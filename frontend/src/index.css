@@ -1,0 +1,263 @@
+@import "tailwindcss";
+
+/* =========================
+   GLOBAL GLASS BACKGROUND
+   ========================= */
+
+.glass-bg {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Base gradient */
+  background: linear-gradient(
+    135deg,
+    #ecfdf5 0%,
+    #f9fafb 45%,
+    #ffffff 100%
+  );
+}
+
+/* Floating light blobs (depth) */
+.glass-bg::before,
+.glass-bg::after {
+  content: "";
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.glass-bg::before {
+  background: radial-gradient(circle, rgba(16,185,129,0.6), transparent 65%);
+  top: -160px;
+  left: -160px;
+}
+
+.glass-bg::after {
+  background: radial-gradient(circle, rgba(156,163,175,0.6), transparent 65%);
+  bottom: -180px;
+  right: -180px;
+}
+
+/* Frosted glass overlay */
+.glass-bg::marker {
+  content: "";
+}
+
+/* Subtle noise-like diffusion (fake noise using gradient) */
+.glass-overlay {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(22px) saturate(120%);
+  -webkit-backdrop-filter: blur(22px) saturate(120%);
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.35),
+    rgba(255,255,255,0.15)
+  );
+}
+
+/* =========================
+   AUTH
+   ========================= */
+
+.auth-container {
+  position: relative;
+  z-index: 1;
+
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* =========================
+   GLASS CARD (OPTIONAL USE)
+   ========================= */
+
+.glass-card {
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background: rgba(255, 255, 255, 0.6);
+
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 18px;
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* =========================
+   BUTTONS
+   ========================= */
+
+.primary-btn {
+  background: #10b981;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   DASHBOARD
+   ========================= */
+
+.dashboard {
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #f9fafb,
+    #ffffff
+  );
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 18px 32px;
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+.dashboard-body {
+  padding: 40px;
+}
+/* =========================
+   MARKET GRAPH BACKGROUND
+   ========================= */
+
+.market-graph {
+  position: absolute;
+  inset: auto 0 12% 0;
+  height: 45%;
+  width: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Base line style */
+.market-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+
+  animation: draw-line 3.5s ease-out forwards;
+}
+
+/* Strong primary line */
+.line-strong {
+  stroke: rgba(16, 185, 129, 0.95); /* emerald */
+  filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.35));
+
+  animation:
+    draw-line 3.2s ease-out forwards,
+    float-line 10s ease-in-out infinite;
+}
+
+/* Medium secondary */
+.line-medium {
+  stroke: rgba(5, 150, 105, 0.75);
+  stroke-width: 2.8;
+
+  animation:
+    draw-line 3.6s ease-out forwards,
+    float-line 14s ease-in-out infinite;
+}
+
+/* Soft supportive */
+.line-soft {
+  stroke: rgba(107, 114, 128, 0.6);
+  stroke-width: 2.4;
+
+  animation:
+    draw-line 4s ease-out forwards,
+    float-line 18s ease-in-out infinite;
+}
+
+/* Background depth lines */
+.line-faint {
+  stroke: rgba(16, 185, 129, 0.35);
+  stroke-width: 2;
+
+  animation:
+    draw-line 4.6s ease-out forwards,
+    float-line 22s ease-in-out infinite;
+}
+
+.delay-1 {
+  animation-delay: 0.8s;
+}
+
+.delay-2 {
+  animation-delay: 1.4s;
+}
+
+/* Draw animation */
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Floating motion */
+@keyframes float-line {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+/* Hover depth (desktop only) */
+@media (hover: hover) {
+  .glass-bg:hover .market-graph {
+    transform: translateY(-6px);
+    transition: transform 0.6s ease;
+  }
+}
+
+/* Mobile tuning */
+@media (max-width: 768px) {
+  .market-graph {
+    height: 32%;
+    opacity: 0.22;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .market-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
