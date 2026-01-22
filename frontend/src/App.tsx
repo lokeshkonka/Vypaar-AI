@@ -1,14 +1,36 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AuthComponent from "./components/AuthComponent";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
+
+import AuthComponent from "./components/auth/AuthComponent";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* AUTH */}
         <Route path="/auth" element={<AuthComponent />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* ROOT (protected dashboard) */}
+        <Route
+          path="/"
+          element={
+            <>
+              <SignedIn>
+                <Dashboard />
+              </SignedIn>
+
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          }
+        />
       </Routes>
+
+
+
+
     </BrowserRouter>
   );
 }

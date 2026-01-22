@@ -1,5 +1,5 @@
-import Navbar from "../components/Navbar";
-import UserSync from "../components/UserSync";
+import Navbar from "../components/dashboard/Navbar/Navbar";
+import UserSync from "../components/dashboard/Navbar/UserSync";
 
 export default function Dashboard() {
   return (
