@@ -3,6 +3,7 @@ import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
 import AuthComponent from "./components/auth/AuthComponent";
 import Dashboard from "./pages/Dashboard";
+import Landing from "./pages/Landing";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             </>
           }
         />
+        <Route path="/landing" element={<Landing />} />
       </Routes>
 
 
