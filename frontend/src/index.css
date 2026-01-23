@@ -1,9 +1,12 @@
 @import "tailwindcss";
 
 /* =========================
-   GLOBAL GLASS BACKGROUND
+   GLOBAL GLASS BACKGROUND (AUTH)
    ========================= */
-
+:root {
+  --glass-white: 255, 255, 255;
+  --emerald-main: 16, 185, 129;
+}
 .glass-bg {
   min-height: 100vh;
   width: 100%;
@@ -14,7 +17,6 @@
   align-items: center;
   justify-content: center;
 
-  /* Base gradient */
   background: linear-gradient(
     135deg,
     #ecfdf5 0%,
@@ -23,7 +25,7 @@
   );
 }
 
-/* Floating light blobs (depth) */
+/* Floating light blobs */
 .glass-bg::before,
 .glass-bg::after {
   content: "";
@@ -48,12 +50,7 @@
   right: -180px;
 }
 
-/* Frosted glass overlay */
-.glass-bg::marker {
-  content: "";
-}
-
-/* Subtle noise-like diffusion (fake noise using gradient) */
+/* Glass overlay */
 .glass-overlay {
   position: absolute;
   inset: 0;
@@ -67,12 +64,12 @@
 }
 
 /* =========================
-   AUTH
+   AUTH CONTAINER
    ========================= */
 
 .auth-container {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 
   min-height: 100vh;
   width: 100%;
@@ -84,7 +81,7 @@
 }
 
 /* =========================
-   GLASS CARD (OPTIONAL USE)
+   GLASS CARD
    ========================= */
 
 .glass-card {
@@ -100,6 +97,30 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
+.glass-card {
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  background: rgba(var(--glass-white), 0.65);
+
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 18px;
+
+  box-shadow:
+    0 24px 48px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(var(--emerald-main), 0.45);
+  box-shadow:
+    0 30px 60px rgba(16, 185, 129, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
 /* =========================
    BUTTONS
    ========================= */
@@ -122,11 +143,14 @@
 }
 
 /* =========================
-   DASHBOARD
+   DASHBOARD BASE
    ========================= */
 
 .dashboard {
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
   background: linear-gradient(
     135deg,
     #f9fafb,
@@ -150,9 +174,12 @@
 
 .dashboard-body {
   padding: 40px;
+  position: relative;
+  z-index: 2;
 }
+
 /* =========================
-   MARKET GRAPH BACKGROUND
+   AUTH MARKET GRAPH
    ========================= */
 
 .market-graph {
@@ -160,85 +187,133 @@
   inset: auto 0 12% 0;
   height: 45%;
   width: 100%;
-  z-index: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
-/* Base line style */
 .market-line {
   fill: none;
-  stroke-width: 3;
   stroke-linecap: round;
-
   stroke-dasharray: 1200;
   stroke-dashoffset: 1200;
-
   animation: draw-line 3.5s ease-out forwards;
 }
 
-/* Strong primary line */
 .line-strong {
-  stroke: rgba(16, 185, 129, 0.95); /* emerald */
+  stroke: rgba(16, 185, 129, 0.95);
+  stroke-width: 3;
   filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.35));
-
   animation:
     draw-line 3.2s ease-out forwards,
     float-line 10s ease-in-out infinite;
 }
 
-/* Medium secondary */
 .line-medium {
   stroke: rgba(5, 150, 105, 0.75);
   stroke-width: 2.8;
-
   animation:
     draw-line 3.6s ease-out forwards,
     float-line 14s ease-in-out infinite;
 }
 
-/* Soft supportive */
 .line-soft {
   stroke: rgba(107, 114, 128, 0.6);
   stroke-width: 2.4;
-
   animation:
     draw-line 4s ease-out forwards,
     float-line 18s ease-in-out infinite;
 }
 
-/* Background depth lines */
 .line-faint {
   stroke: rgba(16, 185, 129, 0.35);
   stroke-width: 2;
-
   animation:
     draw-line 4.6s ease-out forwards,
     float-line 22s ease-in-out infinite;
 }
 
-.delay-1 {
-  animation-delay: 0.8s;
+.delay-1 { animation-delay: 0.8s; }
+.delay-2 { animation-delay: 1.4s; }
+
+/* =========================
+   DASHBOARD GRAPH BACKGROUND
+   ========================= */
+
+.dashboard-graph {
+  position: absolute;
+  inset: 80px 0 auto 0;
+  height: 55%;
+  width: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
 }
 
-.delay-2 {
-  animation-delay: 1.4s;
+.dashboard-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 1400;
+  stroke-dashoffset: 1400;
+  animation: draw-line 4s ease-out forwards;
 }
 
-/* Draw animation */
+.dashboard-line.line-main {
+  stroke: rgba(16, 185, 129, 0.65);
+  stroke-width: 2.6;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.25));
+  animation:
+    draw-line 3.5s ease-out forwards,
+    dashboard-float 18s ease-in-out infinite;
+}
+
+.dashboard-line.line-secondary {
+  stroke: rgba(107, 114, 128, 0.6);
+  stroke-width: 2.2;
+  animation:
+    draw-line 4s ease-out forwards,
+    dashboard-float 22s ease-in-out infinite;
+}
+
+.dashboard-line.line-trend {
+  stroke: rgba(16, 185, 129, 0.4);
+  stroke-width: 2;
+  animation:
+    draw-line 4.5s ease-out forwards,
+    dashboard-float 26s ease-in-out infinite;
+}
+
+.dashboard-line.line-faint {
+  stroke: rgba(107, 114, 128, 0.35);
+  stroke-width: 1.8;
+  animation:
+    draw-line 5s ease-out forwards,
+    dashboard-float 30s ease-in-out infinite;
+}
+
+/* =========================
+   ANIMATIONS
+   ========================= */
+
 @keyframes draw-line {
-  to {
-    stroke-dashoffset: 0;
-  }
+  to { stroke-dashoffset: 0; }
 }
 
-/* Floating motion */
 @keyframes float-line {
   0% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
   100% { transform: translateY(0); }
 }
 
-/* Hover depth (desktop only) */
+@keyframes dashboard-float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* =========================
+   INTERACTION & ACCESSIBILITY
+   ========================= */
+
 @media (hover: hover) {
   .glass-bg:hover .market-graph {
     transform: translateY(-6px);
@@ -246,17 +321,21 @@
   }
 }
 
-/* Mobile tuning */
 @media (max-width: 768px) {
   .market-graph {
     height: 32%;
     opacity: 0.22;
   }
+
+  .dashboard-graph {
+    height: 40%;
+    opacity: 0.2;
+  }
 }
 
-/* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .market-line {
+  .market-line,
+  .dashboard-line {
     animation: none;
     stroke-dashoffset: 0;
   }

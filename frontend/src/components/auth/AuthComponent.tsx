@@ -2,11 +2,12 @@ import { SignIn, SignedIn, SignedOut, useAuth } from "@clerk/clerk-react";
 import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import MarketGraphBackground from "./MarketGraphBackground";
+import Footer from "../dashboard/Footer";
 
 /* ---------------- Skeleton Loader ---------------- */
 function AuthSkeleton() {
   return (
-    <div className="w-[360px] rounded-xl bg-white p-6 shadow-sm animate-pulse">
+    <div className="w-90 rounded-xl bg-white p-6 shadow-sm animate-pulse">
       <div className="h-6 w-2/3 rounded bg-gray-200 mb-3" />
       <div className="h-4 w-1/2 rounded bg-gray-200 mb-6" />
 
@@ -23,6 +24,7 @@ export default function AuthComponent() {
   const { isLoaded } = useAuth();
 
   return (
+    <div>
     <div className="relative min-h-screen bg-[#f5f7f6] overflow-hidden">
       {/* Background */}
       <MarketGraphBackground />
@@ -72,6 +74,8 @@ export default function AuthComponent() {
           )}
         </AnimatePresence>
       </div>
+    </div>
+          <Footer />
     </div>
   );
 }
