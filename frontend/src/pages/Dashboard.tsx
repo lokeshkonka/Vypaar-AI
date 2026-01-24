@@ -11,7 +11,8 @@ import MarketSelector from "../components/dashboard/Home/MarketSelector";
 import ProductSelector from "../components/dashboard/Home/ProductSelector";
 import GenerateForecastCTA from "../components/dashboard/Home/GenerateForecastCTA";
 import DashboardGraphBackground from "../components/dashboard/Home/DashboardGraphBackground";
-import Footer from "../components/dashboard/Footer";
+import DashFooter from "../components/dashboard/Home/dashFooter";
+
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +49,7 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-      <Footer/>
+      <DashFooter/>
     </ForecastProvider>
   );
 }

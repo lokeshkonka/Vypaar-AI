@@ -1,3 +1,4 @@
+import "./home.css"
 export default function DashboardGraphBackground() {
   return (
     <svg

@@ -9,7 +9,7 @@ export default function WelcomeCard() {
         mb-6 sm:mb-7
         border border-gray-600/80
         rounded-xl
-        bg-gradient-to-br from-white/80 to-white/60
+        bg-linear-to-br from-white/80 to-white/60
         transition-all duration-300
         hover:border-emerald-400/70
         hover:shadow-[0_16px_40px_rgba(16,185,129,0.14)]
@@ -22,40 +22,40 @@ export default function WelcomeCard() {
         </div>
 
         <div>
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 leading-tight">
+          <h2 className="text-base sm:text-lg font-semibold  leading-tight">
             Demand Forecast Setup
           </h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-md">
+          <p className="text-xs sm:text-sm mt-1 max-w-md">
             Configure inputs for accurate, localized AI-driven demand predictions.
           </p>
         </div>
       </div>
 
       {/* Guidance bullets */}
-      <ul className="space-y-3 sm:space-y-4 text-sm sm:text-[0.95rem] text-gray-600">
+      <ul className="space-y-3 sm:space-y-4 text-sm sm:text-[0.95rem] ">
         <li className="flex items-start gap-3">
-          <MapPin className="w-4 h-4 sm:w-[18px] sm:h-[18px] mt-0.5 text-emerald-600 flex-shrink-0" />
-          <span>
+          <MapPin className="w-4 h-4 sm:w-4.5 sm:h-4.5 mt-0.5 text-emerald-600 shrink-0" />
+          <span className="">
             Select your{" "}
-            <span className="font-medium text-gray-800">market location</span>{" "}
+            <span className="font-medium  ">market location</span>{" "}
             to factor in regional demand patterns and festivals.
           </span>
         </li>
 
-        <li className="flex items-start gap-3">
-          <Package className="w-4 h-4 sm:w-[18px] sm:h-[18px] mt-0.5 text-emerald-600 flex-shrink-0" />
+        <li className="flex items-start gap-3 ">
+          <Package className="w-4 h-4 sm:w-4.5 sm:h-4.5 mt-0.5 text-emerald-600 shrink-0" />
           <span>
             Choose a{" "}
-            <span className="font-medium text-gray-800">product</span>{" "}
+            <span className="font-medium  ">product</span>{" "}
             to analyze category-specific trends.
           </span>
         </li>
 
         <li className="flex items-start gap-3">
-          <Calendar className="w-4 h-4 sm:w-[18px] sm:h-[18px] mt-0.5 text-emerald-600 flex-shrink-0" />
+          <Calendar className="w-4 h-4 sm:w-4.5 sm:h-4.5 mt-0.5 text-emerald-600 shrink-0" />
           <span>
             Pick a{" "}
-            <span className="font-medium text-gray-800">forecast range</span>{" "}
+            <span className="font-medium ">forecast range</span>{" "}
             to plan short-term or festival-driven inventory.
           </span>
         </li>

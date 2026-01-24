@@ -40,9 +40,12 @@ const ForecastContext = createContext<ForecastContextType | null>(null);
    PROVIDER
    ========================= */
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 export function ForecastProvider({ children }: { children: ReactNode }) {
   const [selection, setSelectionState] = useState<ForecastSelection>({});
 
+  /* -------- selection updater -------- */
   const setSelection = (data: ForecastSelection) => {
     setSelectionState((prev) => ({
       ...prev,
@@ -50,6 +53,7 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  /* -------- completion guard -------- */
   const isSelectionComplete = useMemo(() => {
     return Boolean(
       selection.state &&
@@ -62,13 +66,44 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     );
   }, [selection]);
 
+  /* -------- backend integration -------- */
   const generateForecast = async () => {
     if (!isSelectionComplete) {
       throw new Error("Forecast selection incomplete");
     }
 
-    // 🔒 backend call goes here later
-    console.log("Generating forecast with:", selection);
+    const payload = {
+      state: selection.state!,
+      city: selection.city!,
+      marketType: selection.marketType!,
+      market: selection.market!,
+      category: selection.category!,
+      product: selection.product!,
+      forecastRange: Number(selection.forecastRange),
+    };
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/forecast`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const message = await res.text();
+        throw new Error(message || "Forecast API failed");
+      }
+
+      const data = await res.json();
+
+      // For now just log — later this can be stored in context
+      console.log("Forecast response:", data);
+    } catch (error) {
+      console.error("Forecast generation error:", error);
+      throw error;
+    }
   };
 
   return (
@@ -85,6 +120,9 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/* =========================
+   HOOK
+   ========================= */
 
 export function useForecast() {
   const ctx = useContext(ForecastContext);

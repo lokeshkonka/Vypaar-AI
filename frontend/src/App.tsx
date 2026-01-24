@@ -14,7 +14,7 @@ function App() {
 
         {/* ROOT (protected dashboard) */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <>
               <SignedIn>
@@ -27,7 +27,7 @@ function App() {
             </>
           }
         />
-        <Route path="/landing" element={<Landing />} />
+        <Route path="/" element={<Landing />} />
       </Routes>
 
 

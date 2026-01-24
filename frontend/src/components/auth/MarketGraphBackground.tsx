@@ -1,7 +1,8 @@
+import "./auth.css";
 export default function MarketGraphBackground() {
   return (
     <svg
-      className="market-graph"
+      className="absolute inset-x-0 top-0 h-105 w-full"
       viewBox="0 0 1200 420"
       preserveAspectRatio="none"
       aria-hidden="true"

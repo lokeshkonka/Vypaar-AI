@@ -1,5 +1,6 @@
 import { Calendar, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useForecast } from "../../../context/ForecastContext";
 
 export default function ForecastRangeAndGenerate() {
@@ -10,6 +11,8 @@ export default function ForecastRangeAndGenerate() {
     generateForecast,
     isSelectionComplete,
   } = useForecast();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const ranges: Array<{
     label: string;
@@ -29,11 +32,16 @@ export default function ForecastRangeAndGenerate() {
   ];
 
   const handleGenerate = async () => {
+    if (!isSelectionComplete || isLoading) return;
+
     try {
-      await generateForecast();
+      setIsLoading(true);
+      await generateForecast(); // waits till backend responds
       navigate("/overview");
     } catch (err) {
-      console.error(err);
+      console.error("Forecast generation failed:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -42,12 +50,12 @@ export default function ForecastRangeAndGenerate() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <Calendar className="w-5 h-5 text-emerald-600" />
-        <h3 className="text-sm sm:text-base font-medium text-gray-900">
+        <h3 className="text-sm sm:text-base font-medium">
           Forecast Range & Generate
         </h3>
       </div>
 
-      {/* Radio-style range buttons */}
+      {/* Range buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {ranges.map((r) => {
           const active = selection.forecastRange === r.value;
@@ -56,9 +64,8 @@ export default function ForecastRangeAndGenerate() {
             <button
               key={r.value}
               type="button"
-              onClick={() =>
-                setSelection({ forecastRange: r.value })
-              }
+              disabled={isLoading}
+              onClick={() => setSelection({ forecastRange: r.value })}
               className={`
                 min-h-[56px] sm:min-h-[60px]
                 rounded-xl border
@@ -71,16 +78,14 @@ export default function ForecastRangeAndGenerate() {
                 ${
                   active
                     ? "bg-emerald-600 text-white border-emerald-600 shadow-[0_10px_28px_rgba(16,185,129,0.35)]"
-                    : "bg-white/70 text-gray-700 border-gray-300 hover:border-emerald-400 hover:text-emerald-700"
+                    : "bg-white/70 text-black border-gray-300 hover:border-emerald-400 hover:text-emerald-700"
                 }
               `}
             >
-              <span className="leading-tight">{r.label}</span>
+              <span>{r.label}</span>
               <span
-                className={`mt-0.5 text-xs leading-tight ${
-                  active
-                    ? "text-emerald-100"
-                    : "text-gray-500"
+                className={`mt-0.5 text-xs ${
+                  active ? "text-emerald-100" : "text-gray-500"
                 }`}
               >
                 {r.hint}
@@ -93,7 +98,7 @@ export default function ForecastRangeAndGenerate() {
       {/* Generate CTA */}
       <button
         onClick={handleGenerate}
-        disabled={!isSelectionComplete}
+        disabled={!isSelectionComplete || isLoading}
         className={`
           w-full min-h-12 sm:min-h-13
           rounded-xl
@@ -103,14 +108,14 @@ export default function ForecastRangeAndGenerate() {
           focus:outline-none focus:ring-2 focus:ring-emerald-400/40
 
           ${
-            isSelectionComplete
-              ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            isSelectionComplete && !isLoading
+              ? "bg-emerald-600 dark:text-white text-black hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]"
+              : "bg-gray-300 dark:text-black cursor-not-allowed"
           }
         `}
       >
-        Generate Forecast
-        <ArrowRight size={16} />
+        {isLoading ? "Generating..." : "Generate Forecast"}
+        {!isLoading && <ArrowRight size={16} />}
       </button>
     </div>
   );
