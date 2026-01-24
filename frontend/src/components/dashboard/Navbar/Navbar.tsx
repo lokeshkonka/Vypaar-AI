@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   SignedIn,
   SignedOut,
@@ -17,45 +17,43 @@ import {
   FiChevronLeft,
   FiSun,
   FiMoon,
+  FiMousePointer,
 } from "react-icons/fi";
 
 import NavLoader from "./NavLoader";
 import { useTheme } from "../../../context/ThemeContext";
 
+/* =========================
+   NAVBAR
+   ========================= */
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+
+  const isActive = (path: string) =>
+    location.pathname.startsWith(path);
 
   return (
     <>
       {/* ================= TOP NAVBAR ================= */}
-      <header
-        className="
-          fixed top-0 z-30 w-full
-          bg-white dark:bg-[#0f1f1b]
-          border-b border-gray-200 dark:border-[#1f3a33]
-        "
-      >
+      <header className="fixed top-0 z-30 w-full bg-white dark:bg-[#0f1f1b] border-b border-gray-200 dark:border-[#1f3a33]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
 
           {/* LEFT */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setOpen(true)}
-              className="
-                cursor-pointer
-                text-gray-600 dark:text-gray-300
-                hover:text-black dark:hover:text-white
-                transition
-              "
+              className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
             >
               <FiMenu size={22} />
             </button>
 
-            <Link to="/home" className="flex items-center gap-2 cursor-pointer">
+            <Link to="/home" className="flex items-center gap-2">
               <img src="/icon.png" className="h-8 w-8" />
-              <span className="font-semibold text-gray-900 dark:text-white tracking-wide">
+              <span className="font-semibold text-gray-900 dark:text-white">
                 Vypaar AI
               </span>
             </Link>
@@ -63,18 +61,27 @@ export default function Navbar() {
 
           {/* CENTER */}
           <nav className="hidden md:flex items-center gap-10 text-sm">
-            <Link
+            <NavLink
               to="/blog"
-              className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-black dark:text-white font-medium"
+                  : "text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+              }
             >
               Blog
-            </Link>
-            <Link
+            </NavLink>
+
+            <NavLink
               to="/pricing"
-              className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-black dark:text-white font-medium"
+                  : "text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+              }
             >
               Pricing
-            </Link>
+            </NavLink>
           </nav>
 
           {/* RIGHT */}
@@ -82,24 +89,14 @@ export default function Navbar() {
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="
-                rounded-md p-2
-                text-gray-600 dark:text-gray-300
-                hover:bg-black/5 dark:hover:bg-white/10
-                transition
-              "
+              className="rounded-md p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
 
             {/* Notifications */}
-            <button className="
-              relative cursor-pointer
-              text-gray-600 dark:text-gray-300
-              hover:text-black dark:hover:text-white
-              transition
-            ">
+            <button className="relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition">
               <FiBell size={20} />
               <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400" />
             </button>
@@ -130,9 +127,9 @@ export default function Navbar() {
           {/* HEADER */}
           <div className="flex items-center justify-between">
             <Link
-              to="/home"
+              to="/"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2"
             >
               <img src="/icon.png" className="h-8 w-8" />
               <span className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -142,13 +139,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setOpen(false)}
-              className="
-                cursor-pointer rounded-md p-1
-                text-gray-500 dark:text-gray-300
-                hover:text-black dark:hover:text-white
-                hover:bg-black/5 dark:hover:bg-white/10
-                transition
-              "
+              className="rounded-md p-1 text-gray-500 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
             >
               <FiChevronLeft size={22} />
             </button>
@@ -161,22 +152,47 @@ export default function Navbar() {
             <SideItem
               icon={<FiBarChart2 />}
               label="Product Analysis"
-              onClick={() => navigate("/dashboard/product-analysis")}
+              active={isActive("/dashboard/product-analysis")}
+              onClick={() => {
+                navigate("/dashboard/product-analysis");
+                setOpen(false);
+              }}
             />
             <SideItem
               icon={<FiBox />}
               label="Inventory"
-              onClick={() => navigate("/dashboard/inventory")}
+              active={isActive("/dashboard/inventory")}
+              onClick={() => {
+                navigate("/dashboard/inventory");
+                setOpen(false);
+              }}
             />
             <SideItem
               icon={<FiTrendingUp />}
               label="Insights"
-              onClick={() => navigate("/dashboard/insights")}
+              active={isActive("/dashboard/insights")}
+              onClick={() => {
+                navigate("/dashboard/insights");
+                setOpen(false);
+              }}
             />
             <SideItem
               icon={<FiActivity />}
               label="Model Accuracy"
-              onClick={() => navigate("/dashboard/model-accuracy")}
+              active={isActive("/dashboard/model-accuracy")}
+              onClick={() => {
+                navigate("/dashboard/model-accuracy");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiMousePointer />}
+              label="Selector"
+              active={isActive("/dashboard/selector")}
+              onClick={() => {
+                navigate("/dashboard/selector");
+                setOpen(false);
+              }}
             />
           </div>
 
@@ -184,20 +200,20 @@ export default function Navbar() {
 
           {/* MOBILE LINKS */}
           <div className="md:hidden space-y-2">
-            <Link
+            <NavLink
               to="/blog"
               onClick={() => setOpen(false)}
               className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
             >
               Blog
-            </Link>
-            <Link
+            </NavLink>
+            <NavLink
               to="/pricing"
               onClick={() => setOpen(false)}
               className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
             >
               Pricing
-            </Link>
+            </NavLink>
           </div>
 
           <div className="flex-1" />
@@ -211,27 +227,32 @@ export default function Navbar() {
   );
 }
 
-/* ================= SIDE ITEM ================= */
+/* =========================
+   SIDE ITEM
+   ========================= */
+
 function SideItem({
   icon,
   label,
   onClick,
+  active,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  active: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className="
-        flex w-full items-center gap-3 rounded-lg
-        px-4 py-2.5
-        text-gray-700 dark:text-gray-300
-        hover:bg-black/5 dark:hover:bg-white/10
-        hover:text-black dark:hover:text-white
-        transition
-      "
+      className={`
+        flex w-full items-center gap-3 rounded-lg px-4 py-2.5 transition
+        ${
+          active
+            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+            : "text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10"
+        }
+      `}
     >
       <span className="text-lg">{icon}</span>
       <span className="text-sm font-medium">{label}</span>

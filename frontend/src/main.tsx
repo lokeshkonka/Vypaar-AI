@@ -17,7 +17,7 @@ import { ThemeProvider } from './context/ThemeContext.tsx'
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <ThemeProvider>
-      <ClerkProvider afterSignOutUrl="/auth" signInForceRedirectUrl="/dashboard" publishableKey={PUBLISHABLE_KEY} appearance={{
+      <ClerkProvider afterSignOutUrl="/auth" signInForceRedirectUrl="/dashboard/selector" publishableKey={PUBLISHABLE_KEY} appearance={{
         theme: dark,}}>
         <App />
       </ClerkProvider>

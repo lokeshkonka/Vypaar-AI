@@ -10,8 +10,8 @@ import WelcomeCard from "../components/dashboard/Home/WelcomeCard";
 import MarketSelector from "../components/dashboard/Home/MarketSelector";
 import ProductSelector from "../components/dashboard/Home/ProductSelector";
 import GenerateForecastCTA from "../components/dashboard/Home/GenerateForecastCTA";
-import DashboardGraphBackground from "../components/dashboard/Home/DashboardGraphBackground";
 import DashFooter from "../components/dashboard/Home/dashFooter";
+import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
 
 
 export default function Dashboard() {
@@ -34,7 +34,7 @@ export default function Dashboard() {
   return (
     <ForecastProvider>
       <div className="dashboard relative min-h-screen overflow-hidden">
-        <DashboardGraphBackground />
+        <GraphBackgroundCorner />
         <Navbar />
         <UserSync />
 

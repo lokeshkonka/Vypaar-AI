@@ -1,10 +1,11 @@
-import DashboardGraphBackground from "./DashboardGraphBackground";
+import GraphBackgroundBottom from "../../Background/graphBackgroundBottom";
+
 
 export default function DashboardLoader() {
   return (
     <div className="dashboard relative min-h-screen overflow-hidden">
       {/* Background graph stays for continuity */}
-      <DashboardGraphBackground />
+      <GraphBackgroundBottom />
 
       {/* Navbar skeleton */}
       <div className="dashboard-header">
