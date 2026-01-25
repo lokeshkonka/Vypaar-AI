@@ -221,8 +221,8 @@ class InventoryForecast(BaseSchema):
     price_increase_percentage: float
 
 
-class InventorySuggestionResponse(BaseSchema):
-    """Inventory suggestion response."""
+class InventorySuggestionDetailedResponse(BaseSchema):
+    """Inventory suggestion response (detailed variant)."""
 
     recommendation: InventoryRecommendation
     forecast: InventoryForecast
@@ -348,8 +348,8 @@ class TrainingInfo(BaseSchema):
     training_duration_minutes: int
 
 
-class ModelMetricsResponse(BaseSchema):
-    """Comprehensive model metrics response."""
+class ModelMetricsDetailedResponse(BaseSchema):
+    """Comprehensive model metrics response (detailed shape)."""
 
     model_name: str
     version: str

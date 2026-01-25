@@ -227,6 +227,64 @@ class MarketPriceRepository(BaseRepository):
         await self.db.flush()
         return instances
 
+    async def get_recent_prices(self, days: int = 90) -> List[MarketPrice]:
+        """Get market prices for the recent period (used by scheduler retraining)."""
+        cutoff_date = (get_current_timestamp() - timedelta(days=days)).date()
+        query = (
+            select(MarketPrice)
+            .where(MarketPrice.date >= cutoff_date)
+            .order_by(MarketPrice.date)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def create_or_update_price(self, price_data: dict) -> Optional[MarketPrice]:
+        """Upsert a market price record by commodity/market/date."""
+        commodity_id = price_data.get("commodity_id")
+        market_id = price_data.get("market_id")
+        date_value = price_data.get("date")
+
+        if not commodity_id or not market_id or not date_value:
+            logger.warning("Skipping price upsert due to missing ids/date", extra={"price_data": price_data})
+            return None
+
+        if isinstance(date_value, str):
+            price_date = datetime.strptime(date_value, "%Y-%m-%d").date()
+        else:
+            price_date = date_value
+
+        query = select(MarketPrice).where(
+            and_(
+                MarketPrice.commodity_id == commodity_id,
+                MarketPrice.market_id == market_id,
+                MarketPrice.date == price_date,
+            )
+        )
+        result = await self.db.execute(query)
+        existing = result.scalar_one_or_none()
+
+        if existing:
+            for field in ["price", "min_price", "max_price", "modal_price", "arrival"]:
+                if field in price_data and price_data.get(field) is not None:
+                    setattr(existing, field, price_data[field])
+            await self.db.flush()
+            return existing
+
+        new_record = MarketPrice(
+            commodity_id=commodity_id,
+            market_id=market_id,
+            date=price_date,
+            price=price_data.get("price", 0.0),
+            min_price=price_data.get("min_price"),
+            max_price=price_data.get("max_price"),
+            modal_price=price_data.get("modal_price"),
+            arrival=price_data.get("arrival"),
+        )
+
+        self.db.add(new_record)
+        await self.db.flush()
+        return new_record
+
 
 class AlertRepository(BaseRepository):
     """Repository for Alert operations."""

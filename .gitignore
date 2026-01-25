@@ -174,3 +174,4 @@ test_*.py
 /tmp/
 /build/
 /dist/
+GITHUB_READY.md

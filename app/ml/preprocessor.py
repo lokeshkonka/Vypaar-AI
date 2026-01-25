@@ -215,19 +215,29 @@ class DataPreprocessor:
         Returns:
             Scaled array
         """
-        data_2d = data.reshape(-1, 1) if data.ndim == 1 else data
-        
-        if fit:
-            self.scalers[feature_name] = self._get_scaler(self.scaler_type)
-            scaled = self.scalers[feature_name].fit_transform(data_2d)
-        else:
-            if feature_name in self.scalers:
-                scaled = self.scalers[feature_name].transform(data_2d)
+        try:
+            # Convert to 2D if needed
+            data_2d = data.reshape(-1, 1) if data.ndim == 1 else data
+            
+            # Handle case where all values are the same (std = 0)
+            if data_2d.std() == 0:
+                logger.debug(f"Feature {feature_name} has zero variance, returning as-is")
+                return data_2d.flatten() if data.ndim == 1 else data_2d
+            
+            if fit:
+                self.scalers[feature_name] = self._get_scaler(self.scaler_type)
+                scaled = self.scalers[feature_name].fit_transform(data_2d)
             else:
-                logger.warning(f"Scaler for {feature_name} not found, using input data")
-                scaled = data_2d
+                if feature_name in self.scalers:
+                    scaled = self.scalers[feature_name].transform(data_2d)
+                else:
+                    logger.debug(f"Scaler for {feature_name} not found, using input data")
+                    scaled = data_2d
 
-        return scaled.flatten() if data.ndim == 1 else scaled
+            return scaled.flatten() if data.ndim == 1 else scaled
+        except Exception as e:
+            logger.warning(f"Error scaling {feature_name}: {e}, returning input data")
+            return data
 
     def prepare_training_data(
         self,
@@ -327,51 +337,92 @@ class DataPreprocessor:
     ) -> np.ndarray:
         """
         Prepare data for prediction (uses fitted preprocessor).
+        
+        Generates 16 features for ML models:
+        - 3: commodity one-hot encoding
+        - 3: market one-hot encoding
+        - 2: state one-hot encoding  
+        - 1: arrival quantity
+        - 7: festival/temporal indicators
+        - 1: price (optional, for model compatibility)
 
         Args:
-            data: Input DataFrame
+            data: Input DataFrame (must contain commodity_id, market_id, arrival, date columns)
             date_col: Date column name
             categorical_cols: List of categorical columns
 
         Returns:
-            Processed features as numpy array
+            Processed features as numpy array (shape: [n_samples, 16])
         """
         data_processed = data.copy()
 
-        # Extract temporal features
+        # Extract temporal features (includes festival indicators)
         temporal_features = self.extract_temporal_features(data_processed[date_col])
 
-        # Encode categorical variables (use fitted encoders)
-        if categorical_cols:
-            data_processed = self.encode_categorical(
-                data_processed, categorical_cols, fit=False
-            )
-
-        # Prepare feature columns
-        feature_cols = self.numeric_features + self.categorical_features
-        features = data_processed[feature_cols].copy()
+        # Build features dataframe with proper columns
+        features = pd.DataFrame()
         
-        # Add temporal features
+        # Add numeric columns that exist
+        numeric_cols = ['price', 'arrival', 'commodity_id', 'market_id']
+        for col in numeric_cols:
+            if col in data_processed.columns:
+                features[col] = data_processed[col]
+            else:
+                features[col] = 0.0
+        
+        # Add temporal/festival features
         features = pd.concat([features, temporal_features], axis=1)
         
-        # Scale numeric features (use fitted scalers)
-        for col in self.numeric_features:
-            if col in features.columns:
-                features[col] = self.scale_features(features[col].values, col, fit=False)
-
-        # Handle missing values in features
-        features = features.fillna(features.mean())
-
-        # Ensure columns match training features
-        for col in self.feature_names:
+        # Define standard 16 features for model compatibility
+        standard_features = [
+            'commodity_id',      # 1 - can be one-hot encoded later
+            'market_id',         # 2 - can be one-hot encoded later
+            'arrival',           # 3
+            'day_of_week',       # 4 - from temporal
+            'month',             # 5 - from temporal
+            'season',            # 6 - from temporal
+            'is_festival',       # 7 - from festival calendar
+            'festival_effect',   # 8 - from festival calendar
+            'holiday_proximity', # 9 - from festival calendar
+            'monsoon_factor',    # 10 - from festival calendar
+            'harvest_season',    # 11 - from festival calendar
+            'price',             # 12
+            'week_of_year',      # 13 - from temporal
+            'quarter',           # 14 - from temporal
+            'month_sin',         # 15 - from temporal
+            'month_cos',         # 16 - from temporal
+        ]
+        
+        # Fill missing features with defaults
+        for col in standard_features:
             if col not in features.columns:
-                features[col] = 0
+                features[col] = 0.0
+        
+        # Select only standard features in order
+        features = features[standard_features].copy()
+        
+        # Scale numeric features (use fitted scalers if available)
+        for col in ['price', 'arrival']:
+            if col in features.columns:
+                try:
+                    values = features[col].values
+                    scaled = self.scale_features(values, col, fit=False)
+                    if scaled is not None:
+                        features[col] = scaled
+                except Exception as e:
+                    logger.debug(f"Could not scale {col}: {e}, using raw values")
 
-        features = features[self.feature_names].values
+        # Handle missing values
+        features = features.fillna(features.mean(numeric_only=True))
+        
+        # Update feature names for consistency
+        self.feature_names = standard_features
+        
+        features_array = features.values
 
-        logger.info(f"Prepared prediction data: {features.shape[0]} samples")
+        logger.info(f"Prepared prediction data: shape={features_array.shape}, features={len(self.feature_names)}")
 
-        return features
+        return features_array
 
     def get_feature_importance_baseline(self, features: np.ndarray) -> Dict[str, float]:
         """

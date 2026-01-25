@@ -378,8 +378,9 @@ class EnsembleManager:
 
         # Confidence based on agreement (lower std = higher confidence)
         # Using coefficient of variation as inverse of confidence
-        cv = std_prediction / (abs(ensemble_prediction) + 1e-6)
-        confidence = 1 / (1 + cv)  # Convert to 0-1 range
+        # Add epsilon to prevent division by zero
+        cv = std_prediction / (abs(ensemble_prediction) + 1e-6) if ensemble_prediction != 0 else 0
+        confidence = 1 / (1 + cv) if (1 + cv) != 0 else 0.85  # Default to reasonable confidence
 
         return ensemble_prediction, confidence, individual_predictions
 
