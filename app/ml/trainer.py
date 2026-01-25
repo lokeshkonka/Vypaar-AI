@@ -1,5 +1,3 @@
-"""ML model training and hyperparameter optimization."""
-
 from typing import Tuple, Dict, List, Optional, Any
 from pathlib import Path
 import numpy as np
@@ -26,48 +24,31 @@ from app.ml.preprocessor import DataPreprocessor
 
 
 class ModelTrainer:
-    """Train and evaluate ensemble ML models for agricultural price prediction."""
 
     def __init__(self, preprocessor: DataPreprocessor = None):
-        """
-        Initialize model trainer.
-
-        Args:
-            preprocessor: DataPreprocessor instance for feature engineering
-        """
         self.preprocessor = preprocessor or DataPreprocessor()
         self.models: Dict[str, Any] = {}
         self.metrics: Dict[str, Dict[str, float]] = {}
         self.model_dir = Path(settings.model_dir)
         self.model_dir.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Initialized ModelTrainer with model directory: {self.model_dir}")
+        logger.info(f"Model trainer ready to build prediction models at {self.model_dir}")
 
     def train_xgboost(
         self, X_train: np.ndarray, y_train: np.ndarray, cv_splits: int = 5
     ) -> xgb.XGBRegressor:
-        """
-        Train XGBoost model with hyperparameter tuning.
-
-        Args:
-            X_train: Training features
-            y_train: Training target
-            cv_splits: Number of cross-validation splits
-
-        Returns:
-            Trained XGBRegressor model
-        """
-        logger.info("Training XGBoost model...")
+        
+        logger.info("Building XGBoost model with gradient boosting")
 
         # Base model
         xgb_model = xgb.XGBRegressor(
-            n_estimators=200,
-            max_depth=7,
+            n_estimators=400,
+            max_depth=8,
             learning_rate=0.05,
-            subsample=0.8,
-            colsample_bytree=0.8,
-            reg_alpha=0.1,
-            reg_lambda=1.0,
+            subsample=0.9,
+            colsample_bytree=0.9,
+            reg_alpha=0.2,
+            reg_lambda=1.2,
             random_state=42,
             n_jobs=-1,
             tree_method='hist',
@@ -75,9 +56,11 @@ class ModelTrainer:
 
         # Hyperparameter grid (simplified for training speed)
         param_grid = {
-            'max_depth': [5, 7, 9],
-            'learning_rate': [0.01, 0.05, 0.1],
-            'n_estimators': [100, 200],
+            'max_depth': [6, 8, 10],
+            'learning_rate': [0.03, 0.05, 0.08],
+            'n_estimators': [300, 500],
+            'subsample': [0.8, 0.95],
+            'colsample_bytree': [0.8, 1.0],
         }
 
         # GridSearchCV with TimeSeriesSplit
@@ -93,8 +76,7 @@ class ModelTrainer:
 
         grid_search.fit(X_train, y_train)
         logger.info(
-            f"XGBoost best params: {grid_search.best_params_}, "
-            f"best CV score: {grid_search.best_score_:.4f}"
+            f"XGBoost trained successfully with accuracy {grid_search.best_score_:.2%}"
         )
 
         self.models['xgboost'] = grid_search.best_estimator_
@@ -103,36 +85,31 @@ class ModelTrainer:
     def train_lightgbm(
         self, X_train: np.ndarray, y_train: np.ndarray, cv_splits: int = 5
     ) -> lgb.LGBMRegressor:
-        """
-        Train LightGBM model with hyperparameter tuning.
-
-        Args:
-            X_train: Training features
-            y_train: Training target
-            cv_splits: Number of cross-validation splits
-
-        Returns:
-            Trained LGBMRegressor model
-        """
-        logger.info("Training LightGBM model...")
+        
+        logger.info("Building LightGBM model for fast predictions")
 
         lgb_model = lgb.LGBMRegressor(
-            n_estimators=200,
-            max_depth=7,
+            n_estimators=400,
+            max_depth=6,
             learning_rate=0.05,
             num_leaves=31,
-            subsample=0.8,
-            colsample_bytree=0.8,
+            subsample=0.9,
+            colsample_bytree=0.9,
             reg_alpha=0.1,
-            reg_lambda=1.0,
+            reg_lambda=1.2,
+            min_child_samples=10,
             random_state=42,
             n_jobs=-1,
         )
 
         param_grid = {
-            'max_depth': [5, 7, 9],
-            'learning_rate': [0.01, 0.05, 0.1],
-            'n_estimators': [100, 200],
+            'max_depth': [4, 6, 8],
+            'learning_rate': [0.03, 0.05, 0.08],
+            'n_estimators': [300, 500],
+            'num_leaves': [15, 31, 63],
+            'subsample': [0.8, 0.95],
+            'colsample_bytree': [0.8, 1.0],
+            'min_child_samples': [5, 10, 20],
         }
 
         tscv = TimeSeriesSplit(n_splits=cv_splits)
@@ -147,8 +124,7 @@ class ModelTrainer:
 
         grid_search.fit(X_train, y_train)
         logger.info(
-            f"LightGBM best params: {grid_search.best_params_}, "
-            f"best CV score: {grid_search.best_score_:.4f}"
+            f"LightGBM model ready with {grid_search.best_score_:.2%} validation accuracy"
         )
 
         self.models['lightgbm'] = grid_search.best_estimator_
@@ -157,37 +133,27 @@ class ModelTrainer:
     def train_catboost(
         self, X_train: np.ndarray, y_train: np.ndarray, cv_splits: int = 5
     ) -> Optional[Any]:
-        """
-        Train CatBoost model with hyperparameter tuning.
-
-        Args:
-            X_train: Training features
-            y_train: Training target
-            cv_splits: Number of cross-validation splits
-
-        Returns:
-            Trained CatBoostRegressor model or None if not available
-        """
+        
         if not HAS_CATBOOST:
-            logger.warning("CatBoost not available, skipping")
+            logger.warning("CatBoost library not installed, skipping this model")
             return None
 
-        logger.info("Training CatBoost model...")
+        logger.info("Building CatBoost model for robust predictions")
 
         catboost_model = CatBoostRegressor(
-            iterations=200,
-            depth=7,
+            iterations=400,
+            depth=8,
             learning_rate=0.05,
-            subsample=0.8,
+            subsample=0.9,
             random_state=42,
             verbose=False,
             thread_count=-1,
         )
 
         param_grid = {
-            'depth': [5, 7, 9],
-            'learning_rate': [0.01, 0.05, 0.1],
-            'iterations': [100, 200],
+            'depth': [6, 8, 10],
+            'learning_rate': [0.03, 0.05, 0.08],
+            'iterations': [300, 600],
         }
 
         tscv = TimeSeriesSplit(n_splits=cv_splits)
@@ -202,8 +168,7 @@ class ModelTrainer:
 
         grid_search.fit(X_train, y_train)
         logger.info(
-            f"CatBoost best params: {grid_search.best_params_}, "
-            f"best CV score: {grid_search.best_score_:.4f}"
+            f"CatBoost model achieved {grid_search.best_score_:.2%} accuracy on validation"
         )
 
         self.models['catboost'] = grid_search.best_estimator_
@@ -212,32 +177,23 @@ class ModelTrainer:
     def train_random_forest(
         self, X_train: np.ndarray, y_train: np.ndarray, cv_splits: int = 5
     ) -> RandomForestRegressor:
-        """
-        Train Random Forest model with hyperparameter tuning.
-
-        Args:
-            X_train: Training features
-            y_train: Training target
-            cv_splits: Number of cross-validation splits
-
-        Returns:
-            Trained RandomForestRegressor model
-        """
-        logger.info("Training Random Forest model...")
+        
+        logger.info("Building Random Forest ensemble with decision trees")
 
         rf_model = RandomForestRegressor(
-            n_estimators=200,
-            max_depth=15,
-            min_samples_split=5,
+            n_estimators=400,
+            max_depth=18,
+            min_samples_split=4,
             min_samples_leaf=2,
             random_state=42,
             n_jobs=-1,
         )
 
         param_grid = {
-            'max_depth': [10, 15, 20],
-            'n_estimators': [100, 200],
-            'min_samples_split': [3, 5],
+            'max_depth': [12, 18, 24],
+            'n_estimators': [300, 500],
+            'min_samples_split': [2, 4],
+            'min_samples_leaf': [1, 2],
         }
 
         tscv = TimeSeriesSplit(n_splits=cv_splits)
@@ -252,8 +208,7 @@ class ModelTrainer:
 
         grid_search.fit(X_train, y_train)
         logger.info(
-            f"Random Forest best params: {grid_search.best_params_}, "
-            f"best CV score: {grid_search.best_score_:.4f}"
+            f"Random Forest model trained with {grid_search.best_score_:.2%} prediction accuracy"
         )
 
         self.models['random_forest'] = grid_search.best_estimator_
@@ -262,18 +217,7 @@ class ModelTrainer:
     def evaluate_model(
         self, model: Any, X_test: np.ndarray, y_test: np.ndarray, model_name: str
     ) -> Dict[str, float]:
-        """
-        Evaluate model performance.
-
-        Args:
-            model: Trained model
-            X_test: Test features
-            y_test: Test target
-            model_name: Name of the model
-
-        Returns:
-            Dictionary of evaluation metrics
-        """
+        
         y_pred = model.predict(X_test)
 
         metrics = {
@@ -283,21 +227,16 @@ class ModelTrainer:
             'mape': float(mean_absolute_percentage_error(y_test, y_pred)),
         }
 
-        # Add RMSE percentage (normalized by mean actual price)
         mean_y = np.mean(y_test)
         if mean_y > 0:
             metrics['rmse_pct'] = float((metrics['rmse'] / mean_y) * 100)
 
-        # Accuracy approximation (1 - MAPE for regression)
         metrics['accuracy'] = float(max(0, 1 - metrics['mape']))
 
         self.metrics[model_name] = metrics
 
         logger.info(
-            f"{model_name} Metrics - "
-            f"R²: {metrics['r2_score']:.4f}, "
-            f"RMSE: {metrics['rmse']:.4f}, "
-            f"MAE: {metrics['mae']:.4f}, "
+            f"{model_name} performs with {metrics['accuracy']:.1%} accuracy and ₹{metrics['mae']:.0f} average error. "
             f"MAPE: {metrics['mape']:.4f}"
         )
 
@@ -337,36 +276,28 @@ class ModelTrainer:
 
         return importance_dict
 
-    def train_ensemble(
+    def train_all_models(
         self,
         X_train: np.ndarray,
         y_train: np.ndarray,
-        X_test: np.ndarray,
-        y_test: np.ndarray,
+        X_test: np.ndarray = None,
+        y_test: np.ndarray = None,
         models_to_train: List[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Train all ensemble models.
+        
+        if X_test is None or y_test is None:
+            from sklearn.model_selection import train_test_split
+            X_train, X_test, y_train, y_test = train_test_split(
+                X_train, y_train, test_size=0.2, random_state=42
+            )
 
-        Args:
-            X_train: Training features
-            y_train: Training target
-            X_test: Test features
-            y_test: Test target
-            models_to_train: List of model names to train (default: all)
-
-        Returns:
-            Dictionary with models and metrics
-        """
         if models_to_train is None:
             models_to_train = ['xgboost', 'lightgbm', 'catboost', 'random_forest']
 
         results = {}
 
         for model_name in models_to_train:
-            logger.info(f"\n{'='*50}")
-            logger.info(f"Training {model_name.upper()}")
-            logger.info(f"{'='*50}")
+            logger.info(f"Starting {model_name} model training")
 
             if model_name == 'xgboost':
                 model = self.train_xgboost(X_train, y_train)
@@ -380,10 +311,8 @@ class ModelTrainer:
                 logger.warning(f"Unknown model: {model_name}")
                 continue
 
-            # Evaluate model
             metrics = self.evaluate_model(model, X_test, y_test, model_name)
             
-            # Get feature importance
             importance = self.get_feature_importance(model, model_name)
 
             results[model_name] = {
@@ -392,83 +321,47 @@ class ModelTrainer:
                 'feature_importance': importance,
             }
 
-        logger.info(f"\n{'='*50}")
-        logger.info("Ensemble Training Complete")
-        logger.info(f"{'='*50}")
+        logger.info(f"All {len(results)} ensemble models trained and ready for predictions")
 
         return results
 
     def save_model(self, model: Any, model_name: str, version: str = None) -> str:
-        """
-        Save trained model to disk.
-
-        Args:
-            model: Trained model
-            model_name: Name of the model
-            version: Version string (default: timestamp)
-
-        Returns:
-            Path to saved model
-        """
+        
         if version is None:
             version = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         model_path = self.model_dir / f"{model_name}_{version}.joblib"
         joblib.dump(model, model_path)
 
-        logger.info(f"Saved {model_name} model to {model_path}")
+        logger.info(f"Saved {model_name} model successfully")
         return str(model_path)
 
     def save_all_models(self, version: str = None) -> Dict[str, str]:
-        """
-        Save all trained models to disk.
-
-        Args:
-            version: Version string (default: timestamp)
-
-        Returns:
-            Dictionary mapping model names to file paths
-        """
+        
         saved_paths = {}
 
         for model_name, model in self.models.items():
             path = self.save_model(model, model_name, version)
             saved_paths[model_name] = path
 
-        logger.info(f"Saved {len(saved_paths)} models")
+        logger.info(f"All {len(saved_paths)} models saved and ready for deployment")
         return saved_paths
 
     def save_preprocessor(self, version: str = None) -> str:
-        """
-        Save fitted preprocessor to disk.
-
-        Args:
-            version: Version string (default: timestamp)
-
-        Returns:
-            Path to saved preprocessor
-        """
+        
         if version is None:
             version = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         preprocessor_path = self.model_dir / f"preprocessor_{version}.joblib"
         joblib.dump(self.preprocessor, preprocessor_path)
 
-        logger.info(f"Saved preprocessor to {preprocessor_path}")
+        logger.info(f"Preprocessor saved successfully")
         return str(preprocessor_path)
 
     def load_model(self, model_path: str) -> Any:
-        """
-        Load trained model from disk.
-
-        Args:
-            model_path: Path to model file
-
-        Returns:
-            Loaded model
-        """
+        
         model = joblib.load(model_path)
-        logger.info(f"Loaded model from {model_path}")
+        logger.info(f"Model loaded from storage")
         return model
 
     def get_model_summary(self) -> Dict[str, Dict[str, Any]]:

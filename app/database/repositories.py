@@ -26,9 +26,16 @@ class BaseRepository:
         self.db = db
         self.model = model
 
-    async def create(self, **kwargs) -> Any:
-        """Create and save a new record."""
-        instance = self.model(**kwargs)
+    async def create(self, instance_or_kwargs=None, **kwargs) -> Any:
+        """Create and save a new record from an instance or keyword args."""
+        if instance_or_kwargs is not None and not kwargs:
+            # Passed an ORM instance directly
+            instance = instance_or_kwargs
+        else:
+            # Passed keyword arguments
+            if instance_or_kwargs is not None:
+                kwargs.update(instance_or_kwargs)
+            instance = self.model(**kwargs)
         self.db.add(instance)
         await self.db.flush()
         return instance

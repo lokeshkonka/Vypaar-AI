@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Script to scrape data from Agmarknet."""
 
 import argparse
 import sys
 from pathlib import Path
 
-# Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -17,7 +15,6 @@ from app.scraper.agmarknet_scraper import AgmarknetScraper
 
 
 def parse_args():
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Scrape agricultural market data from Agmarknet"
     )

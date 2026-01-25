@@ -158,3 +158,19 @@ data/models/*
 *.tmp
 temp/
 tmp/
+
+# Test files (local development only)
+test_*.py
+*_test.db
+
+# Environment
+.env.local
+.env.*.local
+
+# IDE settings
+*.code-workspace
+
+# Temporary outputs
+/tmp/
+/build/
+/dist/

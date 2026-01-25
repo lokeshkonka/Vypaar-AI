@@ -10,18 +10,13 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, La
 from sklearn.impute import SimpleImputer
 
 from app.core.utils import get_current_timestamp
+from app.core.festival_calendar import FestivalCalendar
 
 
 class DataPreprocessor:
-    """Preprocess and engineer features for agricultural market price predictions."""
 
     def __init__(self, scaler_type: str = "standard"):
-        """
-        Initialize preprocessor.
-
-        Args:
-            scaler_type: Type of scaler - 'standard', 'minmax', or 'robust'
-        """
+        
         self.scaler_type = scaler_type
         self.scalers: Dict[str, StandardScaler] = {}
         self.label_encoders: Dict[str, LabelEncoder] = {}
@@ -29,11 +24,11 @@ class DataPreprocessor:
         self.feature_names: List[str] = []
         self.categorical_features: List[str] = []
         self.numeric_features: List[str] = []
+        self.festival_calendar = FestivalCalendar()
 
-        logger.info(f"Initialized DataPreprocessor with {scaler_type} scaling")
+        logger.info(f"Preprocessor ready with {scaler_type} scaling and festival integration")
 
     def _get_scaler(self, scaler_type: str) -> Any:
-        """Get scaler instance based on type."""
         if scaler_type == "standard":
             return StandardScaler()
         elif scaler_type == "minmax":
@@ -44,21 +39,10 @@ class DataPreprocessor:
             return StandardScaler()
 
     def extract_temporal_features(self, date_col: pd.Series) -> pd.DataFrame:
-        """
-        Extract temporal features from date column.
-
-        Args:
-            date_col: Series containing dates
-
-        Returns:
-            DataFrame with temporal features
-        """
-        features = pd.DataFrame()
         
-        # Convert to datetime if not already
+        features = pd.DataFrame()
         dates = pd.to_datetime(date_col)
         
-        # Temporal features
         features['day_of_week'] = dates.dt.dayofweek
         features['day_of_month'] = dates.dt.day
         features['month'] = dates.dt.month
@@ -66,23 +50,27 @@ class DataPreprocessor:
         features['week_of_year'] = dates.dt.isocalendar().week
         features['day_of_year'] = dates.dt.dayofyear
         
-        # Seasonal features (agricultural seasons in India)
-        # Rabi: Oct-Mar, Kharif: Jun-Oct, Summer: Mar-Jun
         def get_season(month: int) -> int:
             if month in [10, 11, 12, 1, 2, 3]:
-                return 1  # Rabi
+                return 1
             elif month in [6, 7, 8, 9]:
-                return 2  # Kharif
+                return 2
             else:
-                return 3  # Summer
+                return 3
         
         features['season'] = dates.dt.month.map(get_season)
         
-        # Cyclical encoding for seasonal patterns
         features['month_sin'] = np.sin(2 * np.pi * dates.dt.month / 12)
         features['month_cos'] = np.cos(2 * np.pi * dates.dt.month / 12)
         features['day_sin'] = np.sin(2 * np.pi * dates.dt.day / 31)
         features['day_cos'] = np.cos(2 * np.pi * dates.dt.day / 31)
+        
+        festival_features = dates.apply(
+            lambda d: pd.Series(self.festival_calendar.get_enhanced_features(d))
+        )
+        
+        for col in festival_features.columns:
+            features[col] = festival_features[col]
         
         return features
 

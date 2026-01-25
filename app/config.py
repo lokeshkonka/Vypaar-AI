@@ -8,7 +8,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings with environment variable support."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -73,7 +72,7 @@ class Settings(BaseSettings):
     scrape_timeout: int = 30
     scrape_retry_attempts: int = 3
     scrape_retry_delay: int = 5
-    scrape_rate_limit: int = 10  # requests per minute
+    scrape_rate_limit: int = 10
     scrape_user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     agmarknet_base_url: str = "https://agmarknet.gov.in"
     

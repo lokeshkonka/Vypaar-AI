@@ -181,9 +181,16 @@ class PredictionResponse(BaseSchema):
     predicted_price: float
     confidence_interval: tuple[float, float]
     model_confidence: float = Field(..., ge=0, le=1)
+    confidence_score: float | None = Field(default=None, ge=0, le=1)
     models_used: list[str]
     model_metrics: ModelMetadata
     prediction_metadata: PredictionMetadata
+    
+    def model_dump(self, **kwargs):
+        """Include confidence_score as alias for backward compatibility."""
+        data = super().model_dump(**kwargs)
+        data['confidence_score'] = data.get('model_confidence')
+        return data
 
 
 # Inventory Schemas

@@ -6,8 +6,47 @@ import pandas as pd
 from loguru import logger
 from pathlib import Path
 import joblib
+import inspect
 
 from app.config import settings
+
+
+def _apply_sklearn_compat_shims() -> None:
+    """Allow LightGBM to call sklearn validation with force_all_finite across versions."""
+    try:
+        import sklearn.utils.validation as suv
+        import sklearn.utils as su
+
+        original_check_array = suv.check_array
+        original_check_x_y = suv.check_X_y
+
+        def check_array_compat(*args, force_all_finite=True, **kwargs):
+            kwargs['ensure_all_finite'] = force_all_finite
+            return original_check_array(*args, **kwargs)
+
+        def check_x_y_compat(*args, force_all_finite=True, **kwargs):
+            kwargs['ensure_all_finite'] = force_all_finite
+            return original_check_x_y(*args, **kwargs)
+
+        suv.check_array = check_array_compat  # type: ignore[attr-defined]
+        su.check_array = check_array_compat  # type: ignore[attr-defined]
+        suv.check_X_y = check_x_y_compat  # type: ignore[attr-defined]
+        su.check_X_y = check_x_y_compat  # type: ignore[attr-defined]
+
+        # If LightGBM is already imported, update its cached references too
+        try:
+            import lightgbm.sklearn as lgb_sklearn  # type: ignore
+            lgb_sklearn.check_array = check_array_compat
+            lgb_sklearn.check_X_y = check_x_y_compat
+        except Exception:
+            pass
+
+    except Exception as exc:  # pragma: no cover
+        logger.warning(f"Could not apply sklearn compatibility shim: {exc}")
+
+
+# Apply compatibility shims eagerly at import time to catch early LightGBM imports.
+_apply_sklearn_compat_shims()
 
 
 class EnsembleManager:
@@ -15,11 +54,14 @@ class EnsembleManager:
 
     def __init__(self):
         """Initialize ensemble manager."""
+        _apply_sklearn_compat_shims()
         self.models: Dict[str, Any] = {}
         self.model_weights: Dict[str, float] = {}
         self.ensemble_type = 'weighted_average'  # weighted_average, voting, stacking
         self.preprocessor = None
         self.model_dir = Path(settings.model_dir)
+        self.latest_artifact_mtime: Optional[float] = None
+        self.latest_artifact_name: Optional[str] = None
 
         logger.info("Initialized EnsembleManager")
 
@@ -52,33 +94,105 @@ class EnsembleManager:
         logger.info(f"Loaded {len(self.models)} models for ensemble")
 
     def load_latest_models(self) -> None:
-        """Load latest version of all models from model directory."""
+        """Load latest version of all models from model directory.
+
+        Preference order:
+        1. Tuned ensemble artifacts (ensemble_tuned_*.joblib)
+        2. Regular ensemble artifacts (ensemble_*.joblib)
+        3. Individual model files (random_forest_*.joblib, etc.)
+        """
         if not self.model_dir.exists():
             logger.error(f"Model directory not found: {self.model_dir}")
             return
 
-        # Find latest models for each type
-        model_types = ['xgboost', 'lightgbm', 'catboost', 'random_forest']
-        model_paths = {}
+        # Try tuned ensemble first
+        tuned_files = list(self.model_dir.glob("ensemble_tuned_*.joblib"))
+        loaded_from_ensemble = False
+        if tuned_files:
+            latest_tuned = max(tuned_files, key=lambda p: p.stat().st_mtime)
+            try:
+                ensemble_data = joblib.load(str(latest_tuned))
+                if isinstance(ensemble_data, dict):
+                    for model_name in ['random_forest', 'gradient_boosting', 'xgboost', 'lightgbm', 'catboost']:
+                        if model_name in ensemble_data:
+                            self.models[model_name] = ensemble_data[model_name]
+                    # Persist artifact info & weights if present
+                    self.artifact_info = ensemble_data
+                    if 'model_weights' in ensemble_data and isinstance(ensemble_data['model_weights'], dict):
+                        self.model_weights = ensemble_data['model_weights']
+                    self.model_version = str(ensemble_data.get('timestamp', latest_tuned.stem))
+                    self.latest_artifact_mtime = latest_tuned.stat().st_mtime
+                    self.latest_artifact_name = latest_tuned.name
+                    loaded_from_ensemble = True
+                    logger.info(f"Loaded tuned ensemble: {latest_tuned.name} with {len(self.models)} models")
+            except Exception as e:
+                logger.error(f"Failed to load tuned ensemble: {e}")
 
-        for model_type in model_types:
-            # Find all models of this type
-            pattern = f"{model_type}_*.joblib"
-            matching_files = list(self.model_dir.glob(pattern))
+        # Fallback: regular ensemble
+        if not loaded_from_ensemble:
+            ensemble_files = list(self.model_dir.glob("ensemble_*.joblib"))
+            if ensemble_files:
+                latest_ensemble = max(ensemble_files, key=lambda p: p.stat().st_mtime)
+                try:
+                    ensemble_data = joblib.load(str(latest_ensemble))
+                    if isinstance(ensemble_data, dict):
+                        for model_name in ['random_forest', 'gradient_boosting', 'xgboost', 'lightgbm', 'catboost']:
+                            if model_name in ensemble_data:
+                                self.models[model_name] = ensemble_data[model_name]
+                        self.artifact_info = ensemble_data
+                        if 'model_weights' in ensemble_data and isinstance(ensemble_data['model_weights'], dict):
+                            self.model_weights = ensemble_data['model_weights']
+                        self.model_version = str(ensemble_data.get('timestamp', latest_ensemble.stem))
+                        self.latest_artifact_mtime = latest_ensemble.stat().st_mtime
+                        self.latest_artifact_name = latest_ensemble.name
+                        loaded_from_ensemble = True
+                        logger.info(f"Loaded ensemble: {latest_ensemble.name} with {len(self.models)} models")
+                except Exception as e:
+                    logger.error(f"Failed to load ensemble: {e}")
 
-            if matching_files:
-                # Sort by modification time and get the latest
-                latest_model = max(matching_files, key=lambda p: p.stat().st_mtime)
-                model_paths[model_type] = str(latest_model)
+        # Fallback: find individual model files
+        if not self.models:
+            model_types = ['random_forest', 'gradient_boosting', 'xgboost', 'lightgbm', 'catboost']
+            model_paths = {}
+
+            for model_type in model_types:
+                pattern = f"{model_type}_*.joblib"
+                matching_files = list(self.model_dir.glob(pattern))
+
+                if matching_files:
+                    latest_model = max(matching_files, key=lambda p: p.stat().st_mtime)
+                    model_paths[model_type] = str(latest_model)
+
+            if model_paths:
+                for model_name, path in model_paths.items():
+                    try:
+                        model = joblib.load(path)
+                        self.models[model_name] = model
+                        logger.info(f"Loaded model: {model_name} from {path}")
+                    except Exception as e:
+                        logger.error(f"Failed to load {model_name}: {e}")
 
         # Find latest preprocessor
         preprocessor_files = list(self.model_dir.glob("preprocessor_*.joblib"))
         preprocessor_path = None
         if preprocessor_files:
             preprocessor_path = str(max(preprocessor_files, key=lambda p: p.stat().st_mtime))
+            try:
+                preprocessor_data = joblib.load(preprocessor_path)
+                if isinstance(preprocessor_data, dict):
+                    self.preprocessor = preprocessor_data.get('preprocessor', preprocessor_data)
+                    self.feature_cols = preprocessor_data.get('feature_cols', None)
+                else:
+                    self.preprocessor = preprocessor_data
+                logger.info(f"Loaded preprocessor from {preprocessor_path}")
+            except Exception as e:
+                logger.error(f"Failed to load preprocessor: {e}")
 
-        if model_paths:
-            self.load_models(model_paths, preprocessor_path)
+        if self.models:
+            # If weights not provided by artifact, default to equal
+            if not self.model_weights:
+                self.set_equal_weights()
+            logger.info(f"Loaded {len(self.models)} models for ensemble")
         else:
             logger.warning("No trained models found in model directory")
 
@@ -96,6 +210,32 @@ class EnsembleManager:
         }
 
         logger.info(f"Set ensemble weights: {self.model_weights}")
+
+    def _get_latest_ensemble_file(self) -> Optional[Path]:
+        """Return newest ensemble artifact (tuned preferred)."""
+        tuned_files = list(self.model_dir.glob("ensemble_tuned_*.joblib"))
+        if tuned_files:
+            return max(tuned_files, key=lambda p: p.stat().st_mtime)
+
+        ensemble_files = list(self.model_dir.glob("ensemble_*.joblib"))
+        if ensemble_files:
+            return max(ensemble_files, key=lambda p: p.stat().st_mtime)
+
+        return None
+
+    def refresh_if_newer(self) -> None:
+        """Reload models if a newer ensemble artifact appears on disk."""
+        if not self.model_dir.exists():
+            return
+
+        latest_file = self._get_latest_ensemble_file()
+        if not latest_file:
+            return
+
+        latest_mtime = latest_file.stat().st_mtime
+        if self.latest_artifact_mtime is None or latest_mtime > self.latest_artifact_mtime:
+            logger.info(f"Detected newer ensemble artifact: {latest_file.name}; reloading")
+            self.load_latest_models()
 
     def set_equal_weights(self) -> None:
         """Set equal weights for all models."""
@@ -220,7 +360,9 @@ class EnsembleManager:
                 if features.ndim == 1:
                     prediction = model.predict(features.reshape(1, -1))[0]
                 else:
-                    prediction = model.predict(features)
+                    pred_result = model.predict(features)
+                    # Handle both scalar and array results
+                    prediction = float(pred_result[0]) if isinstance(pred_result, np.ndarray) else float(pred_result)
 
                 individual_predictions[model_name] = float(prediction)
                 predictions.append(float(prediction))

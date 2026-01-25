@@ -16,20 +16,23 @@ from app.config import settings
 from app.core.exceptions import AgriTechException
 from app.core.logging_config import setup_logging
 from app.core.utils import get_current_timestamp
+from app.services.scheduler import get_scheduler
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan manager."""
-    # Startup
-    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    logger.info(f"Environment: {settings.environment}")
-    logger.info(f"Debug mode: {settings.debug}")
+    
+    logger.info(f"{settings.app_name} v{settings.app_version} starting up")
+    logger.info(f"Running in {settings.environment} mode")
+    
+    scheduler = get_scheduler()
+    scheduler.start()
+    logger.info("Background data collection and training scheduler activated")
     
     yield
     
-    # Shutdown
-    logger.info(f"Shutting down {settings.app_name}")
+    scheduler.stop()
+    logger.info(f"{settings.app_name} shutting down gracefully")
 
 
 # Initialize FastAPI application
@@ -57,24 +60,18 @@ app.add_middleware(
 # Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    """Log all HTTP requests."""
+    
     start_time = time.time()
-    
-    # Process request first
     response = await call_next(request)
-    
-    # Calculate processing time
     process_time = time.time() - start_time
     
-    # Log after processing (non-blocking)
     try:
         logger.opt(lazy=True).info(
-            f"{request.method} {request.url.path} - {response.status_code} - {process_time:.3f}s"
+            f"{request.method} {request.url.path} completed in {process_time:.3f}s with status {response.status_code}"
         )
     except Exception:
-        pass  # Don't let logging errors break requests
+        pass
     
-    # Add custom headers
     response.headers["X-Process-Time"] = str(process_time)
     response.headers["X-API-Version"] = settings.app_version
     
@@ -84,14 +81,10 @@ async def log_requests(request: Request, call_next):
 # Exception handlers
 @app.exception_handler(AgriTechException)
 async def agritech_exception_handler(request: Request, exc: AgriTechException):
-    """Handle custom application exceptions."""
+    
     logger.error(
-        f"Application error: {exc.message}",
-        extra={
-            "status_code": exc.status_code,
-            "details": exc.details,
-            "url": str(request.url),
-        }
+        f"{exc.message} at {request.url.path}",
+        extra={"status": exc.status_code, "details": exc.details}
     )
     
     return JSONResponse(

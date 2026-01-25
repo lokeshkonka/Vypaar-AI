@@ -13,7 +13,6 @@ from app.config import settings
 
 
 class AgriculturalPredictor:
-    """High-level interface for agricultural price predictions."""
 
     def __init__(
         self,
@@ -21,37 +20,21 @@ class AgriculturalPredictor:
         ensemble: Optional[EnsembleManager] = None,
         metrics_calculator: Optional[ModelMetricsCalculator] = None,
     ):
-        """
-        Initialize predictor.
-
-        Args:
-            preprocessor: DataPreprocessor instance
-            ensemble: EnsembleManager instance
-            metrics_calculator: ModelMetricsCalculator instance
-        """
         self.preprocessor = preprocessor or DataPreprocessor()
         self.ensemble = ensemble or EnsembleManager()
         self.metrics_calculator = metrics_calculator or ModelMetricsCalculator()
         self.prediction_history: List[Dict[str, Any]] = []
 
-        logger.info("Initialized AgriculturalPredictor")
+        logger.info("Price prediction system ready with ensemble models")
 
     def load_models(self, model_paths: Dict[str, str], preprocessor_path: str = None) -> None:
-        """
-        Load pre-trained models.
-
-        Args:
-            model_paths: Dictionary of model paths
-            preprocessor_path: Path to preprocessor
-        """
+        
         self.ensemble.load_models(model_paths, preprocessor_path)
         if preprocessor_path:
             import joblib
-
             self.preprocessor = joblib.load(preprocessor_path)
 
     def load_latest_models(self) -> None:
-        """Load latest trained models."""
         self.ensemble.load_latest_models()
 
     def prepare_prediction_input(
@@ -60,17 +43,7 @@ class AgriculturalPredictor:
         date_col: str,
         categorical_cols: List[str] = None,
     ) -> np.ndarray:
-        """
-        Prepare input data for prediction.
-
-        Args:
-            data: DataFrame with prediction data
-            date_col: Date column name
-            categorical_cols: List of categorical columns
-
-        Returns:
-            Processed features
-        """
+        
         features = self.preprocessor.prepare_prediction_data(
             data, date_col, categorical_cols
         )
@@ -94,6 +67,8 @@ class AgriculturalPredictor:
             Dictionary with predictions and metrics
         """
         start_time = datetime.now()
+
+        self.ensemble.refresh_if_newer()
 
         # Ensemble prediction
         if include_confidence:
