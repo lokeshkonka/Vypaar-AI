@@ -7,14 +7,12 @@ import StockComponent from "../components/ProductAnalysis/StockComponent";
 import DemandGraph from "../components/ProductAnalysis/DemandGraph";
 import ImpactComponent from "../components/ProductAnalysis/ImpactComponent";
 import RecommendTable from "../components/ProductAnalysis/RecommendTable";
-import GraphBackgroundBottom from "../components/Background/graphBackgroundBottom";
 import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
 
 const ProductAnalysis = () => {
   return (
     <ContextAnalysisProvider>
       <Navbar />
-      <GraphBackgroundBottom/>
       <GraphBackgroundCorner/>
       <main
         className="

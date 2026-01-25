@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { motion,  useSpring } from "framer-motion";
+import { Link } from "react-router-dom";
 
 
 
@@ -107,7 +108,9 @@ const HeroSection: React.FC = () => {
             rounded-lg px-7 h-11
           "
         >
+          <Link to="/dashboard/selector">
           Get started
+          </Link>
           <ArrowRight className="size-5" />
         </button>
 

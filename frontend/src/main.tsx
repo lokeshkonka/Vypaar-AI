@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { dark } from '@clerk/themes'
 import { ThemeProvider } from './context/ThemeContext.tsx'
+import NotifyDummy from './data/NotifyDummy.tsx'
 
 
 // Import your Publishable Key
@@ -19,7 +20,10 @@ import { ThemeProvider } from './context/ThemeContext.tsx'
       <ThemeProvider>
       <ClerkProvider afterSignOutUrl="/auth" signInForceRedirectUrl="/dashboard/selector" publishableKey={PUBLISHABLE_KEY} appearance={{
         theme: dark,}}>
+        <NotifyDummy>
         <App />
+
+        </NotifyDummy>
       </ClerkProvider>
        </ThemeProvider>
     </StrictMode>,

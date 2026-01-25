@@ -17,7 +17,6 @@ export function ContextAnalysisProvider({
 }: {
   children: React.ReactNode;
 }) {
-  // 🔒 BACKEND LOGIC (INTENTIONALLY COMMENTED)
   /*
   const fetchProductAnalysis = async () => {
     const res = await fetch(`${BACKEND_URL}/api/product-analysis`);

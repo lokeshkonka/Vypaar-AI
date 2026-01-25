@@ -1,42 +1,53 @@
-import { FiBarChart2 } from "react-icons/fi";
+// src/components/product-analysis/StockComponent.tsx
+import {
+  FiTrendingUp,
+  FiPackage,
+  FiAlertTriangle,
+  FiAlertCircle,
+} from "react-icons/fi";
 import { useContextAnalysis } from "../../context/ContextAnalysis";
-import TableComponent from "./ui/TableComponent";
+import MetricCard from "./ui/MetricCard";
 
 export default function StockComponent() {
   const { stockMetrics } = useContextAnalysis();
 
-  const data = [
-    {
-      metric: "Predicted Demand",
-      value: `${stockMetrics.predictedDemand} Kg`,
-    },
-    {
-      metric: "Stock Needed",
-      value: `${stockMetrics.stockNeeded} Kg`,
-    },
-    {
-      metric: "Overstock Risk",
-      value: `${stockMetrics.overstockRisk}%`,
-    },
-    {
-      metric: "Understock Risk",
-      value: `${stockMetrics.understockRisk}%`,
-    },
-  ];
-
   return (
-    <TableComponent
-      title="Stock Metrics"
-      icon={<FiBarChart2 size={16} />}
-      columns={[
-        { key: "metric", label: "Metric" },
-        {
-          key: "value",
-          label: "Value",
-          align: "right",
-        },
-      ]}
-      data={data}
-    />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Predicted Demand */}
+      <MetricCard
+        title="Predicted Demand"
+        value={stockMetrics.predictedDemand}
+        unit="kg"
+        subtitle="Forecasted demand"
+        icon={<FiTrendingUp size={18} />}
+      />
+
+      {/* Stock Needed */}
+      <MetricCard
+        title="Stock Needed"
+        value={stockMetrics.stockNeeded}
+        unit="kg"
+        subtitle="Recommended inventory"
+        icon={<FiPackage size={18} />}
+      />
+
+      {/* Overstock Risk */}
+      <MetricCard
+        title="Overstock Risk"
+        value={stockMetrics.overstockRisk}
+        unit="%"
+        subtitle="Excess inventory risk"
+        icon={<FiAlertTriangle size={18} />}
+      />
+
+      {/* Understock Risk */}
+      <MetricCard
+        title="Understock Risk"
+        value={stockMetrics.understockRisk}
+        unit="%"
+        subtitle="Stockout probability"
+        icon={<FiAlertCircle size={18} />}
+      />
+    </div>
   );
 }

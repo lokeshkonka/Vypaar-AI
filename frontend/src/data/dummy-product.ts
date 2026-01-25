@@ -1,5 +1,3 @@
-// src/data/dummy.ts
-
 export const selectorData = {
   market: "Andheri",
   product: "Tomatoes",
@@ -22,9 +20,34 @@ export const demandGraphData = [
 ];
 
 export const impactData = {
-  festival: "Shivratri",
-  festivalImpact: "Expected ++",
-  weather: "Rains expected in next days",
+  festival: [
+    {
+      title: "Diwali",
+      subtitle: "In 5 days",
+      delta: "+30%",
+      positive: true,
+    },
+    {
+      title: "Navratri",
+      subtitle: "In 12 days",
+      delta: "+15%",
+      positive: false,
+    },
+  ],
+  weather: [
+    {
+      title: "Rain Expected",
+      subtitle: "Tomorrow",
+      delta: "-5%",
+      positive: true,
+    },
+    {
+      title: "Heat Wave",
+      subtitle: "In 3 days",
+      delta: "-8%",
+      positive: false,
+    },
+  ],
 };
 
 export const recommendationTable = [
@@ -34,5 +57,19 @@ export const recommendationTable = [
     suggested: 540,
     buffer: 40,
     risk: "Low",
+  },
+    {
+    product: "Potatoes",
+    current: 900,
+    suggested: 590,
+    buffer: 48,
+    risk: "High",
+  },
+    {
+    product: "Carratoes",
+    current: 900,
+    suggested: 390,
+    buffer: 89,
+    risk: "Medium",
   },
 ];

@@ -1,5 +1,3 @@
-// src/context/types.ts
-
 export interface SelectorData {
   market: string;
   product: string;
@@ -13,20 +11,22 @@ export interface StockMetrics {
   understockRisk: number;
 }
 
-/**
- * actual = historical sales
- * forecast = predicted demand
- */
 export interface DemandGraphPoint {
   day: string;
   actual: number;
   forecast: number;
 }
 
+export interface ImpactItem {
+  title: string;
+  subtitle?: string;
+  delta?: string;
+  positive?: boolean;
+}
+
 export interface ImpactData {
-  festival: string;
-  festivalImpact: string;
-  weather: string;
+  festival: ImpactItem[];
+  weather: ImpactItem[];
 }
 
 export interface RecommendationRow {

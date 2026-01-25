@@ -22,6 +22,8 @@ import {
 
 import NavLoader from "./NavLoader";
 import { useTheme } from "../../../context/ThemeContext";
+import { useNotify } from "../../../context/NotifyContext";
+import NotificationComponent from "./NotificationComponent";
 
 /* =========================
    NAVBAR
@@ -29,9 +31,12 @@ import { useTheme } from "../../../context/ThemeContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [showNotif, setShowNotif] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { unreadCount } = useNotify();
 
   const isActive = (path: string) =>
     location.pathname.startsWith(path);
@@ -51,7 +56,7 @@ export default function Navbar() {
               <FiMenu size={22} />
             </button>
 
-            <Link to="/home" className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <img src="/icon.png" className="h-8 w-8" />
               <span className="font-semibold text-gray-900 dark:text-white">
                 Vypaar AI
@@ -85,21 +90,30 @@ export default function Navbar() {
           </nav>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="rounded-md p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition"
+              className="cursor-pointer rounded-2xl translate-x-3 p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
 
             {/* Notifications */}
-            <button className="relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition">
-              <FiBell size={20} />
-              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400" />
-            </button>
+            <div className=" px-3 translate-y-1 ">
+              <button
+                onClick={() => setShowNotif(v => !v)}
+                className="cursor-pointer  relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+              >
+                <FiBell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400" />
+                )}
+              </button>
+
+              {showNotif && <NotificationComponent />}
+            </div>
 
             {/* User */}
             <SignedIn>
@@ -139,7 +153,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setOpen(false)}
-              className="rounded-md p-1 text-gray-500 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
+              className="rounded-md p-1 cursor-pointer text-gray-500 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
             >
               <FiChevronLeft size={22} />
             </button>
@@ -201,18 +215,18 @@ export default function Navbar() {
           {/* MOBILE LINKS */}
           <div className="md:hidden space-y-2">
             <NavLink
-              to="/blog"
-              onClick={() => setOpen(false)}
-              className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
-            >
-              Blog
-            </NavLink>
-            <NavLink
               to="/pricing"
               onClick={() => setOpen(false)}
               className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
             >
               Pricing
+            </NavLink>
+            <NavLink
+              to="/blog"
+              onClick={() => setOpen(false)}
+              className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+            >
+              Blog
             </NavLink>
           </div>
 
@@ -246,7 +260,7 @@ function SideItem({
     <button
       onClick={onClick}
       className={`
-        flex w-full items-center gap-3 rounded-lg px-4 py-2.5 transition
+        flex w-full items-center gap-3 rounded-lg px-4 py-2.5 transition cursor-pointer
         ${
           active
             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
