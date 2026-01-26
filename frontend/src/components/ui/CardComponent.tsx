@@ -40,7 +40,7 @@ export default function CardComponent({
 
           <h3
             className="
-              text-sm sm:text-base
+              text-lg sm:text-base
               font-semibold
               tracking-wide
               uppercase

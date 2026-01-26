@@ -1,5 +1,5 @@
 import { FiCalendar, FiCloudRain } from "react-icons/fi";
-import ImpactListCard from "./ui/ImpactCard";
+import ImpactListCard from "../ui/ImpactCard";
 import { useContextAnalysis } from "../../context/ContextAnalysis";
 
 export default function ImpactComponent() {

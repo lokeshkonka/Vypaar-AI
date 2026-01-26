@@ -2,7 +2,7 @@
 
 import { FiMapPin, FiBox, FiCalendar } from "react-icons/fi";
 import { useContextAnalysis } from "../../context/ContextAnalysis";
-import CardComponent from "./ui/CardComponent";
+import CardComponent from "../ui/CardComponent";
 
 const selectorIcons: Record<string, React.ReactNode> = {
   market: <FiMapPin size={16} />,

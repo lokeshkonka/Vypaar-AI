@@ -10,6 +10,8 @@ interface TableComponentProps<T> {
   icon?: React.ReactNode;
   columns: TableColumn<T>[];
   data: T[];
+  loading?: boolean;
+  skeletonRows?: number;
 }
 
 export default function TableComponent<T>({
@@ -17,6 +19,8 @@ export default function TableComponent<T>({
   icon,
   columns,
   data,
+  loading = false,
+  skeletonRows = 4,
 }: TableComponentProps<T>) {
   return (
     <div
@@ -49,12 +53,13 @@ export default function TableComponent<T>({
         </div>
       )}
 
-      {/* Table wrapper with outer border */}
+      {/* Table wrapper */}
       <div
         className="overflow-x-auto"
         style={{ border: "1px solid var(--border)" }}
       >
         <table className="w-full border-collapse">
+          {/* HEADER */}
           <thead>
             <tr>
               {columns.map((col, index) => (
@@ -84,41 +89,66 @@ export default function TableComponent<T>({
             </tr>
           </thead>
 
+          {/* BODY */}
           <tbody>
-            {data.map((row, i) => (
-              <tr
-                key={i}
-                className="
-                  transition-colors
-                  hover:bg-[rgba(var(--glass-white),0.18)]
-                "
-              >
-                {columns.map((col, index) => (
-                  <td
-                    key={String(col.key)}
+            {loading
+              ? Array.from({ length: skeletonRows }).map((_, i) => (
+                  <tr key={`skeleton-${i}`}>
+                    {columns.map((_, j) => (
+                      <td
+                        key={j}
+                        className="px-3 py-3.5 border-b"
+                        style={{
+                          borderColor: "var(--border)",
+                        }}
+                      >
+                        <div
+                          className="
+                            h-4 w-3/4
+                            rounded
+                            bg-gray-200/70
+                            dark:bg-white/10
+                            animate-pulse
+                          "
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              : data.map((row, i) => (
+                  <tr
+                    key={i}
                     className="
-                      px-3 py-3.5
-                      text-base
-                      font-medium
-                      text-main
-                      border-b
+                      transition-colors
+                      hover:bg-[rgba(var(--glass-white),0.18)]
                     "
-                    style={{
-                      borderColor: "var(--border)",
-                      textAlign: col.align ?? "left",
-                      borderRight:
-                        index !== columns.length - 1
-                          ? "1px solid var(--border)"
-                          : undefined,
-                    }}
                   >
-                    {col.render
-                      ? col.render(row[col.key], row)
-                      : String(row[col.key])}
-                  </td>
+                    {columns.map((col, index) => (
+                      <td
+                        key={String(col.key)}
+                        className="
+                          px-3 py-3.5
+                          text-base
+                          font-medium
+                          text-main
+                          border-b
+                        "
+                        style={{
+                          borderColor: "var(--border)",
+                          textAlign: col.align ?? "left",
+                          borderRight:
+                            index !== columns.length - 1
+                              ? "1px solid var(--border)"
+                              : undefined,
+                        }}
+                      >
+                        {col.render
+                          ? col.render(row[col.key], row)
+                          : String(row[col.key])}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
           </tbody>
         </table>
       </div>

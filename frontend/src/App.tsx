@@ -6,6 +6,10 @@ import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
 import ProductAnalysis from "./pages/ProductAnalysis";
 import ComingSoon from "./pages/ComingSoon";
+import Inventory from "./pages/Inventory";
+import Insights from "./pages/Insights";
+import ModelAccuracy from "./pages/ModelAccuracy";
+import Docs from "./pages/Docs";
 
 function App() {
   return (
@@ -31,11 +35,14 @@ function App() {
         />
         <Route path="/" element={<Landing />} />
         <Route path="/dashboard/product-analysis" element={<ProductAnalysis />} />
-        <Route path="/dashboard/inventory" element={<ComingSoon />} />
-        <Route path="/dashboard/insights" element={<ComingSoon />} />
-        <Route path="/dashboard/model-accuracy" element={<ComingSoon />} />
+        <Route path="/dashboard/inventory" element={<Inventory />} />
+        <Route path="/dashboard/insights" element={<Insights />} />
+        <Route path="/dashboard/model-accuracy" element={<ModelAccuracy />} />
         <Route path="/blog" element={<ComingSoon />} />
         <Route path="/pricing" element={<ComingSoon />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/about" element={<ComingSoon />} />
+        <Route path="/contact" element={<ComingSoon />} />
 
       </Routes>
 

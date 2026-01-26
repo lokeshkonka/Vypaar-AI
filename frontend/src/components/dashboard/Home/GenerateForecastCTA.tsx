@@ -67,7 +67,7 @@ export default function ForecastRangeAndGenerate() {
               disabled={isLoading}
               onClick={() => setSelection({ forecastRange: r.value })}
               className={`
-                min-h-[56px] sm:min-h-[60px]
+                min-h-14 sm:min-h-15
                 rounded-xl border
                 px-4 py-3
                 flex flex-col items-center justify-center

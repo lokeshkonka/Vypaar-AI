@@ -6,7 +6,7 @@ import {
   FiAlertCircle,
 } from "react-icons/fi";
 import { useContextAnalysis } from "../../context/ContextAnalysis";
-import MetricCard from "./ui/MetricCard";
+import MetricCard from "../ui/MetricCard";
 
 export default function StockComponent() {
   const { stockMetrics } = useContextAnalysis();

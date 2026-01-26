@@ -1,5 +1,5 @@
 import { useContextAnalysis } from "../../context/ContextAnalysis";
-import GraphComponent from "./ui//GraphComponent";
+import GraphComponent from "../ui/GraphComponent";
 
 export default function DemandGraph() {
   const { demandGraphData } = useContextAnalysis();

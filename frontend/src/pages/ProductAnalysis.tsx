@@ -15,14 +15,15 @@ const ProductAnalysis = () => {
       <Navbar />
       <GraphBackgroundCorner/>
       <main
-        className="
-          mx-auto
-          px-4
-          pt-20     
-          space-y-8
-          max-w-6xl
-        "
-      >
+        className="mx-auto px-4 pt-20 space-y-8 max-w-6xl">
+          <header>
+            <h1 className="text-3xl font-semibold">
+              Product Analysis
+            </h1>
+            <p className="text-soft">
+              In-depth insights and recommendations for your products
+            </p>
+          </header>
         <SelectorComponent />
         <StockComponent />
         <DemandGraph />

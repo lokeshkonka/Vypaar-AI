@@ -1,5 +1,5 @@
 import { Clock, Sparkles } from "lucide-react";
-import Navbar from "../components/dashboard/Navbar/Navbar";
+import Navbar from "../components/landing/Navbar";
 import DashFooter from "../components/dashboard/Home/dashFooter";
 
 import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
