@@ -99,6 +99,7 @@ const HeroSection: React.FC = () => {
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 320, damping: 70 }}
       >
+        <Link to="/dashboard/selector">
         <button
           className="
             flex items-center gap-2
@@ -106,13 +107,13 @@ const HeroSection: React.FC = () => {
             transition text-white
             active:scale-95
             rounded-lg px-7 h-11
+            cursor-pointer
           "
         >
-          <Link to="/dashboard/selector">
           Get started
-          </Link>
           <ArrowRight className="size-5" />
         </button>
+          </Link>
 
         <button
           className="

@@ -9,7 +9,7 @@ import OurLatestCreation from "../components/landing/OurLatestCreation";
 
 const Landing: React.FC = () => {
   return (
-    <div className=" bg-black ">
+    <div className=" bg-black overflow-x-hidden">
         <Navbar />
         <LenisScroll />
         
