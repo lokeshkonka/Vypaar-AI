@@ -1,18 +1,28 @@
 import CardComponent from "../ui/CardComponent";
 import { useInventory } from "../../context/InventoryContext";
-import { markets, products } from "../../data/dummyData";
+import { useForecast } from "../../context/ForecastContext";
 
 export default function InventoryFilters() {
-  const { filters, setFilters, updateStock, isUpdating } = useInventory();
+  const { filters, setFilters, updateStock, isUpdating } =
+    useInventory();
+
+  const { markets, categories, products } = useForecast();
+
+  const canUpdate =
+    Boolean(filters.market || filters.category || filters.product) &&
+    !isUpdating;
 
   return (
     <CardComponent title="Filter Inventory">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Market */}
         <select
-          className="border px-3 py-2 text-sm"
+          className="border px-3 py-2 text-sm bg-transparent"
           value={filters.market ?? ""}
           onChange={(e) =>
-            setFilters({ market: e.target.value || undefined })
+            setFilters({
+              market: e.target.value || undefined,
+            })
           }
         >
           <option value="">All Markets</option>
@@ -23,45 +33,67 @@ export default function InventoryFilters() {
           ))}
         </select>
 
+        {/* Category */}
         <select
-          className="border px-3 py-2 text-sm"
+          className="border px-3 py-2 text-sm bg-transparent"
           value={filters.category ?? ""}
           onChange={(e) =>
-            setFilters({ category: e.target.value || undefined })
+            setFilters({
+              category:
+                (e.target.value as typeof filters.category) ||
+                undefined,
+              product: undefined,
+            })
           }
         >
           <option value="">All Categories</option>
-          {[...new Set(products.map((p) => p.category))].map((c) => (
+          {categories.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
           ))}
         </select>
 
+        {/* Product */}
         <select
-          className="border px-3 py-2 text-sm"
+          className="border px-3 py-2 text-sm bg-transparent"
           value={filters.product ?? ""}
+          disabled={!filters.category}
           onChange={(e) =>
-            setFilters({ product: e.target.value || undefined })
+            setFilters({
+              product: e.target.value || undefined,
+            })
           }
         >
           <option value="">All Products</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.name}>
-              {p.name}
-            </option>
-          ))}
+          {products
+            .filter(
+              (p) =>
+                !filters.category ||
+                p.category === filters.category
+            )
+            .map((p) => (
+              <option key={p.id} value={p.name}>
+                {p.name}
+              </option>
+            ))}
         </select>
       </div>
 
+      {/* Update Button */}
       <button
         onClick={updateStock}
-        disabled={isUpdating}
+        disabled={!canUpdate}
         className="
-          mt-4 w-full
-          px-4 py-3 text-sm font-medium
-          bg-emerald-600 dark:text-white text-black hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]
+          mt-4 w-full px-4 py-3
+          text-sm font-semibold
+          bg-emerald-600 text-white
+          hover:bg-emerald-700
+          hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)]
+          active:scale-[0.98]
           disabled:opacity-50
+          disabled:cursor-not-allowed
+          transition
         "
       >
         {isUpdating ? "Updating Stock…" : "Update Stock"}

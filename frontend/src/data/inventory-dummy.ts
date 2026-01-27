@@ -1,4 +1,4 @@
-import { type ProductCategory } from "./dummyData";
+import { type ProductCategory } from "./forecast-dummy";
 
 export interface InventoryRow {
   market: string;

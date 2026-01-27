@@ -1,8 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React from "react";
+
+/* =========================
+   TYPES
+   ========================= */
+
+/**
+ * Allows:
+ * - real keys of T
+ * - virtual/computed keys like "__buffer", "__delta", etc.
+ */
+type TableColumnKey<T> = keyof T | `__${string}`;
+
 interface TableColumn<T> {
-  key: keyof T;
+  key: TableColumnKey<T>;
   label: string;
   align?: "left" | "right" | "center";
-  render?: (value: T[keyof T], row: T) => React.ReactNode;
+  render?: (
+    value: T[keyof T] | undefined,
+    row: T
+  ) => React.ReactNode;
 }
 
 interface TableComponentProps<T> {
@@ -13,6 +30,10 @@ interface TableComponentProps<T> {
   loading?: boolean;
   skeletonRows?: number;
 }
+
+/* =========================
+   COMPONENT
+   ========================= */
 
 export default function TableComponent<T>({
   title,
@@ -96,7 +117,7 @@ export default function TableComponent<T>({
                   <tr key={`skeleton-${i}`}>
                     {columns.map((_, j) => (
                       <td
-                        key={j}
+                        key={`skeleton-${i}-${j}`}
                         className="px-3 py-3.5 border-b"
                         style={{
                           borderColor: "var(--border)",
@@ -123,30 +144,38 @@ export default function TableComponent<T>({
                       hover:bg-[rgba(var(--glass-white),0.18)]
                     "
                   >
-                    {columns.map((col, index) => (
-                      <td
-                        key={String(col.key)}
-                        className="
-                          px-3 py-3.5
-                          text-base
-                          font-medium
-                          text-main
-                          border-b
-                        "
-                        style={{
-                          borderColor: "var(--border)",
-                          textAlign: col.align ?? "left",
-                          borderRight:
-                            index !== columns.length - 1
-                              ? "1px solid var(--border)"
-                              : undefined,
-                        }}
-                      >
-                        {col.render
-                          ? col.render(row[col.key], row)
-                          : String(row[col.key])}
-                      </td>
-                    ))}
+                    {columns.map((col, index) => {
+                      const value =
+                        typeof col.key === "string" &&
+                        col.key.startsWith("__")
+                          ? undefined
+                          : (row as any)[col.key];
+
+                      return (
+                        <td
+                          key={String(col.key)}
+                          className="
+                            px-3 py-3.5
+                            text-base
+                            font-medium
+                            text-main
+                            border-b
+                          "
+                          style={{
+                            borderColor: "var(--border)",
+                            textAlign: col.align ?? "left",
+                            borderRight:
+                              index !== columns.length - 1
+                                ? "1px solid var(--border)"
+                                : undefined,
+                          }}
+                        >
+                          {col.render
+                            ? col.render(value, row)
+                            : String(value ?? "")}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
           </tbody>

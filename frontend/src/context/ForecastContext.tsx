@@ -7,6 +7,12 @@ import {
   type ReactNode,
 } from "react";
 
+import {
+  forecastDummy,
+  type ProductCategory,
+  type ForecastRangeValue,
+} from "../data/forecast-dummy";
+
 /* =========================
    TYPES
    ========================= */
@@ -17,15 +23,24 @@ export type ForecastSelection = {
   marketType?: string;
   market?: string;
 
-  category?: string;
+  category?: ProductCategory;
   product?: string;
 
-  forecastRange?: "7" | "14";
+  forecastRange?: ForecastRangeValue;
 };
 
 type ForecastContextType = {
+  /* Selection */
   selection: ForecastSelection;
-  setSelection: (data: ForecastSelection) => void;
+  setSelection: (data: Partial<ForecastSelection>) => void;
+
+  /* Reference data (from backend/dummy) */
+  markets: typeof forecastDummy.markets;
+  products: typeof forecastDummy.products;
+  categories: ProductCategory[];
+  forecastRanges: typeof forecastDummy.forecastRanges;
+
+  /* Actions */
   generateForecast: () => Promise<void>;
   isSelectionComplete: boolean;
 };
@@ -40,20 +55,22 @@ const ForecastContext = createContext<ForecastContextType | null>(null);
    PROVIDER
    ========================= */
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
 export function ForecastProvider({ children }: { children: ReactNode }) {
-  const [selection, setSelectionState] = useState<ForecastSelection>({});
+  const [selection, setSelectionState] =
+    useState<ForecastSelection>({});
 
-  /* -------- selection updater -------- */
-  const setSelection = (data: ForecastSelection) => {
-    setSelectionState((prev) => ({
-      ...prev,
-      ...data,
-    }));
+  const setSelection = (data: Partial<ForecastSelection>) => {
+    setSelectionState((prev) => ({ ...prev, ...data }));
   };
 
-  /* -------- completion guard -------- */
+  const categories = useMemo(() => {
+    return Array.from(
+      new Set(
+        forecastDummy.products.map((p) => p.category)
+      )
+    );
+  }, []);
+
   const isSelectionComplete = useMemo(() => {
     return Boolean(
       selection.state &&
@@ -66,44 +83,16 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     );
   }, [selection]);
 
-  /* -------- backend integration -------- */
+  /* -------- backend integration (commented) -------- */
   const generateForecast = async () => {
-    if (!isSelectionComplete) {
-      throw new Error("Forecast selection incomplete");
-    }
-
-    const payload = {
-      state: selection.state!,
-      city: selection.city!,
-      marketType: selection.marketType!,
-      market: selection.market!,
-      category: selection.category!,
-      product: selection.product!,
-      forecastRange: Number(selection.forecastRange),
-    };
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/forecast`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const message = await res.text();
-        throw new Error(message || "Forecast API failed");
-      }
-
-      const data = await res.json();
-
-      // For now just log — later this can be stored in context
-      console.log("Forecast response:", data);
-    } catch (error) {
-      console.error("Forecast generation error:", error);
-      throw error;
-    }
+    /*
+    await fetch(`${BACKEND_URL}/api/forecast`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(selection),
+    });
+    */
+    console.log("Forecast payload:", selection);
   };
 
   return (
@@ -111,6 +100,12 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
       value={{
         selection,
         setSelection,
+
+        markets: forecastDummy.markets,
+        products: forecastDummy.products,
+        categories,
+        forecastRanges: forecastDummy.forecastRanges,
+
         generateForecast,
         isSelectionComplete,
       }}
@@ -127,7 +122,9 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
 export function useForecast() {
   const ctx = useContext(ForecastContext);
   if (!ctx) {
-    throw new Error("useForecast must be used inside ForecastProvider");
+    throw new Error(
+      "useForecast must be used inside ForecastProvider"
+    );
   }
   return ctx;
 }

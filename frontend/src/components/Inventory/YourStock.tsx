@@ -56,7 +56,7 @@ export default function YourStock() {
           },
 
           {
-            key: "suggested",
+            key: "__buffer",
             label: "Buffer",
             align: "right",
             render: (_, row) => {

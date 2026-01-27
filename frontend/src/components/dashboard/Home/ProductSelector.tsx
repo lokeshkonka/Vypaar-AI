@@ -1,25 +1,21 @@
 import { Package } from "lucide-react";
-import { products } from "../../../data/dummyData";
 import { useForecast } from "../../../context/ForecastContext";
+import type { ProductCategory } from "../../../data/forecast-dummy";
 
 const inputBase =
   "w-full h-12 rounded-xl px-4 text-sm transition-colors " +
-  // Light mode
   "bg-black border border-gray-300 " +
-  "hover:border-gray-400 " +
-  // Dark mode
-  "dark:bg-white/5 dark:border-white/10  " +
-  // Focus
+  "dark:bg-white/5 dark:border-white/10 " +
   "focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 " +
-  // Disabled
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
 export default function ProductSelector() {
-  const { selection, setSelection } = useForecast();
-
-  const categories = Array.from(
-    new Set(products.map((p) => p.category))
-  );
+  const {
+    selection,
+    setSelection,
+    products,
+    categories,
+  } = useForecast();
 
   const filteredProducts = products.filter(
     (p) => p.category === selection.category
@@ -30,18 +26,16 @@ export default function ProductSelector() {
       {/* Header */}
       <div className="flex items-center gap-2">
         <Package className="w-5 h-5 text-emerald-600" />
-        <h3 className="font-medium ">
-          Product Configuration
-        </h3>
+        <h3 className="font-medium">Product Configuration</h3>
       </div>
 
       {/* Category */}
       <select
         className={inputBase}
-        value={selection.category || ""}
+        value={selection.category ?? ""}
         onChange={(e) =>
           setSelection({
-            category: e.target.value,
+            category: e.target.value as ProductCategory,
             product: undefined,
           })
         }
@@ -57,8 +51,8 @@ export default function ProductSelector() {
       {/* Product */}
       <select
         className={inputBase}
-        value={selection.product || ""}
         disabled={!selection.category}
+        value={selection.product ?? ""}
         onChange={(e) =>
           setSelection({
             product: e.target.value,

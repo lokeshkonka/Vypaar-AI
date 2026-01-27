@@ -10,33 +10,17 @@ export default function ForecastRangeAndGenerate() {
     setSelection,
     generateForecast,
     isSelectionComplete,
+    forecastRanges,
   } = useForecast();
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const ranges: Array<{
-    label: string;
-    value: "7" | "14";
-    hint: string;
-  }> = [
-    {
-      label: "7 Days",
-      value: "7",
-      hint: "Short-term demand outlook",
-    },
-    {
-      label: "14 Days",
-      value: "14",
-      hint: "Festival & trend-based forecast",
-    },
-  ];
 
   const handleGenerate = async () => {
     if (!isSelectionComplete || isLoading) return;
 
     try {
       setIsLoading(true);
-      await generateForecast(); // waits till backend responds
+      await generateForecast();
       navigate("/product-analysis");
     } catch (err) {
       console.error("Forecast generation failed:", err);
@@ -55,17 +39,19 @@ export default function ForecastRangeAndGenerate() {
         </h3>
       </div>
 
-      {/* Range buttons */}
+      {/* Forecast Ranges */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        {ranges.map((r) => {
-          const active = selection.forecastRange === r.value;
+        {forecastRanges.map((range) => {
+          const active = selection.forecastRange === range.value;
 
           return (
             <button
-              key={r.value}
+              key={range.value}
               type="button"
               disabled={isLoading}
-              onClick={() => setSelection({ forecastRange: r.value })}
+              onClick={() =>
+                setSelection({ forecastRange: range.value })
+              }
               className={`
                 min-h-14 sm:min-h-15
                 rounded-xl border
@@ -82,14 +68,7 @@ export default function ForecastRangeAndGenerate() {
                 }
               `}
             >
-              <span>{r.label}</span>
-              <span
-                className={`mt-0.5 text-xs ${
-                  active ? "text-emerald-100" : "text-gray-500"
-                }`}
-              >
-                {r.hint}
-              </span>
+              <span>{range.label}</span>
             </button>
           );
         })}
@@ -109,12 +88,12 @@ export default function ForecastRangeAndGenerate() {
 
           ${
             isSelectionComplete && !isLoading
-              ? "bg-emerald-600 dark:text-white text-black hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]"
-              : "bg-gray-300 dark:text-black cursor-not-allowed"
+              ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]"
+              : "bg-gray-300 text-black cursor-not-allowed"
           }
         `}
       >
-        {isLoading ? "Generating..." : "Generate Forecast"}
+        {isLoading ? "Generating Forecast…" : "Generate Forecast"}
         {!isLoading && <ArrowRight size={16} />}
       </button>
     </div>
