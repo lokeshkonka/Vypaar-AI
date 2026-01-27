@@ -492,7 +492,7 @@ class AgmarknetScraper:
         
         return data
 
-    def scrape_all(self, days_back: int = 30) -> dict[str, Any]:
+    def scrape_all(self, days_back: int = 30, historical_days: Optional[int] = None) -> dict[str, Any]:
         
         logger.info(f"Beginning comprehensive data collection for the past {days_back} days")
         
@@ -502,6 +502,7 @@ class AgmarknetScraper:
             commodities = self.scrape_commodities()
             markets = self.scrape_markets()
             prices = self.scrape_market_prices(days_back=days_back)
+            historical_prices = self.scrape_historical_data(days_back=historical_days or max(days_back, 60))
             
             end_time = get_current_timestamp()
             duration = (end_time - start_time).total_seconds()
@@ -514,11 +515,13 @@ class AgmarknetScraper:
                     "commodities": len(commodities),
                     "markets": len(markets),
                     "prices": len(prices),
+                    "historical_prices": len(historical_prices),
                 },
                 "data": {
                     "commodities": commodities,
                     "markets": markets,
-                    "prices": prices[:100],
+                    "prices": prices,
+                    "historical_prices": historical_prices,
                 }
             }
             

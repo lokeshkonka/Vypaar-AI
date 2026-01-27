@@ -1,19 +1,81 @@
 """Pytest configuration and shared fixtures."""
 
 import asyncio
+import os
 import pytest
 from typing import AsyncGenerator, Generator
 from pathlib import Path
 
-from fastapi.testclient import TestClient
+# Set testing environment variable before importing app
+os.environ["TESTING"] = "1"
+
+from starlette.testclient import TestClient as StarletteTestClient
+
+
+def create_test_client(app):
+    """Create TestClient compatible wrapper."""
+    import httpx
+    
+    class SyncTestClientWrapper:
+        """Wrapper to make AsyncClient work synchronously in sync tests."""
+        def __init__(self, async_client):
+            self._async_client = async_client
+            
+        def get(self, url, **kwargs):
+            """Make sync GET request."""
+            import asyncio
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self._async_client.get(url, **kwargs))
+            
+        def post(self, url, **kwargs):
+            """Make sync POST request."""
+            import asyncio
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self._async_client.post(url, **kwargs))
+            
+        def put(self, url, **kwargs):
+            """Make sync PUT request."""
+            import asyncio
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self._async_client.put(url, **kwargs))
+            
+        def delete(self, url, **kwargs):
+            """Make sync DELETE request."""
+            import asyncio
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self._async_client.delete(url, **kwargs))
+    
+    # Use httpx AsyncClient with ASGITransport
+    transport = httpx.ASGITransport(app=app)
+    async_client = httpx.AsyncClient(transport=transport, base_url="http://testserver")
+    return SyncTestClientWrapper(async_client)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-from app.main import app
-from app.database.models import Base
-from app.database.connection import get_async_session
-from app.config import settings
+
+# Lazy load app to avoid import hangs
+_app = None
+
+def get_app():
+    global _app
+    if _app is None:
+        try:
+            from app.main import app
+            _app = app
+        except ImportError as e:
+            print(f"Warning: Failed to import app: {e}")
+            raise
+    return _app
+
+try:
+    from app.database.models import Base
+    from app.database.connection import get_async_session
+    from app.config import settings
+except ImportError:
+    Base = None
+    get_async_session = None
+    settings = None
 
 
 # Test database URL
@@ -79,11 +141,16 @@ async def test_async_db_session(test_async_db_engine) -> AsyncGenerator[AsyncSes
 @pytest.fixture(scope="function")
 def test_client(test_async_db_session):
     """Create test client with dependency overrides."""
+    app = get_app()  # Lazy load app here
+    
     async def override_get_db():
         yield test_async_db_session
     
-    app.dependency_overrides[get_async_session] = override_get_db
-    client = TestClient(app)
+    if get_async_session:
+        app.dependency_overrides[get_async_session] = override_get_db
+    
+    # Use helper function to create client
+    client = create_test_client(app)
     yield client
     app.dependency_overrides.clear()
 

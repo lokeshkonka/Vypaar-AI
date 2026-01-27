@@ -15,8 +15,13 @@ from app.config import settings
 from app.scraper.agmarknet_scraper import AgmarknetScraper
 from app.ml.trainer import ModelTrainer
 from app.ml.preprocessor import DataPreprocessor
+from app.core.utils import get_current_timestamp
 from app.database.connection import get_async_session
-from app.database.repositories import MarketPriceRepository
+from app.database.repositories import (
+    CommodityRepository,
+    MarketPriceRepository,
+    MarketRepository,
+)
 
 
 class DataScheduler:
@@ -32,7 +37,7 @@ class DataScheduler:
         try:
             logger.info("Starting daily market data collection")
             
-            result = self.scraper.scrape_all(days_back=7)
+            result = self.scraper.scrape_all(days_back=30, historical_days=120)
             
             if result.get("status") == "success":
                 counts = result.get("counts", {})
@@ -53,24 +58,24 @@ class DataScheduler:
             async for session in get_async_session():
                 repo = MarketPriceRepository(session)
                 
-                recent_data = await repo.get_recent_prices(days=90)
+                recent_data = await repo.get_recent_prices(days=180)
                 
                 if len(recent_data) < 1000:
                     logger.warning(f"Insufficient training data available: {len(recent_data)} records")
                     return
                 
-                logger.info(f"Training with {len(recent_data)} records from the past 90 days")
+                logger.info(f"Training with {len(recent_data)} records from the past 180 days")
                 
                 preprocessor = DataPreprocessor()
                 trainer = ModelTrainer(preprocessor)
                 
                 import pandas as pd
                 df = pd.DataFrame([{
-                    "commodity": p.commodity,
-                    "market": p.market,
-                    "state": p.state,
+                    "commodity": getattr(p, "commodity").name if getattr(p, "commodity", None) else getattr(p, "commodity_id", None),
+                    "market": getattr(p, "market").name if getattr(p, "market", None) else getattr(p, "market_id", None),
+                    "state": getattr(getattr(p, "market", None), "state", None),
                     "date": p.date,
-                    "price": p.modal_price,
+                    "price": p.modal_price or p.price,
                     "arrival": p.arrival,
                 } for p in recent_data])
                 
@@ -92,15 +97,87 @@ class DataScheduler:
         
         try:
             async for session in get_async_session():
-                repo = MarketPriceRepository(session)
-                
-                prices = result.get("data", {}).get("prices", [])
-                
+                price_repo = MarketPriceRepository(session)
+                commodity_repo = CommodityRepository(session)
+                market_repo = MarketRepository(session)
+
+                data_block = result.get("data", {})
+                prices = data_block.get("prices", [])
+                historical_prices = data_block.get("historical_prices", [])
+                price_batches = prices + historical_prices
+
+                commodity_cache: dict[str, object] = {}
+                market_cache: dict[str, object] = {}
+
+                for commodity in data_block.get("commodities", []):
+                    name = commodity.get("name")
+                    if not name:
+                        continue
+                    existing = await commodity_repo.get_by_name(name)
+                    if not existing:
+                        existing = await commodity_repo.create(commodity)
+                    commodity_cache[name.lower()] = existing
+
+                for market in data_block.get("markets", []):
+                    name = market.get("name")
+                    if not name:
+                        continue
+                    existing = await market_repo.get_by_name(name)
+                    if not existing:
+                        existing = await market_repo.create(market)
+                    market_cache[name.lower()] = existing
+
                 stored_count = 0
-                for price_data in prices:
-                    await repo.create_or_update_price(price_data)
+
+                for price_data in price_batches:
+                    commodity_name = price_data.get("commodity")
+                    market_name = price_data.get("market")
+
+                    if not commodity_name or not market_name:
+                        continue
+
+                    commodity_key = commodity_name.lower()
+                    market_key = market_name.lower()
+
+                    commodity = commodity_cache.get(commodity_key)
+                    if not commodity:
+                        commodity = await commodity_repo.get_by_name(commodity_name)
+                        if not commodity:
+                            commodity = await commodity_repo.create(
+                                name=commodity_name,
+                                category=price_data.get("category") or "General",
+                                unit="Quintal",
+                            )
+                        commodity_cache[commodity_key] = commodity
+
+                    market = market_cache.get(market_key)
+                    if not market:
+                        market = await market_repo.get_by_name(market_name)
+                        if not market:
+                            market = await market_repo.create(
+                                name=market_name,
+                                state=price_data.get("state") or "Unknown",
+                                district=price_data.get("district") or price_data.get("state") or "",
+                            )
+                        market_cache[market_key] = market
+
+                    payload = {
+                        "commodity_id": getattr(commodity, "id", None),
+                        "market_id": getattr(market, "id", None),
+                        "date": price_data.get("date") or get_current_timestamp().date(),
+                        "price": price_data.get("price") or price_data.get("modal_price") or 0.0,
+                        "min_price": price_data.get("min_price"),
+                        "max_price": price_data.get("max_price"),
+                        "modal_price": price_data.get("modal_price"),
+                        "arrival": price_data.get("arrival"),
+                    }
+
+                    if not payload["commodity_id"] or not payload["market_id"]:
+                        continue
+
+                    await price_repo.create_or_update_price(payload)
                     stored_count += 1
-                
+
                 await session.commit()
                 logger.info(f"Stored {stored_count} price records in database")
                 

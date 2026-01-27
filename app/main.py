@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app import __version__
+from app.api.frontend import router as frontend_router
 from app.api.v1.router import api_router
 from app.config import settings
 from app.core.exceptions import AgriTechException
@@ -25,13 +26,20 @@ async def lifespan(app: FastAPI):
     logger.info(f"{settings.app_name} v{settings.app_version} starting up")
     logger.info(f"Running in {settings.environment} mode")
     
-    scheduler = get_scheduler()
-    scheduler.start()
-    logger.info("Background data collection and training scheduler activated")
+    # Only start scheduler if not in testing mode
+    import os
+    if os.getenv("TESTING") != "1":
+        scheduler = get_scheduler()
+        scheduler.start()
+        logger.info("Background data collection and training scheduler activated")
+    else:
+        logger.info("Scheduler disabled during testing")
+        scheduler = None
     
     yield
     
-    scheduler.stop()
+    if scheduler:
+        scheduler.stop()
     logger.info(f"{settings.app_name} shutting down gracefully")
 
 
@@ -158,6 +166,8 @@ async def root() -> dict[str, Any]:
 
 # Include API router
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+app.include_router(frontend_router, prefix="/api")
+app.include_router(frontend_router, prefix=settings.api_v1_prefix)
 
 
 if __name__ == "__main__":

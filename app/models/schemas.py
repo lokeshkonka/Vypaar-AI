@@ -193,6 +193,78 @@ class PredictionResponse(BaseSchema):
         return data
 
 
+# Frontend bridge schemas
+class ForecastPoint(BaseSchema):
+    """Single forecast point for a day."""
+
+    date: str
+    predicted_price: float
+    lower_bound: float
+    upper_bound: float
+    confidence: float
+
+
+class ForecastRequest(BaseSchema):
+    """Forecast request coming from the UI selector."""
+
+    state: Optional[str] = None
+    city: Optional[str] = None
+    market_type: Optional[str] = Field(default=None, alias="marketType")
+    market: str
+    category: Optional[str] = None
+    product: str
+    forecast_range: int = Field(default=14, ge=1, le=30, alias="forecastRange")
+
+
+class ForecastResponse(BaseSchema):
+    """Forecast response aligned with dashboard expectations."""
+
+    product: str
+    market: str
+    state: Optional[str] = None
+    range_days: int = Field(alias="rangeDays")
+    trend: str
+    average_price: float = Field(alias="averagePrice")
+    forecasts: list[ForecastPoint]
+    model_accuracy: float = Field(alias="modelAccuracy")
+    notes: list[str]
+
+
+class InsightItemResponse(BaseSchema):
+    """Actionable insight for the insights dashboard."""
+
+    id: str
+    title: str
+    reason: str
+    priority: str
+    confidence: int
+    time_horizon: str = Field(alias="timeHorizon")
+
+
+class ModelAccuracySummary(BaseSchema):
+    """Compact accuracy summary for UI cards."""
+
+    forecastAccuracy: float
+    improvement: float
+    mae: float
+    maeTraditional: float
+    mape: float
+    mapeTraditional: float
+    aiAccuracy: float
+    traditionalAccuracy: float
+
+
+class InventoryDashboardItem(BaseSchema):
+    """Inventory row used by the frontend dashboard."""
+
+    market: str
+    category: Optional[str] = None
+    product: str
+    current: float
+    suggested: float
+    risk: str
+
+
 # Inventory Schemas
 class InventorySuggestionRequest(BaseSchema):
     """Request for inventory suggestions."""

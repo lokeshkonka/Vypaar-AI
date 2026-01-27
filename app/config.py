@@ -29,7 +29,14 @@ class Settings(BaseSettings):
     reload: bool = True
     
     # CORS
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:8000"])
+    cors_origins: list[str] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:8000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
+    )
     cors_allow_credentials: bool = True
     cors_allow_methods: list[str] = ["*"]
     cors_allow_headers: list[str] = ["*"]
