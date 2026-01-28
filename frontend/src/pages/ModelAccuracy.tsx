@@ -1,13 +1,12 @@
 // src/pages/ModelAccuracy.tsx
 import Navbar from "../components/dashboard/Navbar/Navbar";
 import DashFooter from "../components/dashboard/Home/dashFooter";
-import { ModelProvider } from "../context/ModelContext";
+import { ModelProvider, useModelAccuracy } from "../context/ModelContext";
 
 import AccuracyHero from "../components/ModelAccuracy/AccuracyHero";
 import ErrorMetricCard from "../components/ModelAccuracy/ErrorMetricCard";
 import AccuracyComparison from "../components/ModelAccuracy/AccuracyComparison";
 import ModelGraph from "../components/ModelAccuracy/ModelGraph";
-import { useModelAccuracy } from "../context/ModelContext";
 import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
 
 function MetricsGrid() {

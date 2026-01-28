@@ -2,20 +2,17 @@ import TableComponent from "../ui/TableComponent";
 import CardComponent from "../ui/CardComponent";
 import { useNavigate } from "react-router-dom";
 import { useInventory } from "../../context/InventoryContext";
-import InventoryFilters from "./InventoryFilters";
 
 export default function YourStock() {
-  const { inventory, isUpdating } = useInventory();
+  const { inventory, isUpdating, isLoading, updateItem } = useInventory();
   const navigate = useNavigate();
 
   return (
     <div className="space-y-4">
-      {/* TOP ROW: Filters + Actions */}
+      {/* TOP ROW: Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Filters */}
-        <div className="lg:col-span-2">
-          <InventoryFilters />
-        </div>
+        {/* Spacer */}
+        <div className="lg:col-span-2"></div>
         {/* Actions */}
 <CardComponent title="Forecast Actions">
   <p className="text-sm text-soft leading-relaxed mb-2">
@@ -39,20 +36,37 @@ export default function YourStock() {
       {/* BOTTOM ROW: Table */}
       <TableComponent
         title="Your Stocks"
-        loading={isUpdating}
+        loading={isLoading || isUpdating}
         columns={[
           { key: "product", label: "Product" },
 
           {
             key: "current",
-            label: "Your Stock",
+            label: "Current Stock",
             align: "right",
+            render: (value, row) => (
+              <input
+                type="number"
+                value={value}
+                onChange={(e) => updateItem(row.id, parseFloat(e.target.value) || 0)}
+                className="
+                  w-20 px-2 py-1 text-right
+                  bg-transparent border border-gray-300
+                  dark:border-gray-600
+                  rounded text-sm
+                  focus:outline-none focus:border-emerald-500
+                "
+                min="0"
+                step="0.1"
+              />
+            ),
           },
 
           {
             key: "suggested",
             label: "Suggested",
             align: "right",
+            render: (value) => (typeof value === 'number' ? value.toFixed(1) : (parseFloat(value as string) || 0).toFixed(1)),
           },
 
           {
@@ -69,7 +83,7 @@ export default function YourStock() {
                       : "text-orange-500"
                   }
                 >
-                  {buffer > 0 ? `+${buffer}` : buffer}
+                  {buffer > 0 ? `+${buffer.toFixed(1)}` : buffer.toFixed(1)}
                 </span>
               );
             },

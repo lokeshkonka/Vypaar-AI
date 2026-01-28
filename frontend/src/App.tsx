@@ -9,6 +9,7 @@ import ComingSoon from "./pages/ComingSoon";
 import Inventory from "./pages/Inventory";
 import Insights from "./pages/Insights";
 import ModelAccuracy from "./pages/ModelAccuracy";
+import BuySellAlerts from "./pages/BuySellAlerts";
 import Docs from "./pages/Docs";
 
 function App() {
@@ -34,10 +35,71 @@ function App() {
           }
         />
         <Route path="/" element={<Landing />} />
-        <Route path="/dashboard/product-analysis" element={<ProductAnalysis />} />
-        <Route path="/dashboard/inventory" element={<Inventory />} />
-        <Route path="/dashboard/insights" element={<Insights />} />
-        <Route path="/dashboard/model-accuracy" element={<ModelAccuracy />} />
+        <Route 
+          path="/dashboard/product-analysis" 
+          element={
+            <>
+              <SignedIn>
+                <ProductAnalysis />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/dashboard/inventory" 
+          element={
+            <>
+              <SignedIn>
+                <Inventory />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/dashboard/insights" 
+          element={
+            <>
+              <SignedIn>
+                <Insights />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/dashboard/model-accuracy" 
+          element={
+            <>
+              <SignedIn>
+                <ModelAccuracy />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/dashboard/buysell-alerts" 
+          element={
+            <>
+              <SignedIn>
+                <BuySellAlerts />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
         <Route path="/blog" element={<ComingSoon />} />
         <Route path="/pricing" element={<ComingSoon />} />
         <Route path="/docs" element={<Docs />} />

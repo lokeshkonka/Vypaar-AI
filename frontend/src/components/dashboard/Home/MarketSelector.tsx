@@ -21,23 +21,10 @@ export default function MarketSelector() {
     ),
   ];
 
-  const marketTypes = [
-    ...new Set(
-      markets
-        .filter(
-          (m) =>
-            m.state === selection.state &&
-            m.city === selection.city
-        )
-        .map((m) => m.type)
-    ),
-  ];
-
   const filteredMarkets = markets.filter(
     (m) =>
       m.state === selection.state &&
-      m.city === selection.city &&
-      m.type === selection.marketType
+      m.city === selection.city
   );
 
   return (
@@ -54,7 +41,6 @@ export default function MarketSelector() {
           setSelection({
             state: e.target.value,
             city: undefined,
-            marketType: undefined,
             market: undefined,
           })
         }
@@ -72,7 +58,6 @@ export default function MarketSelector() {
         onChange={(e) =>
           setSelection({
             city: e.target.value,
-            marketType: undefined,
             market: undefined,
           })
         }
@@ -86,33 +71,23 @@ export default function MarketSelector() {
       <select
         className={inputBase}
         disabled={!selection.city}
-        value={selection.marketType || ""}
-        onChange={(e) =>
-          setSelection({
-            marketType: e.target.value,
-            market: undefined,
-          })
-        }
-      >
-        <option value="">Select Market Type</option>
-        {marketTypes.map((t) => (
-          <option key={t}>{t}</option>
-        ))}
-      </select>
-
-      <select
-        className={inputBase}
-        disabled={!selection.marketType}
         value={selection.market || ""}
         onChange={(e) =>
-          setSelection({ market: e.target.value })
+          setSelection({
+            market: e.target.value,
+          })
         }
       >
         <option value="">Select Market</option>
         {filteredMarkets.map((m) => (
-          <option key={m.id}>{m.name}</option>
+          <option key={m.id} value={m.name}>
+            {m.name}
+          </option>
         ))}
       </select>
+
+      
+       
     </div>
   );
 }

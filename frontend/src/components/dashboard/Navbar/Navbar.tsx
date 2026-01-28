@@ -18,6 +18,7 @@ import {
   FiSun,
   FiMoon,
   FiMousePointer,
+  FiZap,
 } from "react-icons/fi";
 
 import NavLoader from "./NavLoader";
@@ -196,6 +197,15 @@ export default function Navbar() {
               active={isActive("/dashboard/model-accuracy")}
               onClick={() => {
                 navigate("/dashboard/model-accuracy");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiZap />}
+              label="Buy/Sell Alerts"
+              active={isActive("/dashboard/buysell-alerts")}
+              onClick={() => {
+                navigate("/dashboard/buysell-alerts");
                 setOpen(false);
               }}
             />

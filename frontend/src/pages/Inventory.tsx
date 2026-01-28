@@ -22,18 +22,34 @@ export default function Inventory() {
         <Navbar />
         <GraphBackgroundBottom />
 
-        <main className="relative z-10 max-w-6xl mx-auto px-4 pt-28 space-y-6">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Inventory Recommendation
-          </h1>
-            <StockComponent  />
-          <ActionRequiredCard />
-          <DecisionInsightCard />
+        <main className="relative z-10 max-w-7xl mx-auto px-4 pt-28 space-y-8 pb-12">
+          {/* Header */}
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Inventory Management
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Monitor stock levels and get AI-powered recommendations
+            </p>
+          </div>
+
+          {/* Stock Metrics */}
+          <StockComponent />
+
+          {/* Action Cards Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ActionRequiredCard />
+            <DecisionInsightCard />
+          </div>
+
+          {/* Stock Comparison */}
           <StockCompare />
-          < ForecastProvider>
-          <InventoryProvider>
-            <YourStock />
-          </InventoryProvider>
+
+          {/* Your Stock Table */}
+          <ForecastProvider>
+            <InventoryProvider>
+              <YourStock />
+            </InventoryProvider>
           </ForecastProvider>
         </main>
 

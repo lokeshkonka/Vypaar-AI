@@ -116,6 +116,7 @@ class Alert(Base):
     priority = Column(String(20), default="MEDIUM", index=True)  # CRITICAL, HIGH, MEDIUM, LOW
     status = Column(String(20), default="ACTIVE", index=True)  # ACTIVE, RESOLVED, DISMISSED
     conditions = Column(JSON, nullable=True)  # Store conditions as JSON
+    notification_channels = Column(JSON, default=lambda: ["in_app"], nullable=False)  # Store as JSON array
     message = Column(Text, nullable=True)
     triggered_at = Column(DateTime, nullable=True, index=True)
     resolved_at = Column(DateTime, nullable=True)

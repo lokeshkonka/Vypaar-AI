@@ -1,14 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext } from "react";
-import {
-  selectorData,
-  stockMetrics,
-  demandGraphData,
-  impactData,
-  recommendationTable,
-} from "../data/dummy-product";
+import { createContext, useContext, useEffect, useState, useRef } from "react";
+import type { AnalysisContextValue, ImpactItem } from "./types";
 
-import type { AnalysisContextValue } from "./types";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
 const AnalysisContext = createContext<AnalysisContextValue | null>(null);
 
@@ -17,19 +11,173 @@ export function ContextAnalysisProvider({
 }: {
   children: React.ReactNode;
 }) {
-  /*
-  const fetchProductAnalysis = async () => {
-    const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
-    return await res.json();
-  };
-  */
+  const [analysis, setAnalysis] = useState<AnalysisContextValue>({
+    selectorData: { market: "", product: "", forecastRange: "" },
+    stockMetrics: { predictedDemand: 0, stockNeeded: 0, overstockRisk: 0, understockRisk: 0 },
+    demandGraphData: [],
+    impactData: { festival: [], weather: [] },
+    recommendationTable: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const previousSelectionRef = useRef<string | null>(null);
+  const loadingRef = useRef(false);
+
+  useEffect(() => {
+    const loadForecastData = async () => {
+      // Prevent duplicate requests
+      if (loadingRef.current) {
+        return;
+      }
+      
+      try {
+        loadingRef.current = true;
+        setIsLoading(true);
+        
+        // Get forecast selection from localStorage (set by ForecastContext)
+        const selectionStr = localStorage.getItem('forecastSelection');
+        
+        if (selectionStr) {
+          const selection = JSON.parse(selectionStr);
+          
+          // Skip if selection is incomplete
+          if (!selection.market || !selection.product) {
+            return;
+          }
+          
+          // Call forecast endpoint with selection data
+          const forecastPayload = {
+            state: selection.state || "",
+            city: selection.city || "",
+            market: selection.market,
+            category: selection.category || "",
+            product: selection.product,
+            forecast_range: Number(selection.forecastRange || 7),
+          };
+          
+          const forecastRes = await fetch(`${BACKEND_URL}/api/forecast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(forecastPayload),
+          });
+          
+          if (forecastRes.ok) {
+            const forecastData = await forecastRes.json();
+            
+            // Transform forecast data to match AnalysisContextValue
+            const demandGraphData = forecastData.forecasts?.map((f: any, idx: number) => ({
+              day: `Day ${idx + 1}`,
+              actual: f.predicted_price * 0.95, // Simulated actual
+              forecast: f.predicted_price,
+            })) || [];
+            
+            // Calculate stock metrics from forecast
+            const avgPredictedPrice = forecastData.averagePrice || 0;
+            const predictedDemand = Math.round(avgPredictedPrice * 1.2);
+            
+            // Generate weather and festival impacts
+            const weatherImpact: ImpactItem[] = [
+              { 
+                title: "Temperature Rise", 
+                subtitle: "Expected 3°C increase", 
+                delta: "+12%", 
+                positive: forecastData.trend === "up" 
+              },
+              { 
+                title: "Rainfall Pattern", 
+                subtitle: "Moderate precipitation", 
+                delta: "+5%", 
+                positive: true 
+              },
+            ];
+            
+            const festivalImpact: ImpactItem[] = [
+              { 
+                title: "Upcoming Festival", 
+                subtitle: "High demand expected", 
+                delta: "+25%", 
+                positive: true 
+              },
+              { 
+                title: "Market Holiday", 
+                subtitle: "Reduced supply window", 
+                delta: "-8%", 
+                positive: false 
+              },
+            ];
+            
+            setAnalysis({
+              selectorData: {
+                market: forecastData.market || selection.market,
+                product: forecastData.product || selection.product,
+                forecastRange: `${forecastData.rangeDays || selection.forecastRange} Days`,
+              },
+              stockMetrics: {
+                predictedDemand,
+                stockNeeded: Math.round(predictedDemand * 1.15),
+                overstockRisk: forecastData.trend === "down" ? 35 : 15,
+                understockRisk: forecastData.trend === "up" ? 40 : 20,
+              },
+              demandGraphData,
+              impactData: {
+                festival: festivalImpact,
+                weather: weatherImpact,
+              },
+              recommendationTable: [
+                {
+                  product: forecastData.product || selection.product,
+                  current: Math.round(avgPredictedPrice * 0.8),
+                  suggested: Math.round(predictedDemand * 1.15),
+                  buffer: 15,
+                  risk: forecastData.trend === "up" ? "High" : "Low",
+                },
+              ],
+            });
+          } else {
+            throw new Error('Forecast API failed');
+          }
+        } else {
+          // Fallback: fetch from backend product-analysis endpoint
+          const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
+          if (res.ok) {
+            const data = await res.json();
+            setAnalysis(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load forecast data:", error);
+      } finally {
+        setIsLoading(false);
+        loadingRef.current = false;
+      }
+    };
+
+    // Check if selection has changed
+    const selectionStr = localStorage.getItem('forecastSelection');
+    if (selectionStr !== previousSelectionRef.current) {
+      previousSelectionRef.current = selectionStr;
+      loadForecastData();
+    } else if (!previousSelectionRef.current) {
+      // First load
+      loadForecastData();
+    }
+    
+    // Listen for storage changes from other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'forecastSelection' && e.newValue !== previousSelectionRef.current) {
+        previousSelectionRef.current = e.newValue;
+        loadForecastData();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const value: AnalysisContextValue = {
-    selectorData,
-    stockMetrics,
-    demandGraphData,
-    impactData,
-    recommendationTable,
+    ...analysis,
   };
 
   return (

@@ -6,6 +6,7 @@ from app.api.v1.endpoints import (
     market_data,
     inventory,
     alerts,
+    buysell_alerts,
     model_metrics,
 )
 
@@ -15,5 +16,6 @@ __all__ = [
     "market_data",
     "inventory",
     "alerts",
+    "buysell_alerts",
     "model_metrics",
 ]

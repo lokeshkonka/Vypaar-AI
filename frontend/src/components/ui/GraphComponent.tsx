@@ -25,6 +25,17 @@ export default function GraphComponent({
   title,
   data,
 }: GraphComponentProps) {
+  // Calculate dynamic Y-axis domain for better visibility of price variations
+  const allValues = data.flatMap((d) => [d.forecast, d.actual]).filter((v): v is number => v !== undefined && v !== null);
+  const minValue = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
+  
+  // Use 5% padding to keep the graph tight and show variations clearly
+  const range = maxValue - minValue;
+  const padding = range > 0 ? range * 0.05 : 5;
+  const yAxisMin = Math.floor(minValue - padding);
+  const yAxisMax = Math.ceil(maxValue + padding);
+
   return (
     <CardComponent title={title}>
       <div className="h-64 sm:h-72">
@@ -52,6 +63,7 @@ export default function GraphComponent({
 
             {/* Y Axis */}
             <YAxis
+              domain={[yAxisMin, yAxisMax]}
               tick={{
                 fill: "var(--text-soft)",
                 fontSize: 12,
@@ -91,7 +103,7 @@ export default function GraphComponent({
               stroke="var(--text-soft)"
               strokeWidth={2}
               strokeDasharray="4 4"
-              dot={false}
+              dot={{ r: 4, fill: "var(--text-soft)", strokeWidth: 0 }}
               animationDuration={600}
             />
 
@@ -102,7 +114,7 @@ export default function GraphComponent({
               name="Forecast"
               stroke={`rgb(var(--emerald-main))`}
               strokeWidth={3}
-              dot={false}
+              dot={{ r: 4, fill: `rgb(var(--emerald-main))`, strokeWidth: 0 }}
               activeDot={{
                 r: 6,
                 strokeWidth: 2,

@@ -21,7 +21,7 @@ export default function ForecastRangeAndGenerate() {
     try {
       setIsLoading(true);
       await generateForecast();
-      navigate("/product-analysis");
+      navigate("/dashboard/product-analysis");
     } catch (err) {
       console.error("Forecast generation failed:", err);
     } finally {

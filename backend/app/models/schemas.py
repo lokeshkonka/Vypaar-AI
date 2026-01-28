@@ -53,6 +53,22 @@ class TrendDirection(str, Enum):
     STABLE = "STABLE"
 
 
+class BuySellSignal(str, Enum):
+    """Buy/Sell signal type."""
+
+    BUY = "BUY"
+    SELL = "SELL"
+    HOLD = "HOLD"
+
+
+class SignalStrength(str, Enum):
+    """Signal strength intensity."""
+
+    STRONG = "STRONG"
+    MODERATE = "MODERATE"
+    WEAK = "WEAK"
+
+
 # Base schemas
 class BaseSchema(BaseModel):
     """Base schema with common configuration."""
@@ -257,12 +273,28 @@ class ModelAccuracySummary(BaseSchema):
 class InventoryDashboardItem(BaseSchema):
     """Inventory row used by the frontend dashboard."""
 
+    id: int
     market: str
     category: Optional[str] = None
     product: str
     current: float
     suggested: float
     risk: str
+
+
+class InventoryUpdateRequest(BaseSchema):
+    """Request to update inventory items."""
+
+    items: List[dict]
+
+
+class InventoryUpdateResponse(BaseSchema):
+    """Response after updating inventory."""
+
+    status: str
+    message: str
+    timestamp: str
+    items_updated: int
 
 
 # Product Analysis Schemas
@@ -698,6 +730,96 @@ class AlertUpdateRequest(BaseSchema):
     priority: Optional[str] = None
     conditions: Optional[dict[str, Any]] = None
     notification_channels: Optional[list[str]] = None
+
+
+# Buy/Sell Alert Schemas
+class BuySellAlertRequest(BaseSchema):
+    """Buy/Sell alert creation request."""
+    
+    commodity_id: int = Field(..., description="Commodity ID")
+    market_id: int = Field(..., description="Market ID")
+    buy_threshold: float = Field(..., ge=0, description="Price threshold for BUY signal")
+    sell_threshold: float = Field(..., ge=0, description="Price threshold for SELL signal")
+    priority: AlertPriority = Field(default=AlertPriority.MEDIUM)
+    notification_channels: Optional[list[str]] = Field(default=["in_app"])
+    message: Optional[str] = None
+    enabled: bool = Field(default=True)
+
+
+class BuySellAlertResponse(BaseSchema):
+    """Buy/Sell alert response."""
+    
+    id: int
+    commodity_id: int
+    commodity_name: Optional[str] = None
+    market_id: int
+    market_name: Optional[str] = None
+    buy_threshold: float
+    sell_threshold: float
+    current_price: Optional[float] = None
+    signal: Optional[BuySellSignal] = None
+    signal_strength: Optional[SignalStrength] = None
+    priority: str
+    enabled: bool
+    notification_channels: list[str]
+    message: Optional[str] = None
+    triggered_at: Optional[datetime] = None
+    last_checked_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class BuySellAlertUpdateRequest(BaseSchema):
+    """Update request for buy/sell alerts."""
+    
+    buy_threshold: Optional[float] = None
+    sell_threshold: Optional[float] = None
+    priority: Optional[AlertPriority] = None
+    enabled: Optional[bool] = None
+    notification_channels: Optional[list[str]] = None
+    message: Optional[str] = None
+
+
+class BuySellSignalResponse(BaseSchema):
+    """Buy/Sell signal response with analysis."""
+    
+    commodity_id: int
+    commodity_name: str
+    market_id: int
+    market_name: str
+    current_price: float
+    buy_threshold: float
+    sell_threshold: float
+    signal: BuySellSignal
+    signal_strength: SignalStrength
+    confidence: float = Field(..., ge=0, le=1)
+    reasoning: list[str]
+    price_trend: TrendDirection
+    days_to_buy_signal: Optional[int] = None
+    days_to_sell_signal: Optional[int] = None
+    timestamp: datetime
+
+
+class BuySellAlertListResponse(BaseSchema):
+    """List of buy/sell alerts."""
+    
+    alerts: list[BuySellAlertResponse]
+    total: int
+    active: int
+    triggered: int
+
+
+class BuySellAlertHistoryResponse(BaseSchema):
+    """Buy/Sell alert history."""
+    
+    alert_id: int
+    commodity_name: str
+    market_name: str
+    signals: list[BuySellSignalResponse]
+    total_buys: int
+    total_sells: int
+    success_rate: float = Field(..., ge=0, le=1)
+    profit_loss: Optional[float] = None
 
 
 class ModelMetricsResponse(BaseSchema):

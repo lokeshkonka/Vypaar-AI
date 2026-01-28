@@ -2,18 +2,22 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
+import { useContextAnalysis } from "./ContextAnalysis";
 
-import { useForecast } from "./ForecastContext";
-import {
-  inventoryDummy,
-  type InventoryRow,
-} from "../data/inventory-dummy";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
-import type { ProductCategory } from "../data/forecast-dummy";
+export interface InventoryRow {
+  id: number;
+  market: string;
+  product: string;
+  category?: string;
+  current: number;
+  suggested: number;
+  risk: string;
+}
 
 /* =========================
    TYPES
@@ -21,7 +25,7 @@ import type { ProductCategory } from "../data/forecast-dummy";
 
 type InventoryFilters = {
   market?: string;
-  category?: ProductCategory;
+  category?: string;
   product?: string;
 };
 
@@ -30,14 +34,13 @@ type InventoryContextType = {
   setFilters: (f: Partial<InventoryFilters>) => void;
 
   inventory: InventoryRow[];
+  allInventory: InventoryRow[];
 
   updateStock: () => Promise<void>;
+  updateItem: (id: number, current: number) => void;
   isUpdating: boolean;
+  isLoading: boolean;
 };
-
-/* =========================
-   CONTEXT
-   ========================= */
 
 const InventoryContext =
   createContext<InventoryContextType | null>(null);
@@ -51,24 +54,24 @@ export function InventoryProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { selection } = useForecast();
-
-  const [filters, setFiltersState] =
-    useState<InventoryFilters>({});
-
+  const { recommendationTable, selectorData } = useContextAnalysis();
+  const [filters, setFiltersState] = useState<InventoryFilters>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
-  /* ---------------------------
-     Sync from ForecastContext
-     --------------------------- */
-  useEffect(() => {
-    setFiltersState((prev) => ({
-      ...prev,
-      market: selection.market ?? prev.market,
-      category: selection.category ?? prev.category,
-      product: selection.product ?? prev.product,
+  // Transform recommendation table to inventory rows format
+  const allInventory: InventoryRow[] = useMemo(() => {
+    return recommendationTable.map((rec, idx) => ({
+      id: idx + 1,
+      market: selectorData.market || "General",
+      product: rec.product,
+      category: undefined,
+      current: rec.current,
+      suggested: rec.suggested,
+      risk: rec.risk,
     }));
-  }, [selection.market, selection.category, selection.product]);
+  }, [recommendationTable, selectorData]);
+
+  const isLoading = false; // Use ContextAnalysis loading instead
 
   /* ---------------------------
      Filter updater
@@ -78,19 +81,25 @@ export function InventoryProvider({
   };
 
   /* ---------------------------
-     Derived inventory
+     Update individual item stock
+     --------------------------- */
+  const updateItem = (id: number, current: number) => {
+    // This is handled via the recommendation table from ContextAnalysis
+    console.log("Update item:", id, current);
+  };
+
+  /* ---------------------------
+     Derived filtered inventory
      --------------------------- */
   const inventory = useMemo(() => {
-    return inventoryDummy.filter((row) => {
+    return allInventory.filter((row) => {
       return (
         (!filters.market || row.market === filters.market) &&
-        (!filters.category ||
-          row.category === filters.category) &&
-        (!filters.product ||
-          row.product === filters.product)
+        (!filters.category || row.category === filters.category) &&
+        (!filters.product || row.product === filters.product)
       );
     });
-  }, [filters]);
+  }, [filters, allInventory]);
 
   /* ---------------------------
      Update stock (backend)
@@ -99,19 +108,27 @@ export function InventoryProvider({
     try {
       setIsUpdating(true);
 
-      /*
-      await fetch(`${BACKEND_URL}/api/inventory/update`, {
+      // Send only the fields the backend expects
+      const items = inventory.map(item => ({
+        id: item.id,
+        current: item.current,
+      }));
+
+      const res = await fetch(`${BACKEND_URL}/api/inventory/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filters,
-          items: inventory,
-        }),
+        body: JSON.stringify({ items }),
       });
-      */
 
-      // TEMP: simulate API delay
-      await new Promise((r) => setTimeout(r, 1200));
+      if (!res.ok) {
+        throw new Error("Failed to update stock");
+      }
+
+      const result = await res.json();
+      console.log("Stock updated successfully:", result);
+    } catch (error) {
+      console.error("Stock update error:", error);
+      throw error;
     } finally {
       setIsUpdating(false);
     }
@@ -123,8 +140,11 @@ export function InventoryProvider({
         filters,
         setFilters,
         inventory,
+        allInventory,
         updateStock,
+        updateItem,
         isUpdating,
+        isLoading,
       }}
     >
       {children}
