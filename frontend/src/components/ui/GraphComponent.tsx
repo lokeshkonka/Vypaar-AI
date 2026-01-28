@@ -25,9 +25,20 @@ export default function GraphComponent({
   title,
   data,
 }: GraphComponentProps) {
+  // Ensure we have data, otherwise show placeholder
+  if (!data || data.length === 0) {
+    return (
+      <CardComponent title={title}>
+        <div className="h-64 sm:h-72 flex items-center justify-center text-soft">
+          <p>No data available</p>
+        </div>
+      </CardComponent>
+    );
+  }
+
   return (
     <CardComponent title={title}>
-      <div className="h-64 sm:h-72">
+      <div className="h-64 sm:h-72 w-full" style={{ minHeight: "200px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={data}

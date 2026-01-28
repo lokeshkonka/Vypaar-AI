@@ -363,6 +363,7 @@ async def get_product_analysis(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
     inventory_repo: InventoryRepository = Depends(get_inventory_repo),
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> ProductAnalysisResponse:
     """Provide product analysis data for the dashboard."""
     try:
@@ -401,8 +402,7 @@ async def get_product_analysis(
             )
         
         # Build demand graph data from real price data
-        price_repo = market_price_repo
-        recent_prices = await price_repo.get_all(limit=7)
+        recent_prices = await market_price_repo.get_all(limit=7)
         
         demand_graph = []
         if recent_prices:
