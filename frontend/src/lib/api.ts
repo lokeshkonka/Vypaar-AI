@@ -2,7 +2,7 @@ export const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:80
 
 export async function initUser(token: string) {
   try {
-    const res = await fetch(`${API_BASE}/users/init`, {
+    const res = await fetch(`${API_BASE}/api/users/init`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

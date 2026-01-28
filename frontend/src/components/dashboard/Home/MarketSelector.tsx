@@ -1,6 +1,16 @@
 import { MapPin } from "lucide-react";
-import { markets } from "../../../data/dummyData";
 import { useForecast } from "../../../context/ForecastContext";
+import { useEffect, useState } from "react";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+interface Market {
+  id: number;
+  name: string;
+  state: string;
+  city: string;
+}
+
 const inputBase =
   "w-full h-12 rounded-xl px-4 text-sm transition-colors " +
   // Light mode
@@ -17,9 +27,25 @@ const inputBase =
 
 export default function MarketSelector() {
   const { selection, setSelection } = useForecast();
+  const [markets, setMarkets] = useState<Market[]>([]);
+
+  useEffect(() => {
+    const fetchMarkets = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/markets`);
+        if (res.ok) {
+          const data = await res.json();
+          setMarkets(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch markets:", error);
+      }
+    };
+    fetchMarkets();
+  }, []);
 
   const states = Array.from(
-    new Set(markets.map((m) => m.state))
+    new Set(markets.map((m) => m.state).filter(s => s))
   );
 
   const cities = Array.from(
@@ -27,26 +53,14 @@ export default function MarketSelector() {
       markets
         .filter((m) => m.state === selection.state)
         .map((m) => m.city)
-    )
-  );
-
-  const marketTypes = Array.from(
-    new Set(
-      markets
-        .filter(
-          (m) =>
-            m.state === selection.state &&
-            m.city === selection.city
-        )
-        .map((m) => m.type)
+        .filter(c => c)
     )
   );
 
   const filteredMarkets = markets.filter(
     (m) =>
       m.state === selection.state &&
-      m.city === selection.city &&
-      m.type === selection.marketType
+      m.city === selection.city
   );
 
   return (
@@ -67,7 +81,6 @@ export default function MarketSelector() {
           setSelection({
             state: e.target.value,
             city: undefined,
-            marketType: undefined,
             market: undefined,
           })
         }
@@ -88,7 +101,6 @@ export default function MarketSelector() {
         onChange={(e) =>
           setSelection({
             city: e.target.value,
-            marketType: undefined,
             market: undefined,
           })
         }
@@ -101,31 +113,11 @@ export default function MarketSelector() {
         ))}
       </select>
 
-      {/* Market Type */}
-      <select
-        className={inputBase}
-        value={selection.marketType || ""}
-        disabled={!selection.city}
-        onChange={(e) =>
-          setSelection({
-            marketType: e.target.value,
-            market: undefined,
-          })
-        }
-      >
-        <option value="">Select Market Type</option>
-        {marketTypes.map((t) => (
-          <option key={t} value={t}>
-            {t}
-          </option>
-        ))}
-      </select>
-
       {/* Market */}
       <select
         className={inputBase}
         value={selection.market || ""}
-        disabled={!selection.marketType}
+        disabled={!selection.city}
         onChange={(e) =>
           setSelection({
             market: e.target.value,

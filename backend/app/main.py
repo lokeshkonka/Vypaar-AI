@@ -168,6 +168,7 @@ async def root() -> dict[str, Any]:
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 app.include_router(frontend_router, prefix="/api")
 app.include_router(frontend_router, prefix=settings.api_v1_prefix)
+app.include_router(frontend_router)  # For /users/init at root level
 
 
 if __name__ == "__main__":

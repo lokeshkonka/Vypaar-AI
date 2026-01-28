@@ -1,13 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-  selectorData,
-  stockMetrics,
-  demandGraphData,
-  impactData,
-  recommendationTable,
-} from "../data/dummy-product";
-
 import type { AnalysisContextValue } from "./types";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
@@ -20,11 +12,11 @@ export function ContextAnalysisProvider({
   children: React.ReactNode;
 }) {
   const [analysis, setAnalysis] = useState<AnalysisContextValue>({
-    selectorData,
-    stockMetrics,
-    demandGraphData,
-    impactData,
-    recommendationTable,
+    selectorData: { market: "", product: "", forecastRange: "" },
+    stockMetrics: { predictedDemand: 0, stockNeeded: 0, overstockRisk: 0, understockRisk: 0 },
+    demandGraphData: [],
+    impactData: { festival: [], weather: [] },
+    recommendationTable: [],
   });
 
   // Fetch product analysis from backend
@@ -34,13 +26,9 @@ export function ContextAnalysisProvider({
         const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
         if (res.ok) {
           const data = await res.json();
-          setAnalysis(data || {
-            selectorData,
-            stockMetrics,
-            demandGraphData,
-            impactData,
-            recommendationTable,
-          });
+          setAnalysis(data);
+        } else {
+          console.error("Failed to fetch product analysis:", res.status);
         }
       } catch (error) {
         console.error("Failed to fetch product analysis:", error);

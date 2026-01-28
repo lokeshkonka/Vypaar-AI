@@ -14,7 +14,6 @@ import {
 export type ForecastSelection = {
   state?: string;
   city?: string;
-  marketType?: string;
   market?: string;
 
   category?: string;
@@ -58,7 +57,6 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     return Boolean(
       selection.state &&
       selection.city &&
-      selection.marketType &&
       selection.market &&
       selection.category &&
       selection.product &&
@@ -75,7 +73,6 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     const payload = {
       state: selection.state!,
       city: selection.city!,
-      marketType: selection.marketType!,
       market: selection.market!,
       category: selection.category!,
       product: selection.product!,

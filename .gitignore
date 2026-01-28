@@ -283,3 +283,4 @@ frontend/.env.production.local
 !.gitkeep
 !.github/
 !.github/**
+frontend/node_modules/.vite/deps/_metadata.json

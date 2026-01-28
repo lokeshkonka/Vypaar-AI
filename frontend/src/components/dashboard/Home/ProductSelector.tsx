@@ -1,6 +1,13 @@
 import { Package } from "lucide-react";
-import { products } from "../../../data/dummyData";
 import { useForecast } from "../../../context/ForecastContext";
+import { useEffect, useState } from "react";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+interface Commodity {
+  id: number;
+  name: string;
+}
 
 const inputBase =
   "w-full h-12 rounded-xl px-4 text-sm transition-colors " +
@@ -14,15 +21,44 @@ const inputBase =
   // Disabled
   "disabled:opacity-60 disabled:cursor-not-allowed";
 
+// Commodity categories - grouping commodities
+const COMMODITY_CATEGORIES: { [key: string]: string } = {
+  "Tomato": "Vegetables",
+  "Potato": "Vegetables",
+  "Wheat": "Grains",
+  "Rice": "Grains",
+};
+
 export default function ProductSelector() {
   const { selection, setSelection } = useForecast();
+  const [commodities, setCommodities] = useState<Commodity[]>([]);
 
+  useEffect(() => {
+    const fetchCommodities = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/commodities`);
+        if (res.ok) {
+          const data = await res.json();
+          setCommodities(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch commodities:", error);
+      }
+    };
+    fetchCommodities();
+  }, []);
+
+  // Get unique categories from commodities that have mappings
   const categories = Array.from(
-    new Set(products.map((p) => p.category))
-  );
+    new Set(
+      commodities
+        .map((p) => COMMODITY_CATEGORIES[p.name])
+        .filter((c) => c !== undefined)
+    )
+  ).sort();
 
-  const filteredProducts = products.filter(
-    (p) => p.category === selection.category
+  const filteredProducts = commodities.filter(
+    (p) => COMMODITY_CATEGORIES[p.name] === selection.category
   );
 
   return (

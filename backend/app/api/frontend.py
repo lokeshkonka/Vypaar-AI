@@ -207,11 +207,7 @@ async def generate_ai_insights(
         recent_prices = await market_price_repo.get_recent_prices(days=30)
 
         if not recent_prices:
-            return [
-                InsightItemResponse(id="i1", title="Festival-driven demand surge expected", reason="Upcoming festive window typically pushes vegetable demand by 25–35% in metro markets.", priority="high", confidence=91, timeHorizon="Immediate"),
-                InsightItemResponse(id="i2", title="Weather may suppress short-term sales", reason="Rain forecasts reduce retail footfall and arrivals for perishable produce.", priority="medium", confidence=76, timeHorizon="Upcoming"),
-                InsightItemResponse(id="i3", title="Stable pricing trend detected", reason="No abnormal price volatility in the past two weeks across selected SKUs.", priority="info", confidence=84, timeHorizon="Long-term"),
-            ]
+            return []
 
         commodity_cache = {}
         for price in recent_prices:
@@ -257,12 +253,7 @@ async def generate_ai_insights(
                 )
             )
 
-        if not insights:
-            return [
-                InsightItemResponse(id="fallback", title="Monitoring markets", reason="Awaiting more price signals to generate actionable insights.", priority="info", confidence=70, timeHorizon="Upcoming"),
-            ]
-
-        return insights[:8]
+        return insights[:8] if insights else []
     except Exception as exc:  # noqa: BLE001
         logger.exception(f"Insight generation failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to build insights")
@@ -329,11 +320,7 @@ async def inventory_dashboard(
         inventory_items = await inventory_repo.get_all(skip=skip, limit=limit)
 
         if not inventory_items:
-            return [
-                InventoryDashboardItem(market="APMC Vashi", category="Vegetables", product="Tomato", current=500, suggested=540, risk="Low"),
-                InventoryDashboardItem(market="APMC Vashi", category="Vegetables", product="Onion", current=300, suggested=420, risk="High"),
-                InventoryDashboardItem(market="Dadar Market", category="Fruits", product="Apple", current=200, suggested=260, risk="Medium"),
-            ]
+            return []
 
         response: list[InventoryDashboardItem] = []
 
@@ -383,47 +370,70 @@ async def get_product_analysis(
         commodities = await commodity_repo.get_all(limit=5)
         markets = await market_repo.get_all(limit=3)
         
+        if not commodities or not markets:
+            raise HTTPException(status_code=404, detail="No data available. Please run data seeding first.")
+        
         # Build selector data
         selector_data = SelectorData(
-            market=markets[0].name if markets else "APMC Vashi",
-            product=commodities[0].name if commodities else "Tomato",
+            market=markets[0].name,
+            product=commodities[0].name,
             forecastRange="Next 7 Days"
         )
         
-        # Build stock metrics (sample data)
-        stock_metrics = StockMetrics(
-            predictedDemand=520,
-            stockNeeded=540,
-            overstockRisk=12,
-            understockRisk=8
-        )
+        # Build stock metrics from real inventory data
+        inventories = await inventory_repo.get_all(limit=1)
+        if inventories:
+            inv = inventories[0]
+            current = int(inv.current_stock or 0)
+            optimal = int(inv.optimal_stock or current * 1.2)
+            stock_metrics = StockMetrics(
+                predictedDemand=int(current * 1.1),
+                stockNeeded=optimal,
+                overstockRisk=max(0, int((current - optimal) / optimal * 100)) if optimal > 0 else 0,
+                understockRisk=max(0, int((optimal - current) / optimal * 100)) if optimal > 0 else 0
+            )
+        else:
+            stock_metrics = StockMetrics(
+                predictedDemand=0,
+                stockNeeded=0,
+                overstockRisk=0,
+                understockRisk=0
+            )
         
-        # Build demand graph data
-        demand_graph = [
-            DemandGraphPoint(day="Mon", actual=420, forecast=450),
-            DemandGraphPoint(day="Tue", actual=460, forecast=480),
-            DemandGraphPoint(day="Wed", actual=430, forecast=470),
-            DemandGraphPoint(day="Thu", actual=410, forecast=460),
-            DemandGraphPoint(day="Fri", actual=440, forecast=490),
-        ]
+        # Build demand graph data from real price data
+        price_repo = market_price_repo
+        recent_prices = await price_repo.get_all(limit=7)
         
-        # Build impact data
-        impact_data = ImpactData(
-            festival=[
-                ImpactItem(title="Upcoming Festival", subtitle="In 5 days", delta="+30%", positive=True),
-                ImpactItem(title="Peak Season", subtitle="In 12 days", delta="+15%", positive=True),
-            ],
-            weather=[
-                ImpactItem(title="Rain Expected", subtitle="Tomorrow", delta="-5%", positive=False),
-                ImpactItem(title="Clear Weather", subtitle="In 3 days", delta="+8%", positive=True),
+        demand_graph = []
+        if recent_prices:
+            from datetime import datetime
+            days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            for i, price_record in enumerate(reversed(recent_prices[-5:])):
+                # Use price as proxy for demand (higher price = higher demand)
+                actual = int(float(price_record.price) / 5)  # Scale down for display
+                forecast = int(actual * 1.05)  # 5% forecast increase
+                day_name = days[i % 7]
+                demand_graph.append(
+                    DemandGraphPoint(day=day_name, actual=actual, forecast=forecast)
+                )
+        
+        if not demand_graph:
+            demand_graph = [
+                DemandGraphPoint(day="Mon", actual=0, forecast=0),
             ]
+        
+        # Build impact data - festival calendar and weather would need integration
+        # For now, return empty arrays as we don't have this data in database
+        impact_data = ImpactData(
+            festival=[],
+            weather=[]
         )
         
-        # Build recommendation table from inventory
-        inventory_items = await inventory_repo.get_all(limit=5)
+        # Build recommendation table from real inventory
+        all_inventory_items = await inventory_repo.get_all(limit=10)
         recommendations = []
         
-        for item in inventory_items[:3]:
+        for item in all_inventory_items[:5]:
             commodity = await commodity_repo.get_by_id(item.commodity_id)
             suggested = int(item.optimal_stock or (item.current_stock * 1.1))
             buffer = suggested - item.current_stock
@@ -446,14 +456,6 @@ async def get_product_analysis(
                 )
             )
         
-        # If no inventory data, use defaults
-        if not recommendations:
-            recommendations = [
-                RecommendationRow(product="Tomato", current=500, suggested=540, buffer=40, risk="Low"),
-                RecommendationRow(product="Onion", current=300, suggested=420, buffer=120, risk="High"),
-                RecommendationRow(product="Potato", current=450, suggested=480, buffer=30, risk="Low"),
-            ]
-        
         return ProductAnalysisResponse(
             selectorData=selector_data,
             stockMetrics=stock_metrics,
@@ -464,3 +466,56 @@ async def get_product_analysis(
     except Exception as exc:  # noqa: BLE001
         logger.exception(f"Product analysis failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch product analysis data")
+
+
+@router.get(
+    "/commodities",
+    response_model=List[dict],
+    status_code=status.HTTP_200_OK,
+)
+async def get_commodities(commodity_repo: CommodityRepository = Depends(get_commodity_repo)):
+    """Get all commodities for frontend selectors."""
+    try:
+        commodities = await commodity_repo.get_all()
+        return [{"id": c.id, "name": c.name} for c in commodities]
+    except Exception as exc:  # noqa: BLE001
+        logger.exception(f"Failed to fetch commodities: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to fetch commodities")
+
+
+@router.post(
+    "/users/init",
+    status_code=status.HTTP_200_OK,
+)
+async def init_user(user_data: dict = None):
+    """Initialize or sync user with backend (Clerk integration point)."""
+    try:
+        # This is a placeholder for user initialization
+        # In a full implementation, this would:
+        # 1. Sync user data from Clerk
+        # 2. Create/update user in database
+        # 3. Initialize user preferences
+        logger.info("User initialization request received")
+        return {
+            "status": "success",
+            "message": "User initialized",
+            "timestamp": get_current_timestamp().isoformat(),
+        }
+    except Exception as exc:  # noqa: BLE001
+        logger.exception(f"User initialization failed: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to initialize user")
+
+
+@router.get(
+    "/markets",
+    response_model=List[dict],
+    status_code=status.HTTP_200_OK,
+)
+async def get_markets(market_repo: MarketRepository = Depends(get_market_repo)):
+    """Get all markets for frontend selectors."""
+    try:
+        markets = await market_repo.get_all()
+        return [{"id": m.id, "name": m.name, "state": m.state, "city": m.district} for m in markets]
+    except Exception as exc:  # noqa: BLE001
+        logger.exception(f"Failed to fetch markets: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to fetch markets")

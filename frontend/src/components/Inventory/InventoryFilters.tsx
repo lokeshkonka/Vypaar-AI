@@ -1,9 +1,47 @@
 import CardComponent from "../ui/CardComponent";
 import { useInventory } from "../../context/InventoryContext";
-import { markets, products } from "../../data/dummyData";
+import { useEffect, useState } from "react";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+interface Market {
+  id: number;
+  name: string;
+  state: string;
+  city: string;
+}
+
+interface Commodity {
+  id: number;
+  name: string;
+  category: string;
+}
 
 export default function InventoryFilters() {
   const { filters, setFilters, updateStock, isUpdating } = useInventory();
+  const [markets, setMarkets] = useState<Market[]>([]);
+  const [commodities, setCommodities] = useState<Commodity[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [marketsRes, commoditiesRes] = await Promise.all([
+          fetch(`${BACKEND_URL}/api/markets`),
+          fetch(`${BACKEND_URL}/api/commodities`)
+        ]);
+        
+        if (marketsRes.ok) {
+          setMarkets(await marketsRes.json());
+        }
+        if (commoditiesRes.ok) {
+          setCommodities(await commoditiesRes.json());
+        }
+      } catch (error) {
+        console.error("Failed to fetch filter data:", error);
+      }
+    };
+    fetchData();
+  }, []);
 
   return (
     <CardComponent title="Filter Inventory">
@@ -31,7 +69,7 @@ export default function InventoryFilters() {
           }
         >
           <option value="">All Categories</option>
-          {[...new Set(products.map((p) => p.category))].map((c) => (
+          {[...new Set(commodities.map((p) => p.category))].map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
@@ -46,7 +84,7 @@ export default function InventoryFilters() {
           }
         >
           <option value="">All Products</option>
-          {products.map((p) => (
+          {commodities.map((p) => (
             <option key={p.id} value={p.name}>
               {p.name}
             </option>
