@@ -1,6 +1,6 @@
 // src/context/ModelContext.tsx
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
   modelAccuracyDummy,
   modelGraphDummy,
@@ -8,9 +8,12 @@ import {
   type ModelGraphPoint,
 } from "../data/model-dummy";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 interface ModelContextValue {
   metrics: ModelAccuracyMetrics;
   graphData: ModelGraphPoint[];
+  isLoading: boolean;
 }
 
 const ModelContext = createContext<ModelContextValue | null>(null);
@@ -20,19 +23,38 @@ export function ModelProvider({
 }: {
   children: React.ReactNode;
 }) {
-  /*
-  // 🔒 BACKEND (COMMENTED)
-  const fetchModelAccuracy = async () => {
-    const res = await fetch(`${BACKEND_URL}/api/model/accuracy`);
-    return await res.json();
-  };
-  */
+  const [isLoading, setIsLoading] = useState(true);
+  const [metrics, setMetrics] = useState<ModelAccuracyMetrics>(modelAccuracyDummy);
+  const [graphData, setGraphData] = useState<ModelGraphPoint[]>(modelGraphDummy);
+
+  // Fetch model accuracy from backend
+  useEffect(() => {
+    const fetchModelAccuracy = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`${BACKEND_URL}/api/model/accuracy`);
+        if (res.ok) {
+          const data = await res.json();
+          setMetrics(data?.metrics || modelAccuracyDummy);
+          setGraphData(data?.graphData || modelGraphDummy);
+        }
+      } catch (error) {
+        console.error("Failed to fetch model accuracy:", error);
+        setMetrics(modelAccuracyDummy);
+        setGraphData(modelGraphDummy);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchModelAccuracy();
+  }, []);
 
   return (
     <ModelContext.Provider
       value={{
-        metrics: modelAccuracyDummy,
-        graphData: modelGraphDummy,
+        metrics,
+        graphData,
+        isLoading,
       }}
     >
       {children}

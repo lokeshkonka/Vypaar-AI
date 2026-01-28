@@ -18,7 +18,9 @@ export default function UserSync() {
         await initUser(token);
         hasSynced.current = true;
       } catch (err) {
-        console.error("Backend user sync failed", err);
+        // Non-critical error - still mark as synced to avoid retrying
+        console.warn("Backend user sync warning (non-critical):", err);
+        hasSynced.current = true;
       }
     };
 

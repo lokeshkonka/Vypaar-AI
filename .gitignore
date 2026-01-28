@@ -1,2 +1,285 @@
-.vscode/settings.json
-frontend/node_modules/.vite/deps/_metadata.json
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+logs/
+*.log
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/models/*
+!data/models/.gitkeep
+*.db
+*.sqlite
+*.sqlite3
+
+# ML models
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+
+# Temp files
+*.tmp
+temp/
+tmp/
+
+# Test files (local development only)
+test_*.py
+*_test.db
+
+# Environment
+.env.local
+.env.*.local
+
+# IDE settings
+*.code-workspace
+
+# Temporary outputs
+/tmp/
+/build/
+/dist/
+GITHUB_READY.md
+# ============================================================================
+# Frontend / Node.js (React + Vite)
+# ============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+frontend/dist/
+frontend/.vite/
+frontend/build/
+.next/
+.nuxt/
+
+# Package manager lock files (optional - comment out to track)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ============================================================================
+# Additional IDE & Editor
+# ============================================================================
+.vscode-server/
+*.sublime-project
+*.sublime-workspace
+.vim/
+*.vim
+*.netrwhist
+
+# ============================================================================
+# Configuration & Secrets
+# ============================================================================
+*.key
+*.pem
+*.crt
+*.pfx
+.env.production
+.env.staging
+
+# ============================================================================
+# Database & Cache
+# ============================================================================
+.pytest_cache/
+.ruff_cache/
+.turbo/
+.gradle/
+
+# ============================================================================
+# Alembic migrations (backup)
+# ============================================================================
+backend/app/database/migrations/versions/__pycache__/
+backend/app/database/migrations/env.py.bak
+
+# ============================================================================
+# Archive & Backup
+# ============================================================================
+*.bak
+*.backup
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
+
+# ============================================================================
+# Testing & Coverage
+# ============================================================================
+test-results/
+test_output.txt
+pytest.ini.bak
+
+# ============================================================================
+# Docker & Deployment
+# ============================================================================
+.dockerignore
+docker-compose.override.yml
+
+# ============================================================================
+# Jupyter & Notebooks
+# ============================================================================
+*.ipynb
+.ipynb_checkpoints/
+
+# ============================================================================
+# Backend development
+# ============================================================================
+backend/logs/
+backend/*.log
+backend/.env.local
+backend/simple_server.py.bak
+
+# ============================================================================
+# Frontend development
+# ============================================================================
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# ============================================================================
+# Keep important files
+# ============================================================================
+!.env.example
+!.gitkeep
+!.github/
+!.github/**

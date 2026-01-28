@@ -1,6 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import { inventoryDummy, type InventoryRow } from "../data/inventory-dummy";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 type InventoryFilters = {
   market?: string;
@@ -14,6 +16,7 @@ type InventoryContextType = {
   inventory: InventoryRow[];
   isUpdating: boolean;
   updateStock: () => Promise<void>;
+  isLoading: boolean;
 };
 
 const InventoryContext = createContext<InventoryContextType | null>(null);
@@ -25,13 +28,35 @@ export function InventoryProvider({
 }) {
   const [filters, setFiltersState] = useState<InventoryFilters>({});
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [inventoryData, setInventoryData] = useState<InventoryRow[]>(inventoryDummy);
+
+  // Fetch inventory data from backend
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch(`${BACKEND_URL}/api/inventory/dashboard`);
+        if (res.ok) {
+          const data = await res.json();
+          setInventoryData(data || inventoryDummy);
+        }
+      } catch (error) {
+        console.error("Failed to fetch inventory:", error);
+        setInventoryData(inventoryDummy);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInventory();
+  }, []);
 
   const setFilters = (f: Partial<InventoryFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...f }));
   };
 
   const inventory = useMemo(() => {
-    return inventoryDummy.map((row) => ({
+    return inventoryData.map((row) => ({
       ...row,
       buffer: row.suggested - row.current,
     })).filter((row) => {
@@ -41,13 +66,24 @@ export function InventoryProvider({
         (!filters.product || row.product === filters.product)
       );
     });
-  }, [filters]);
+  }, [filters, inventoryData]);
 
-  // TEMP: Simulated update (backend later)
+  // Update stock via backend
   const updateStock = async () => {
     setIsUpdating(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setIsUpdating(false);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/inventory/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        await res.json();
+      }
+    } catch (error) {
+      console.error("Failed to update stock:", error);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -58,6 +94,7 @@ export function InventoryProvider({
         inventory,
         isUpdating,
         updateStock,
+        isLoading,
       }}
     >
       {children}

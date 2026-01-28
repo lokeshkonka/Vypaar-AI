@@ -1,0 +1,79 @@
+# Core Dependencies
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-multipart
+
+# Machine Learning
+scikit-learn
+xgboost
+lightgbm
+numpy
+pandas
+joblib
+
+# Web Scraping
+beautifulsoup4
+selenium
+requests
+lxml
+html5lib
+
+# Database
+sqlalchemy
+alembic
+asyncpg
+psycopg2-binary
+aiosqlite
+
+# Redis & Task Queue
+redis
+celery
+flower
+
+# Scheduling
+apscheduler
+
+# Logging
+loguru
+python-json-logger
+
+# Validation & Serialization
+email-validator
+# HTTP & API
+httpx
+aiohttp
+
+# Date & Time
+python-dateutil
+pytz
+
+# Utilities
+python-dotenv
+tenacity
+tqdm
+
+# Scheduling
+apscheduler
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+httpx
+faker
+
+# Code Quality
+black
+flake8
+mypy
+isort
+# Documentation
+mkdocs
+mkdocs-material
+
+# Development
+ipython
+jupyter
+ipykernel
