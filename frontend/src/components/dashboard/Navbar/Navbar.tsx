@@ -19,6 +19,9 @@ import {
   FiMoon,
   FiMousePointer,
   FiZap,
+  FiUpload,
+  FiSettings,
+  FiTarget,
 } from "react-icons/fi";
 
 import NavLoader from "./NavLoader";
@@ -206,6 +209,33 @@ export default function Navbar() {
               active={isActive("/dashboard/buysell-alerts")}
               onClick={() => {
                 navigate("/dashboard/buysell-alerts");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiTarget />}
+              label="Recommendations"
+              active={isActive("/dashboard/recommendations")}
+              onClick={() => {
+                navigate("/dashboard/recommendations");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiUpload />}
+              label="Import Data"
+              active={isActive("/data/import")}
+              onClick={() => {
+                navigate("/data/import");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiSettings />}
+              label="Settings"
+              active={isActive("/dashboard/settings")}
+              onClick={() => {
+                navigate("/dashboard/settings");
                 setOpen(false);
               }}
             />

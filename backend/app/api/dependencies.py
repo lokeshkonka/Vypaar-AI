@@ -4,7 +4,7 @@ from typing import AsyncGenerator, Generator
 from functools import lru_cache
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
+from fastapi import Depends, Request
 from loguru import logger
 
 from app.database.connection import get_async_session
@@ -30,6 +30,24 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     async for session in get_async_session():
         yield session
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Alias for async database session dependency."""
+    async for session in get_async_session():
+        yield session
+
+
+async def get_current_user(request: Request) -> dict:
+    """Get current user from Authorization header.
+
+    This is a lightweight placeholder for Clerk integration.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header else None
+    if not token:
+        return {}
+    return {"user_id": token, "token": token}
 
 
 # Repository dependencies

@@ -11,6 +11,9 @@ from app.api.v1.endpoints import (
     buysell_alerts,
     model_metrics,
     scheduler,
+    data_import,
+    user_settings,
+    recommendations,
 )
 
 api_router = APIRouter()
@@ -23,3 +26,6 @@ api_router.include_router(alerts.router, tags=["Alerts"])
 api_router.include_router(buysell_alerts.router, tags=["Buy/Sell Alerts"])
 api_router.include_router(model_metrics.router, tags=["Model Metrics"])
 api_router.include_router(scheduler.router, prefix="/scheduler", tags=["Scheduler"])
+api_router.include_router(data_import.router, tags=["Data Import"])
+api_router.include_router(user_settings.router, tags=["User Settings"])
+api_router.include_router(recommendations.router, tags=["Recommendations"])

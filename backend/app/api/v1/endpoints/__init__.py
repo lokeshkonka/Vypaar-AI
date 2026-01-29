@@ -8,6 +8,9 @@ from app.api.v1.endpoints import (
     alerts,
     buysell_alerts,
     model_metrics,
+    data_import,
+    user_settings,
+    recommendations,
 )
 
 __all__ = [
@@ -17,5 +20,8 @@ __all__ = [
     "inventory",
     "alerts",
     "buysell_alerts",
+    "user_settings",
     "model_metrics",
+    "data_import",
+    "recommendations",
 ]

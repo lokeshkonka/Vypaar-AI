@@ -11,6 +11,12 @@ import Insights from "./pages/Insights";
 import ModelAccuracy from "./pages/ModelAccuracy";
 import BuySellAlerts from "./pages/BuySellAlerts";
 import Docs from "./pages/Docs";
+import DataImport from "./pages/DataImport";
+import UserSettings from "./pages/UserSettings";
+import Recommendations from "./pages/Recommendations";
+import { DataImportProvider } from "./context/DataImportContext";
+import { UserSettingsProvider } from "./context/UserSettingsContext";
+import { RecommendationProvider } from "./context/RecommendationContext";
 
 function App() {
   return (
@@ -93,6 +99,51 @@ function App() {
             <>
               <SignedIn>
                 <BuySellAlerts />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/dashboard/recommendations" 
+          element={
+            <>
+              <SignedIn>
+                <RecommendationProvider>
+                  <Recommendations />
+                </RecommendationProvider>
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/data/import" 
+          element={
+            <>
+              <SignedIn>
+                <DataImportProvider>
+                  <DataImport />
+                </DataImportProvider>
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          } 
+        />
+        <Route 
+          path="/dashboard/settings" 
+          element={
+            <>
+              <SignedIn>
+                <UserSettingsProvider>
+                  <UserSettings />
+                </UserSettingsProvider>
               </SignedIn>
               <SignedOut>
                 <Navigate to="/auth" replace />
