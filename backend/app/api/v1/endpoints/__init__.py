@@ -11,6 +11,9 @@ from app.api.v1.endpoints import (
     data_import,
     user_settings,
     recommendations,
+    discussions,
+    watchlist,
+    market_trends,
 )
 
 __all__ = [
@@ -24,4 +27,7 @@ __all__ = [
     "model_metrics",
     "data_import",
     "recommendations",
+    "discussions",
+    "watchlist",
+    "market_trends",
 ]

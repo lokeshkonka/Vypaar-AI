@@ -33,7 +33,11 @@ import NotificationComponent from "./NotificationComponent";
    NAVBAR
    ========================= */
 
-export default function Navbar() {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export default function Navbar({ onMenuClick }: NavbarProps) {
   const [open, setOpen] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
 
@@ -54,7 +58,10 @@ export default function Navbar() {
           {/* LEFT */}
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                setOpen(true);
+                onMenuClick?.();
+              }}
               className="text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
             >
               <FiMenu size={22} />

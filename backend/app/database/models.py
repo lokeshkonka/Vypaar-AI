@@ -221,3 +221,91 @@ class Prediction(Base):
 
     def __repr__(self):
         return f"<Prediction(id={self.id}, commodity_id={self.commodity_id}, market_id={self.market_id})>"
+
+
+class Discussion(Base):
+    """Community discussion model."""
+
+    __tablename__ = "discussions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(255), nullable=False, index=True)
+    content = Column(Text, nullable=False)
+    commodity = Column(String(255), nullable=False, index=True)
+    author = Column(String(255), nullable=False)
+    avatar_url = Column(String(500), nullable=True)
+    likes_count = Column(Integer, default=0)
+    replies_count = Column(Integer, default=0)
+    views_count = Column(Integer, default=0)
+    is_pinned = Column(Boolean, default=False, index=True)
+    tags = Column(JSON, default=list, nullable=False)  # Store tags as JSON array
+    status = Column(String(20), default="PUBLISHED", index=True)  # PUBLISHED, DRAFT, ARCHIVED
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index("ix_discussion_commodity_created", "commodity", "created_at"),
+        Index("ix_discussion_status", "status"),
+    )
+
+    def __repr__(self):
+        return f"<Discussion(id={self.id}, title={self.title}, author={self.author})>"
+
+
+class Watchlist(Base):
+    """User watchlist for favorite commodities and markets."""
+
+    __tablename__ = "watchlists"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)  # External user ID
+    commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=False)
+    market_id = Column(Integer, ForeignKey("markets.id"), nullable=True)
+    notes = Column(Text, nullable=True)
+    alert_on_price_change = Column(Boolean, default=False)
+    price_change_threshold = Column(Float, nullable=True)  # Percentage
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    commodity = relationship("Commodity")
+    market = relationship("Market")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "commodity_id", "market_id", name="uq_watchlist"),
+        Index("ix_watchlist_user", "user_id"),
+    )
+
+    def __repr__(self):
+        return f"<Watchlist(id={self.id}, user_id={self.user_id}, commodity_id={self.commodity_id})>"
+
+
+class MarketTrendAnalysis(Base):
+    """Pre-calculated market trend analysis for performance."""
+
+    __tablename__ = "market_trend_analysis"
+
+    id = Column(Integer, primary_key=True, index=True)
+    commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=False)
+    market_id = Column(Integer, ForeignKey("markets.id"), nullable=False)
+    analysis_date = Column(Date, nullable=False, index=True)
+    period_days = Column(Integer, nullable=False)  # 7, 14, 30, 90
+    avg_price = Column(Float, nullable=False)
+    min_price = Column(Float, nullable=False)
+    max_price = Column(Float, nullable=False)
+    price_volatility = Column(Float, nullable=False)  # Coefficient of variation
+    trend_direction = Column(String(20), nullable=False)  # INCREASING, DECREASING, STABLE
+    trend_strength = Column(Float, nullable=False)  # 0-1 score
+    momentum = Column(Float, nullable=False)  # Rate of change
+    total_volume = Column(Float, nullable=True)
+    avg_daily_volume = Column(Float, nullable=True)
+    analysis_data = Column(JSON, nullable=True)  # Store additional analysis metrics
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    __table_args__ = (
+        UniqueConstraint("commodity_id", "market_id", "analysis_date", "period_days", name="uq_trend_analysis"),
+        Index("ix_trend_analysis_date_period", "analysis_date", "period_days"),
+    )
+
+    def __repr__(self):
+        return f"<MarketTrendAnalysis(id={self.id}, commodity_id={self.commodity_id}, market_id={self.market_id})>"

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 
+import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import AuthComponent from "./components/auth/AuthComponent";
 import Dashboard from "./pages/Dashboard";
 import Landing from "./pages/Landing";
@@ -14,14 +15,17 @@ import Docs from "./pages/Docs";
 import DataImport from "./pages/DataImport";
 import UserSettings from "./pages/UserSettings";
 import Recommendations from "./pages/Recommendations";
+import Community from "./pages/Community";
+import ErrorPage from "./pages/ErrorPage";
 import { DataImportProvider } from "./context/DataImportContext";
 import { UserSettingsProvider } from "./context/UserSettingsContext";
 import { RecommendationProvider } from "./context/RecommendationContext";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
         {/* AUTH */}
         <Route path="/auth" element={<AuthComponent />} />
 
@@ -121,6 +125,32 @@ function App() {
             </>
           } 
         />
+        <Route
+          path="/dashboard/community"
+          element={
+            <>
+              <SignedIn>
+                <Community />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          }
+        />
+        <Route
+          path="/dashboard/discussions"
+          element={
+            <>
+              <SignedIn>
+                <Community />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          }
+        />
         <Route 
           path="/data/import" 
           element={
@@ -156,14 +186,12 @@ function App() {
         <Route path="/docs" element={<Docs />} />
         <Route path="/about" element={<ComingSoon />} />
         <Route path="/contact" element={<ComingSoon />} />
+        <Route path="/error" element={<ErrorPage />} />
+        <Route path="*" element={<ErrorPage statusCode={404} />} />
 
       </Routes>
-
-
-
-
     </BrowserRouter>
+  </ErrorBoundary>
   );
 }
-
 export default App;

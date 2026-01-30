@@ -191,7 +191,7 @@ async def get_buysell_alert(
         market = await market_repo.get_by_id(alert.market_id)
 
         # Get current price
-        current_price_record = await market_price_repo.get_latest(
+        current_price_record = await market_price_repo.get_latest_price(
             commodity_id=alert.commodity_id,
             market_id=alert.market_id,
         )
@@ -274,7 +274,7 @@ async def list_buysell_alerts(
             market = await market_repo.get_by_id(alert.market_id)
 
             # Get current price
-            current_price_record = await market_price_repo.get_latest(
+            current_price_record = await market_price_repo.get_latest_price(
                 commodity_id=alert.commodity_id,
                 market_id=alert.market_id,
             )

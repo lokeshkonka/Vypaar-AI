@@ -16,6 +16,9 @@ from app.database.models import (
     Inventory,
     PredictionMetrics,
     Prediction,
+    Discussion,
+    Watchlist,
+    MarketTrendAnalysis,
 )
 
 
@@ -420,3 +423,203 @@ class PredictionRepository(BaseRepository):
             return 0.0
         
         return sum(p.accuracy for p in predictions if p.accuracy) / len(predictions)
+
+
+class DiscussionRepository(BaseRepository):
+    """Repository for Discussion operations."""
+
+    def __init__(self, db: AsyncSession):
+        super().__init__(db, Discussion)
+
+    async def get_by_commodity(
+        self, commodity: str, skip: int = 0, limit: int = 50, status: str = "PUBLISHED"
+    ) -> List[Discussion]:
+        """Get discussions for a commodity."""
+        query = (
+            select(Discussion)
+            .where(and_(Discussion.commodity == commodity, Discussion.status == status))
+            .order_by(desc(Discussion.created_at))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_recent(self, skip: int = 0, limit: int = 50, status: str = "PUBLISHED") -> List[Discussion]:
+        """Get recent discussions."""
+        query = (
+            select(Discussion)
+            .where(Discussion.status == status)
+            .order_by(desc(Discussion.created_at))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_pinned(self, limit: int = 10) -> List[Discussion]:
+        """Get pinned discussions."""
+        query = (
+            select(Discussion)
+            .where(and_(Discussion.is_pinned == True, Discussion.status == "PUBLISHED"))
+            .order_by(desc(Discussion.updated_at))
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def search(self, query_str: str, skip: int = 0, limit: int = 50) -> List[Discussion]:
+        """Search discussions by title or content."""
+        query = (
+            select(Discussion)
+            .where(
+                and_(
+                    or_(
+                        Discussion.title.ilike(f"%{query_str}%"),
+                        Discussion.content.ilike(f"%{query_str}%"),
+                    ),
+                    Discussion.status == "PUBLISHED",
+                )
+            )
+            .order_by(desc(Discussion.created_at))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def increment_likes(self, discussion_id: int) -> Optional[Discussion]:
+        """Increment likes count."""
+        discussion = await self.get_by_id(discussion_id)
+        if discussion:
+            discussion.likes_count += 1
+            await self.db.flush()
+        return discussion
+
+    async def increment_views(self, discussion_id: int) -> Optional[Discussion]:
+        """Increment views count."""
+        discussion = await self.get_by_id(discussion_id)
+        if discussion:
+            discussion.views_count += 1
+            await self.db.flush()
+        return discussion
+
+
+class WatchlistRepository(BaseRepository):
+    """Repository for Watchlist operations."""
+
+    def __init__(self, db: AsyncSession):
+        super().__init__(db, Watchlist)
+
+    async def get_user_watchlist(self, user_id: str, skip: int = 0, limit: int = 100) -> List[Watchlist]:
+        """Get all watchlist entries for a user."""
+        query = (
+            select(Watchlist)
+            .where(Watchlist.user_id == user_id)
+            .order_by(desc(Watchlist.created_at))
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_user_watchlist_count(self, user_id: str) -> int:
+        """Get count of watchlist entries for a user."""
+        query = select(Watchlist).where(Watchlist.user_id == user_id)
+        result = await self.db.execute(query)
+        return len(result.scalars().all())
+
+    async def exists(self, user_id: str, commodity_id: int, market_id: Optional[int] = None) -> bool:
+        """Check if item exists in watchlist."""
+        query = select(Watchlist).where(
+            and_(
+                Watchlist.user_id == user_id,
+                Watchlist.commodity_id == commodity_id,
+                Watchlist.market_id == market_id,
+            )
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none() is not None
+
+    async def get_by_commodity(self, commodity_id: int, limit: int = 100) -> List[Watchlist]:
+        """Get all watchlist entries for a commodity."""
+        query = (
+            select(Watchlist)
+            .where(Watchlist.commodity_id == commodity_id)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+
+class MarketTrendAnalysisRepository(BaseRepository):
+    """Repository for MarketTrendAnalysis operations."""
+
+    def __init__(self, db: AsyncSession):
+        super().__init__(db, MarketTrendAnalysis)
+
+    async def get_latest_analysis(
+        self, commodity_id: int, market_id: int, period_days: int = 7
+    ) -> Optional[MarketTrendAnalysis]:
+        """Get latest trend analysis for given period."""
+        query = (
+            select(MarketTrendAnalysis)
+            .where(
+                and_(
+                    MarketTrendAnalysis.commodity_id == commodity_id,
+                    MarketTrendAnalysis.market_id == market_id,
+                    MarketTrendAnalysis.period_days == period_days,
+                )
+            )
+            .order_by(desc(MarketTrendAnalysis.analysis_date))
+            .limit(1)
+        )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_trend_comparison(
+        self, commodity_id: int, market_id: int
+    ) -> dict:
+        """Get trend data for multiple periods (7d, 14d, 30d)."""
+        trends = {}
+        for period in [7, 14, 30]:
+            query = (
+                select(MarketTrendAnalysis)
+                .where(
+                    and_(
+                        MarketTrendAnalysis.commodity_id == commodity_id,
+                        MarketTrendAnalysis.market_id == market_id,
+                        MarketTrendAnalysis.period_days == period,
+                    )
+                )
+                .order_by(desc(MarketTrendAnalysis.analysis_date))
+                .limit(1)
+            )
+            result = await self.db.execute(query)
+            trends[f"{period}d"] = result.scalar_one_or_none()
+        return trends
+
+    async def get_by_date_range(
+        self,
+        commodity_id: int,
+        market_id: int,
+        start_date,
+        end_date,
+        period_days: int = 7,
+    ) -> List[MarketTrendAnalysis]:
+        """Get trend analysis for a date range."""
+        query = (
+            select(MarketTrendAnalysis)
+            .where(
+                and_(
+                    MarketTrendAnalysis.commodity_id == commodity_id,
+                    MarketTrendAnalysis.market_id == market_id,
+                    MarketTrendAnalysis.period_days == period_days,
+                    MarketTrendAnalysis.analysis_date >= start_date,
+                    MarketTrendAnalysis.analysis_date <= end_date,
+                )
+            )
+            .order_by(MarketTrendAnalysis.analysis_date)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()

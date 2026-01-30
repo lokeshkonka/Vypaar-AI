@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useCallback, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import { useAuth } from "@clerk/clerk-react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
@@ -91,6 +92,7 @@ interface RecommendationProviderProps {
 export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
   children,
 }) => {
+  const { getToken } = useAuth();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [history, setHistory] = useState<RecommendationHistoryItem[]>([]);
   const [metrics, setMetrics] = useState<RecommendationMetrics | null>(null);
@@ -103,15 +105,22 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     setTimeout(() => setSuccessMessage(null), 3000);
   };
 
-  const fetchRecommendations = async () => {
+  const getHeaders = async () => {
+    const token = await getToken();
+    return {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    };
+  };
+
+  const fetchRecommendations = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
+      const headers = await getHeaders();
       const response = await fetch(`${BACKEND_URL}/api/v1/recommendations/`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -126,17 +135,16 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getToken]);
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
+      const headers = await getHeaders();
       const response = await fetch(`${BACKEND_URL}/api/v1/recommendations/history`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -151,17 +159,16 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getToken]);
 
-  const fetchMetrics = async () => {
+  const fetchMetrics = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
+      const headers = await getHeaders();
       const response = await fetch(`${BACKEND_URL}/api/v1/recommendations/metrics`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
       });
 
       if (!response.ok) {
@@ -176,19 +183,18 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getToken]);
 
-  const acknowledgeRecommendation = async (id: number, note?: string) => {
+  const acknowledgeRecommendation = useCallback(async (id: number, note?: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      const headers = await getHeaders();
       const response = await fetch(
         `${BACKEND_URL}/api/v1/recommendations/${id}/acknowledge`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({ note }),
         }
       );
@@ -211,9 +217,9 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getToken]);
 
-  const recordAccuracy = async (
+  const recordAccuracy = useCallback(async (
     id: number,
     outcome: AccuracyRating,
     actualChangePct?: number,
@@ -223,13 +229,12 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     setIsLoading(true);
     setError(null);
     try {
+      const headers = await getHeaders();
       const response = await fetch(
         `${BACKEND_URL}/api/v1/recommendations/${id}/accuracy`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({
             outcome,
             actual_change_pct: actualChangePct,
@@ -250,7 +255,7 @@ export const RecommendationProvider: React.FC<RecommendationProviderProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getToken]);
 
   return (
     <RecommendationContext.Provider

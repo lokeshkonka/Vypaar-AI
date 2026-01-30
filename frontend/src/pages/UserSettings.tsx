@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUserSettings } from "../context/UserSettingsContext";
+import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { Skeleton } from "../components/common";
 import Breadcrumbs from "../components/common/Breadcrumbs";
 import { FiUser, FiBell, FiKey, FiLock, FiLogOut, FiSave, FiCheck, FiX, FiCopy, FiTrash2, FiEye, FiEyeOff } from "react-icons/fi";
 
@@ -148,8 +150,8 @@ export default function UserSettings() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a1515] pt-20 pb-12 px-4">
-      <div className="max-w-6xl mx-auto">
+    <DashboardLayout>
+      <div className="max-w-6xl mx-auto pt-20 pb-12 px-4">
         {/* Header */}
         <div className="mb-8">
           <Breadcrumbs items={breadcrumbs} />
@@ -486,6 +488,6 @@ export default function UserSettings() {
           ) : null}
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }

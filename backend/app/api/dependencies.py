@@ -16,6 +16,9 @@ from app.database.repositories import (
     InventoryRepository,
     PredictionMetricsRepository,
     PredictionRepository,
+    DiscussionRepository,
+    WatchlistRepository,
+    MarketTrendAnalysisRepository,
 )
 from app.ml.predictor import AgriculturalPredictor
 
@@ -86,6 +89,23 @@ async def get_prediction_metrics_repo(
 async def get_prediction_repo(db: AsyncSession = Depends(get_db)) -> PredictionRepository:
     """Get prediction repository."""
     return PredictionRepository(db)
+
+
+async def get_discussion_repo(db: AsyncSession = Depends(get_db)) -> DiscussionRepository:
+    """Get discussion repository."""
+    return DiscussionRepository(db)
+
+
+async def get_watchlist_repo(db: AsyncSession = Depends(get_db)) -> WatchlistRepository:
+    """Get watchlist repository."""
+    return WatchlistRepository(db)
+
+
+async def get_market_trend_analysis_repo(
+    db: AsyncSession = Depends(get_db)
+) -> MarketTrendAnalysisRepository:
+    """Get market trend analysis repository."""
+    return MarketTrendAnalysisRepository(db)
 
 
 # ML Predictor dependency (singleton)

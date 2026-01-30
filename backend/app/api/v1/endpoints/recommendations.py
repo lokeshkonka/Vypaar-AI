@@ -62,6 +62,16 @@ async def list_recommendation_history(
     return RecommendationHistoryResponse(history=history, total=len(history))
 
 
+@router.get("/metrics", response_model=RecommendationMetricsResponse)
+async def get_recommendation_metrics(
+    current_user: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+):
+    """Get recommendation accuracy metrics."""
+    user_id = _require_user_id(current_user)
+    return await RecommendationService.get_accuracy_metrics(session, user_id)
+
+
 @router.get("/{recommendation_id}", response_model=RecommendationResponse)
 async def get_recommendation(
     recommendation_id: int,
@@ -119,13 +129,3 @@ async def record_accuracy(
     if not success:
         raise HTTPException(status_code=400, detail="Unable to record accuracy")
     return {"status": "recorded", "recommendation_id": recommendation_id}
-
-
-@router.get("/metrics", response_model=RecommendationMetricsResponse)
-async def get_recommendation_metrics(
-    current_user: dict = Depends(get_current_user),
-    session: AsyncSession = Depends(get_db_session),
-):
-    """Get recommendation accuracy metrics."""
-    user_id = _require_user_id(current_user)
-    return await RecommendationService.get_accuracy_metrics(session, user_id)

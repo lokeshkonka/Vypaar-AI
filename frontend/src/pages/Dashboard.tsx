@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 
 import Navbar from "../components/dashboard/Navbar/Navbar";
 import UserSync from "../components/dashboard/Navbar/UserSync";
-import DashboardLoader from "../components/dashboard/Home/DashboardLoader";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { CardSkeleton } from "../components/common";
 
 import { ForecastProvider } from "../context/ForecastContext";
 
@@ -28,18 +29,22 @@ export default function Dashboard() {
   }, []);
 
   if (isLoading) {
-    return <DashboardLoader />;
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto mt-12 space-y-6">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+      </DashboardLayout>
+    );
   }
 
   return (
-    <ForecastProvider>
-      <div className="dashboard relative min-h-screen overflow-hidden">
-        <GraphBackgroundCorner />
-        <Navbar />
-        <UserSync />
-
+    <DashboardLayout>
+      <ForecastProvider>
         {/* Home content */}
-        <main className="dashboard-body relative z-10 max-w-2xl mx-auto mt-12">
+        <main className="relative z-10 max-w-2xl mx-auto mt-12">
           <WelcomeCard />
 
           <div className="grid gap-6">
@@ -48,8 +53,8 @@ export default function Dashboard() {
             <GenerateForecastCTA />
           </div>
         </main>
-      </div>
+      </ForecastProvider>
       <DashFooter/>
-    </ForecastProvider>
+    </DashboardLayout>
   );
 }

@@ -843,3 +843,133 @@ class ModelMetricsResponse(BaseSchema):
     hyperparameters: Optional[dict[str, Any]] = None
     cross_validation_scores: Optional[list[float]] = None
     created_at: datetime
+
+
+# Discussion schemas
+class DiscussionCreate(BaseSchema):
+    """Create discussion request."""
+    
+    title: str = Field(..., min_length=5, max_length=255)
+    content: str = Field(..., min_length=10, max_length=5000)
+    commodity: str = Field(..., min_length=1, max_length=255)
+    author: str = Field(..., min_length=1, max_length=255)
+    avatar_url: Optional[str] = None
+    tags: list[str] = Field(default_factory=list, max_length=10)
+
+
+class DiscussionUpdate(BaseSchema):
+    """Update discussion request."""
+    
+    title: Optional[str] = Field(None, min_length=5, max_length=255)
+    content: Optional[str] = Field(None, min_length=10, max_length=5000)
+    tags: Optional[list[str]] = None
+
+
+class DiscussionResponse(BaseSchema):
+    """Discussion response."""
+    
+    id: int
+    title: str
+    content: str
+    commodity: str
+    author: str
+    avatar_url: Optional[str] = None
+    likes_count: int
+    replies_count: int
+    views_count: int
+    is_pinned: bool
+    tags: list[str]
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class DiscussionListResponse(BaseSchema):
+    """List of discussions."""
+    
+    discussions: list[DiscussionResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+# Watchlist schemas
+class WatchlistCreate(BaseSchema):
+    """Create watchlist entry."""
+    
+    user_id: str
+    commodity_id: int
+    market_id: Optional[int] = None
+    notes: Optional[str] = None
+    alert_on_price_change: bool = False
+    price_change_threshold: Optional[float] = Field(None, ge=0.1, le=100)
+
+
+class WatchlistUpdate(BaseSchema):
+    """Update watchlist entry."""
+    
+    notes: Optional[str] = None
+    alert_on_price_change: Optional[bool] = None
+    price_change_threshold: Optional[float] = Field(None, ge=0.1, le=100)
+
+
+class WatchlistResponse(BaseSchema):
+    """Watchlist entry response."""
+    
+    id: int
+    user_id: str
+    commodity_id: int
+    commodity_name: Optional[str] = None
+    market_id: Optional[int] = None
+    market_name: Optional[str] = None
+    current_price: Optional[float] = None
+    notes: Optional[str] = None
+    alert_on_price_change: bool
+    price_change_threshold: Optional[float] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class WatchlistListResponse(BaseSchema):
+    """List of watchlist entries."""
+    
+    watchlist: list[WatchlistResponse]
+    total: int
+
+
+# Market trend analysis schemas
+class MarketTrendAnalysisResponse(BaseSchema):
+    """Market trend analysis response."""
+    
+    id: int
+    commodity_id: int
+    commodity_name: str
+    market_id: int
+    market_name: str
+    analysis_date: str
+    period_days: int
+    avg_price: float
+    min_price: float
+    max_price: float
+    price_volatility: float
+    trend_direction: str  # INCREASING, DECREASING, STABLE
+    trend_strength: float  # 0-1
+    momentum: float
+    total_volume: Optional[float] = None
+    avg_daily_volume: Optional[float] = None
+    price_range: dict = Field(default_factory=dict)
+    trend_label: str = ""
+
+
+class MarketTrendComparisonResponse(BaseSchema):
+    """Compare trends across different periods."""
+    
+    commodity_id: int
+    commodity_name: str
+    market_id: int
+    market_name: str
+    trends_7d: Optional[MarketTrendAnalysisResponse] = None
+    trends_14d: Optional[MarketTrendAnalysisResponse] = None
+    trends_30d: Optional[MarketTrendAnalysisResponse] = None
+    trend_change: str  # Comparison result
+    recommendation: str

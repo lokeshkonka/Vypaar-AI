@@ -3,7 +3,7 @@
 import asyncio
 from typing import List
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile, status
 from loguru import logger
 
 from app.api.dependencies import get_db
@@ -193,7 +193,7 @@ async def validate_import(
 )
 async def start_import(
     request: ImportStartRequest,
-    db: AsyncSession = get_db,
+    db: AsyncSession = Depends(get_db),
 ) -> ImportJobResponse:
     """
     Start importing validated data.
@@ -257,7 +257,7 @@ async def start_import(
     description="Get current status and progress of an import job.",
 )
 async def get_import_status(
-    job_id: str = Query(..., description="Job ID to check"),
+    job_id: str = Path(..., description="Job ID to check"),
 ) -> ImportJobResponse:
     """Get the status and progress of an import job."""
     try:

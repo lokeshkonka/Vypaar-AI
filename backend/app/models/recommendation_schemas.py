@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -155,5 +155,5 @@ class RecommendationMetricsResponse(BaseModel):
     partial_count: int
     accuracy_rate: float = Field(..., ge=0, le=1)
     average_roi_pct: float
-    by_type_accuracy: Dict[str, float]
+    by_type_accuracy: dict[str, float]
     generated_at: datetime

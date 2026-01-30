@@ -14,6 +14,9 @@ from app.api.v1.endpoints import (
     data_import,
     user_settings,
     recommendations,
+    discussions,
+    watchlist,
+    market_trends,
 )
 
 api_router = APIRouter()
@@ -29,3 +32,6 @@ api_router.include_router(scheduler.router, prefix="/scheduler", tags=["Schedule
 api_router.include_router(data_import.router, tags=["Data Import"])
 api_router.include_router(user_settings.router, tags=["User Settings"])
 api_router.include_router(recommendations.router, tags=["Recommendations"])
+api_router.include_router(discussions.router, tags=["Discussions"])
+api_router.include_router(watchlist.router, tags=["Watchlist"])
+api_router.include_router(market_trends.router, tags=["Market Trends"])
