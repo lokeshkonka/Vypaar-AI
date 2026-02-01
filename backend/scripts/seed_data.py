@@ -61,29 +61,33 @@ async def seed():
             market_ids[m["name"]] = created.id
         logger.info(f"Markets seeded: {market_ids}")
 
-        # Seed 14 days of prices for Wheat in Azadpur and Mumbai
+        # Seed 14 days of prices for all commodities in Azadpur and Mumbai
         start_date = datetime.utcnow().date() - timedelta(days=14)
         prices = []
         for day in range(14):
             date = start_date + timedelta(days=day)
             for market_name in ["Azadpur", "Mumbai (Dadar)"]:
                 market_id = market_ids[market_name]
-                commodity_id = commodity_ids["Wheat"]
-                base_price = 2500.0
-                # simple sinusoidal variation
-                modal = base_price * (1 + (0.05 * ((day % 7) - 3) / 3))
-                prices.append({
-                    "commodity_id": commodity_id,
-                    "market_id": market_id,
-                    "date": date,
-                    "price": round(modal, 2),
-                    "min_price": round(modal * 0.9, 2),
-                    "max_price": round(modal * 1.1, 2),
-                    "modal_price": round(modal, 2),
-                    "arrival": round(1000 + 50 * day, 2),
-                })
-        await price_repo.bulk_create(prices)
-        logger.info(f"Seeded {len(prices)} market price records")
+                for commodity in COMMODITIES:
+                    commodity_id = commodity_ids[commodity["name"]]
+                    base_price = 2500.0 + (commodity_id * 120)
+                    # simple sinusoidal variation
+                    modal = base_price * (1 + (0.05 * ((day % 7) - 3) / 3))
+                    prices.append({
+                        "commodity_id": commodity_id,
+                        "market_id": market_id,
+                        "date": date,
+                        "price": round(modal, 2),
+                        "min_price": round(modal * 0.9, 2),
+                        "max_price": round(modal * 1.1, 2),
+                        "modal_price": round(modal, 2),
+                        "arrival": round(1000 + 50 * day, 2),
+                    })
+        upserted = 0
+        for price in prices:
+            await price_repo.create_or_update_price(price)
+            upserted += 1
+        logger.info(f"Seeded {upserted} market price records")
 
         # Seed inventory for Wheat in Azadpur
         wheat_id = commodity_ids["Wheat"]

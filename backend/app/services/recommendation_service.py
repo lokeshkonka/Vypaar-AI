@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import List, Optional
 
 from loguru import logger
+from sqlalchemy import desc, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database.models import Recommendation
 from app.models.recommendation_schemas import (
     AccuracyRating,
-    ConfidenceLevel,
     RecommendationHistoryItem,
     RecommendationMetricsResponse,
     RecommendationResponse,
     RecommendationType,
-    TimeHorizon,
 )
 
 
@@ -23,88 +23,27 @@ class RecommendationService:
     """Business logic for recommendations."""
 
     @staticmethod
-    def _mock_active_recommendations() -> List[RecommendationResponse]:
-        now = datetime.now(tz=timezone.utc)
-        return [
-            RecommendationResponse(
-                id=101,
-                commodity_id=1,
-                commodity_name="Wheat",
-                market_id=11,
-                market_name="Delhi",
-                recommendation_type=RecommendationType.BUY,
-                confidence=ConfidenceLevel.HIGH,
-                reasoning="Seasonal demand spike and tightening supply.",
-                current_price=2120.5,
-                target_price=2285.0,
-                expected_change_pct=7.8,
-                time_horizon=TimeHorizon.SHORT_TERM,
-                created_at=now - timedelta(days=1),
-                expires_at=now + timedelta(days=10),
-                model_version="v1.0",
-                acknowledged=False,
-                last_evaluated_at=now - timedelta(hours=3),
-            ),
-            RecommendationResponse(
-                id=102,
-                commodity_id=4,
-                commodity_name="Onion",
-                market_id=14,
-                market_name="Mumbai",
-                recommendation_type=RecommendationType.STOCK_UP,
-                confidence=ConfidenceLevel.MEDIUM,
-                reasoning="Transport disruptions expected; buffer stock advised.",
-                current_price=1650.0,
-                target_price=1780.0,
-                expected_change_pct=4.2,
-                time_horizon=TimeHorizon.MID_TERM,
-                created_at=now - timedelta(hours=6),
-                expires_at=now + timedelta(days=14),
-                model_version="v1.0",
-                acknowledged=True,
-                acknowledgement_note="Noted. Aligning procurement.",
-                last_evaluated_at=now - timedelta(hours=1),
-            ),
-        ]
-
-    @staticmethod
-    def _mock_history() -> List[RecommendationHistoryItem]:
-        now = datetime.now(tz=timezone.utc)
-        return [
-            RecommendationHistoryItem(
-                id=88,
-                commodity_name="Tomato",
-                recommendation_type=RecommendationType.SELL,
-                confidence=ConfidenceLevel.HIGH,
-                created_at=now - timedelta(days=14),
-                outcome=AccuracyRating.CORRECT,
-                actual_change_pct=-6.4,
-                roi_pct=5.2,
-                note="Price drop matched forecast.",
-            ),
-            RecommendationHistoryItem(
-                id=89,
-                commodity_name="Potato",
-                recommendation_type=RecommendationType.HOLD,
-                confidence=ConfidenceLevel.MEDIUM,
-                created_at=now - timedelta(days=10),
-                outcome=AccuracyRating.PARTIAL,
-                actual_change_pct=1.1,
-                roi_pct=0.6,
-                note="Minor change, within neutral band.",
-            ),
-            RecommendationHistoryItem(
-                id=90,
-                commodity_name="Wheat",
-                recommendation_type=RecommendationType.BUY,
-                confidence=ConfidenceLevel.LOW,
-                created_at=now - timedelta(days=8),
-                outcome=AccuracyRating.INCORRECT,
-                actual_change_pct=-2.8,
-                roi_pct=-1.4,
-                note="Unexpected supply release.",
-            ),
-        ]
+    def _to_response(rec: Recommendation) -> RecommendationResponse:
+        return RecommendationResponse(
+            id=rec.id,
+            commodity_id=rec.commodity_id,
+            commodity_name=rec.commodity_name,
+            market_id=rec.market_id,
+            market_name=rec.market_name,
+            recommendation_type=rec.recommendation_type,
+            confidence=rec.confidence,
+            reasoning=rec.reasoning,
+            current_price=rec.current_price,
+            target_price=rec.target_price,
+            expected_change_pct=rec.expected_change_pct,
+            time_horizon=rec.time_horizon,
+            created_at=rec.created_at,
+            expires_at=rec.expires_at,
+            model_version=rec.model_version,
+            acknowledged=rec.acknowledged,
+            acknowledgement_note=rec.acknowledgement_note,
+            last_evaluated_at=rec.last_evaluated_at,
+        )
 
     @classmethod
     async def get_active_recommendations(
@@ -114,7 +53,19 @@ class RecommendationService:
     ) -> List[RecommendationResponse]:
         """Return active recommendations for a user."""
         logger.info(f"Fetching active recommendations for user {user_id}")
-        return cls._mock_active_recommendations()
+        now = datetime.utcnow()
+        query = (
+            select(Recommendation)
+            .where(
+                Recommendation.user_id == user_id,
+                Recommendation.status == "ACTIVE",
+                or_(Recommendation.expires_at.is_(None), Recommendation.expires_at >= now),
+            )
+            .order_by(desc(Recommendation.created_at))
+        )
+        result = await session.execute(query)
+        rows = result.scalars().all()
+        return [cls._to_response(rec) for rec in rows]
 
     @classmethod
     async def get_recommendation_by_id(
@@ -125,10 +76,13 @@ class RecommendationService:
     ) -> Optional[RecommendationResponse]:
         """Return a single recommendation by id."""
         logger.info(f"Fetching recommendation {recommendation_id} for user {user_id}")
-        for rec in cls._mock_active_recommendations():
-            if rec.id == recommendation_id:
-                return rec
-        return None
+        query = select(Recommendation).where(
+            Recommendation.id == recommendation_id,
+            Recommendation.user_id == user_id,
+        )
+        result = await session.execute(query)
+        rec = result.scalar_one_or_none()
+        return cls._to_response(rec) if rec else None
 
     @classmethod
     async def get_recommendation_history(
@@ -140,8 +94,32 @@ class RecommendationService:
     ) -> List[RecommendationHistoryItem]:
         """Return recommendation history for a user."""
         logger.info(f"Fetching recommendation history for user {user_id}")
-        history = cls._mock_history()
-        return history[offset : offset + limit]
+        query = (
+            select(Recommendation)
+            .where(
+                Recommendation.user_id == user_id,
+                Recommendation.outcome.is_not(None),
+            )
+            .order_by(desc(Recommendation.created_at))
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await session.execute(query)
+        rows = result.scalars().all()
+        return [
+            RecommendationHistoryItem(
+                id=rec.id,
+                commodity_name=rec.commodity_name,
+                recommendation_type=rec.recommendation_type,
+                confidence=rec.confidence,
+                created_at=rec.created_at,
+                outcome=rec.outcome,
+                actual_change_pct=rec.actual_change_pct,
+                roi_pct=rec.roi_pct,
+                note=rec.note,
+            )
+            for rec in rows
+        ]
 
     @classmethod
     async def acknowledge_recommendation(
@@ -155,6 +133,18 @@ class RecommendationService:
         logger.info(
             "Acknowledging recommendation %s for user %s", recommendation_id, user_id
         )
+        query = select(Recommendation).where(
+            Recommendation.id == recommendation_id,
+            Recommendation.user_id == user_id,
+        )
+        result = await session.execute(query)
+        rec = result.scalar_one_or_none()
+        if not rec:
+            return False
+        rec.acknowledged = True
+        rec.acknowledgement_note = note
+        rec.last_evaluated_at = datetime.utcnow()
+        await session.commit()
         return True
 
     @classmethod
@@ -175,6 +165,21 @@ class RecommendationService:
             user_id,
             outcome,
         )
+        query = select(Recommendation).where(
+            Recommendation.id == recommendation_id,
+            Recommendation.user_id == user_id,
+        )
+        result = await session.execute(query)
+        rec = result.scalar_one_or_none()
+        if not rec:
+            return False
+        rec.outcome = outcome.value
+        rec.actual_change_pct = actual_change_pct
+        rec.roi_pct = roi_pct
+        rec.note = note
+        rec.last_evaluated_at = datetime.utcnow()
+        rec.status = "ARCHIVED"
+        await session.commit()
         return True
 
     @classmethod
@@ -185,17 +190,45 @@ class RecommendationService:
     ) -> RecommendationMetricsResponse:
         """Return summary metrics for recommendations."""
         logger.info(f"Fetching recommendation metrics for user {user_id}")
-        history = cls._mock_history()
-        correct = sum(1 for item in history if item.outcome == AccuracyRating.CORRECT)
-        incorrect = sum(
-            1 for item in history if item.outcome == AccuracyRating.INCORRECT
+        query = select(Recommendation).where(
+            Recommendation.user_id == user_id,
+            Recommendation.outcome.is_not(None),
         )
-        partial = sum(1 for item in history if item.outcome == AccuracyRating.PARTIAL)
+        result = await session.execute(query)
+        history = result.scalars().all()
+
+        def _outcome_value(value: Optional[object]) -> str:
+            if isinstance(value, AccuracyRating):
+                return value.value
+            return str(value) if value is not None else ""
+
+        correct = sum(
+            1 for item in history if _outcome_value(item.outcome) == AccuracyRating.CORRECT.value
+        )
+        incorrect = sum(
+            1 for item in history if _outcome_value(item.outcome) == AccuracyRating.INCORRECT.value
+        )
+        partial = sum(
+            1 for item in history if _outcome_value(item.outcome) == AccuracyRating.PARTIAL.value
+        )
         total = len(history)
         accuracy_rate = correct / total if total else 0.0
-        avg_roi = (
-            sum(item.roi_pct or 0 for item in history) / total if total else 0.0
-        )
+        avg_roi = sum(item.roi_pct or 0 for item in history) / total if total else 0.0
+
+        by_type_totals: dict[str, int] = {}
+        by_type_correct: dict[str, int] = {}
+        for item in history:
+            rec_type = item.recommendation_type
+            rec_type_value = rec_type.value if isinstance(rec_type, RecommendationType) else str(rec_type)
+            by_type_totals[rec_type_value] = by_type_totals.get(rec_type_value, 0) + 1
+            if _outcome_value(item.outcome) == AccuracyRating.CORRECT.value:
+                by_type_correct[rec_type_value] = by_type_correct.get(rec_type_value, 0) + 1
+
+        by_type_accuracy = {
+            rec_type: (by_type_correct.get(rec_type, 0) / total_count)
+            for rec_type, total_count in by_type_totals.items()
+            if total_count
+        }
 
         return RecommendationMetricsResponse(
             total_recommendations=total,
@@ -204,12 +237,6 @@ class RecommendationService:
             partial_count=partial,
             accuracy_rate=round(accuracy_rate, 2),
             average_roi_pct=round(avg_roi, 2),
-            by_type_accuracy={
-                RecommendationType.BUY.value: 0.5,
-                RecommendationType.SELL.value: 1.0,
-                RecommendationType.HOLD.value: 0.5,
-                RecommendationType.STOCK_UP.value: 0.75,
-                RecommendationType.STOCK_DOWN.value: 0.6,
-            },
-            generated_at=datetime.now(tz=timezone.utc),
+            by_type_accuracy=by_type_accuracy,
+            generated_at=datetime.utcnow(),
         )

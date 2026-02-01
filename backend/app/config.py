@@ -1,6 +1,7 @@
 """Application configuration management."""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Optional
 
 from pydantic import Field, field_validator
@@ -35,6 +36,8 @@ class Settings(BaseSettings):
             "http://localhost:8000",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
+            "http://*.devtunnel.com",
+            "*"
         ]
     )
     cors_allow_credentials: bool = True
@@ -66,7 +69,7 @@ class Settings(BaseSettings):
     log_compression: str = "zip"
     
     # ML Models
-    model_dir: str = "data/models"
+    model_dir: str = str(Path(__file__).resolve().parent.parent / "data" / "models")
     model_version: str = "v1.0.0"
     ensemble_weights: dict[str, float] = {
         "xgboost": 0.35,

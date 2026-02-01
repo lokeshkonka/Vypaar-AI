@@ -105,8 +105,11 @@ class EnsembleManager:
             logger.error(f"Model directory not found: {self.model_dir}")
             return
 
+        logger.info(f"Loading models from: {self.model_dir}")
+        
         # Try tuned ensemble first
         tuned_files = list(self.model_dir.glob("ensemble_tuned_*.joblib"))
+        logger.info(f"Found {len(tuned_files)} tuned ensemble files")
         loaded_from_ensemble = False
         if tuned_files:
             latest_tuned = max(tuned_files, key=lambda p: p.stat().st_mtime)
@@ -131,6 +134,7 @@ class EnsembleManager:
         # Fallback: regular ensemble
         if not loaded_from_ensemble:
             ensemble_files = list(self.model_dir.glob("ensemble_*.joblib"))
+            logger.info(f"Found {len(ensemble_files)} ensemble files (regular)")
             if ensemble_files:
                 latest_ensemble = max(ensemble_files, key=lambda p: p.stat().st_mtime)
                 try:

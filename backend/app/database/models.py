@@ -252,6 +252,47 @@ class Discussion(Base):
         return f"<Discussion(id={self.id}, title={self.title}, author={self.author})>"
 
 
+class Recommendation(Base):
+    """Recommendation model for personalized insights."""
+
+    __tablename__ = "recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String(255), nullable=False, index=True)
+    commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=True)
+    commodity_name = Column(String(255), nullable=False, index=True)
+    market_id = Column(Integer, ForeignKey("markets.id"), nullable=True)
+    market_name = Column(String(255), nullable=True)
+    recommendation_type = Column(String(20), nullable=False, index=True)
+    confidence = Column(String(20), nullable=False)
+    reasoning = Column(Text, nullable=False)
+    current_price = Column(Float, nullable=True)
+    target_price = Column(Float, nullable=True)
+    expected_change_pct = Column(Float, nullable=True)
+    time_horizon = Column(String(20), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    expires_at = Column(DateTime, nullable=True, index=True)
+    model_version = Column(String(50), nullable=True)
+    acknowledged = Column(Boolean, default=False, nullable=False)
+    acknowledgement_note = Column(Text, nullable=True)
+    last_evaluated_at = Column(DateTime, nullable=True)
+    outcome = Column(String(20), nullable=True, index=True)
+    actual_change_pct = Column(Float, nullable=True)
+    roi_pct = Column(Float, nullable=True)
+    note = Column(Text, nullable=True)
+    status = Column(String(20), default="ACTIVE", nullable=False, index=True)
+
+    commodity = relationship("Commodity")
+    market = relationship("Market")
+
+    __table_args__ = (
+        Index("ix_recommendation_user_status", "user_id", "status"),
+    )
+
+    def __repr__(self):
+        return f"<Recommendation(id={self.id}, user_id={self.user_id}, type={self.recommendation_type})>"
+
+
 class Watchlist(Base):
     """User watchlist for favorite commodities and markets."""
 

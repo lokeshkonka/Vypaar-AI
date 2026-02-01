@@ -1,12 +1,15 @@
 """Frontend-aligned helper endpoints to serve the new dashboard."""
 
 from datetime import timedelta
+from pathlib import Path
 from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from loguru import logger
+
+from app.config import settings
 
 from app.api.dependencies import (
     get_predictor,
@@ -122,6 +125,17 @@ async def generate_forecast(
         horizon = int(request.forecast_range)
         start_date = get_current_timestamp().date()
 
+        use_model_predictions = True
+        model_dir = Path(settings.model_dir)
+        # Check if models are loaded in the predictor (they should be via dependency injection)
+        if predictor.ensemble.models and predictor.ensemble.preprocessor:
+            # Models are loaded, use them for predictions
+            logger.info(f"Using {len(predictor.ensemble.models)} loaded models for forecasts")
+        else:
+            # Models not loaded, use fallback pricing
+            use_model_predictions = False
+            logger.info("No trained models available; using fallback pricing for forecasts")
+
         for offset in range(1, horizon + 1):
             target_date = start_date + timedelta(days=offset)
             payload = {
@@ -142,23 +156,28 @@ async def generate_forecast(
             upper = price_pred * 1.05
             confidence = 0.82
 
-            try:
-                df = pd.DataFrame([payload])
-                features = predictor.preprocessor.prepare_prediction_data(
-                    df,
-                    date_col="date",
-                    categorical_cols=predictor.preprocessor.categorical_features or None,
-                )
-                result = predictor.predict(features, include_individual=False, include_confidence=True)
-                if "prediction" in result:
-                    price_pred = float(result.get("prediction", price_pred))
-                    lower = float(result.get("lower_bound", lower))
-                    upper = float(result.get("upper_bound", upper))
-                    confidence = float(result.get("confidence", confidence) or confidence)
-                # else use the daily_multiplier variation
-            except Exception as exc:  # noqa: BLE001
-                logger.warning(f"Prediction fallback for {commodity.name}: {exc}")
-                # Keep the daily_multiplier variation already set above
+            if use_model_predictions:
+                try:
+                    df = pd.DataFrame([payload])
+                    features = predictor.preprocessor.prepare_prediction_data(
+                        df,
+                        date_col="date",
+                        categorical_cols=predictor.preprocessor.categorical_features or None,
+                    )
+                    result = predictor.predict(
+                        features,
+                        include_individual=False,
+                        include_confidence=True,
+                    )
+                    if "prediction" in result:
+                        price_pred = float(result.get("prediction", price_pred))
+                        lower = float(result.get("lower_bound", lower))
+                        upper = float(result.get("upper_bound", upper))
+                        confidence = float(result.get("confidence", confidence) or confidence)
+                    # else use the daily_multiplier variation
+                except Exception as exc:  # noqa: BLE001
+                    logger.warning(f"Prediction fallback for {commodity.name}: {exc}")
+                    # Keep the daily_multiplier variation already set above
 
             forecasts.append(
                 ForecastPoint(

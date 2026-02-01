@@ -381,37 +381,37 @@ async def update_buysell_alert(
             alert.message = request.message
 
         alert.updated_at = get_current_timestamp()
-        updated = await alert_repo.update(alert)
+        await alert_repo.db.flush()
         await alert_repo.db.commit()
 
         # Fetch related data
-        commodity = await commodity_repo.get_by_id(updated.commodity_id)
-        market = await market_repo.get_by_id(updated.market_id)
+        commodity = await commodity_repo.get_by_id(alert.commodity_id)
+        market = await market_repo.get_by_id(alert.market_id)
 
         # Get current price
-        current_price_record = await market_price_repo.get_latest(
-            commodity_id=updated.commodity_id,
-            market_id=updated.market_id,
+        current_price_record = await market_price_repo.get_latest_price(
+            commodity_id=alert.commodity_id,
+            market_id=alert.market_id,
         )
         current_price = current_price_record.price if current_price_record else None
 
         logger.info(f"Buy/Sell alert updated: id={alert_id}")
 
         return BuySellAlertResponse(
-            id=updated.id,
-            commodity_id=updated.commodity_id,
+            id=alert.id,
+            commodity_id=alert.commodity_id,
             commodity_name=commodity.name if commodity else None,
-            market_id=updated.market_id,
+            market_id=alert.market_id,
             market_name=market.name if market else None,
-            buy_threshold=updated.conditions.get("buy_threshold"),
-            sell_threshold=updated.conditions.get("sell_threshold"),
+            buy_threshold=alert.conditions.get("buy_threshold"),
+            sell_threshold=alert.conditions.get("sell_threshold"),
             current_price=current_price,
-            priority=updated.priority,
-            enabled=updated.status == "ACTIVE",
-            notification_channels=updated.notification_channels,
-            message=updated.message,
-            created_at=updated.created_at,
-            updated_at=updated.updated_at,
+            priority=alert.priority,
+            enabled=alert.status == "ACTIVE",
+            notification_channels=alert.notification_channels,
+            message=alert.message,
+            created_at=alert.created_at,
+            updated_at=alert.updated_at,
         )
     except HTTPException:
         raise

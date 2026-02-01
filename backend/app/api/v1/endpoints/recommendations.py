@@ -1,5 +1,7 @@
 """Recommendation endpoints."""
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,9 +43,7 @@ async def list_recommendations(
     return RecommendationListResponse(
         recommendations=recommendations,
         total=len(recommendations),
-        generated_at=recommendations[0].created_at
-        if recommendations
-        else RecommendationService._mock_active_recommendations()[0].created_at,
+        generated_at=recommendations[0].created_at if recommendations else datetime.utcnow(),
     )
 
 

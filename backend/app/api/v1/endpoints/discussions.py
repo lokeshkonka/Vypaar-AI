@@ -174,6 +174,8 @@ async def create_discussion(
             is_pinned=False,
         )
 
+        await repo.db.commit()
+
         logger.info(f"Discussion created: {discussion.id} by {request.author}")
 
         return DiscussionResponse(
@@ -218,6 +220,7 @@ async def update_discussion(
 
         discussion.updated_at = get_current_timestamp()
         await repo.db.flush()
+        await repo.db.commit()
 
         logger.info(f"Discussion {discussion_id} updated")
 
@@ -257,6 +260,7 @@ async def delete_discussion(
 
         discussion.status = "ARCHIVED"
         await repo.db.flush()
+        await repo.db.commit()
 
         logger.info(f"Discussion {discussion_id} archived")
     except HTTPException:
@@ -276,6 +280,8 @@ async def like_discussion(
         discussion = await repo.increment_likes(discussion_id)
         if not discussion:
             raise HTTPException(status_code=404, detail="Discussion not found")
+
+        await repo.db.commit()
 
         logger.info(f"Discussion {discussion_id} liked")
 
