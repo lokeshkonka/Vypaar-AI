@@ -6,7 +6,7 @@ interface FilterOption {
   value: string;
 }
 
-interface FilterPanelProps {
+export interface FilterPanelProps {
   onFilterChange?: (filters: FilterState) => void;
   commodities?: FilterOption[];
   markets?: FilterOption[];

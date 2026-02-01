@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FiDownload, FiX } from "react-icons/fi";
 
-interface ExportDialogProps {
+export interface ExportDialogProps {
   isOpen: boolean;
   onClose: () => void;
   data?: any[];

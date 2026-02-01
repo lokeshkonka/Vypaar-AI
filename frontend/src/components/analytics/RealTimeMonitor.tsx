@@ -15,7 +15,7 @@ interface LiveCommodity {
   trend: number[]; // Last 10 prices for sparkline
 }
 
-interface RealTimeMonitorProps {
+export interface RealTimeMonitorProps {
   commodities?: LiveCommodity[];
   isConnected?: boolean;
   onDataUpdate?: (data: LiveCommodity[]) => void;

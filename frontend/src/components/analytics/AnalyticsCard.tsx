@@ -1,7 +1,7 @@
 import React from "react";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
-interface AnalyticsCardProps {
+export interface AnalyticsCardProps {
   title: string;
   value: string | number;
   unit?: string;

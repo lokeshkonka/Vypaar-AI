@@ -21,7 +21,7 @@ interface ChartData {
   [key: string]: string | number;
 }
 
-interface ChartCardProps {
+export interface ChartCardProps {
   title: string;
   description?: string;
   data: ChartData[];
