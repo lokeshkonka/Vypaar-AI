@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { ChevronDown, ChevronRight, BarChart3, Box, TrendingUp, Activity, Zap, Target, Upload, Settings } from "lucide-react";
-import { navigationSections } from "../../lib/navigationConfig";
-import type { NavItem, NavSection } from "../../lib/navigationConfig";
+import { navigationSections } from "../../libs/navigationConfig";
+import type { NavItem, NavSection } from "../../libs/navigationConfig";
 
 // Icon map for navigation items
 const iconMap: Record<string, React.ReactNode> = {

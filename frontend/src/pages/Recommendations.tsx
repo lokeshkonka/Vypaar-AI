@@ -71,19 +71,19 @@ export default function Recommendations() {
       {recommendations.map((rec: Recommendation) => (
         <div
           key={rec.id}
-          className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
+          className="glass-card p-5 sm:p-6"
         >
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white truncate">
+              <h3 className="text-lg sm:text-xl font-semibold truncate" style={{ color: "var(--text-main)" }}>
                 {rec.commodity_name}
               </h3>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-xs sm:text-sm mt-0.5" style={{ color: "var(--text-soft)" }}>
                 {rec.market_name || "Market"} • {rec.time_horizon.replace("_", " ")}
               </p>
             </div>
             <span
-              className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${getTypeColor(
+              className={`px-2.5 sm:px-3 py-1 text-xs font-semibold whitespace-nowrap ${getTypeColor(
                 rec.recommendation_type
               )}`}
             >
@@ -91,21 +91,21 @@ export default function Recommendations() {
             </span>
           </div>
 
-          <div className="space-y-2 text-sm bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 sm:p-4 mb-4">
+          <div className="space-y-2 text-sm p-3 sm:p-4 mb-4" style={{ background: "rgba(var(--glass-white), 0.3)", borderRadius: 0 }}>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-gray-400">Current Price</span>
-              <span className="font-semibold text-gray-900 dark:text-white">
+              <span style={{ color: "var(--text-soft)" }}>Current Price</span>
+              <span className="font-semibold" style={{ color: "var(--text-main)" }}>
                 ₹{rec.current_price?.toFixed(2) ?? "--"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-gray-400">Target Price</span>
-              <span className="font-semibold text-gray-900 dark:text-white">
+              <span style={{ color: "var(--text-soft)" }}>Target Price</span>
+              <span className="font-semibold" style={{ color: "var(--text-main)" }}>
                 ₹{rec.target_price?.toFixed(2) ?? "--"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 dark:text-gray-400">Expected Change</span>
+              <span style={{ color: "var(--text-soft)" }}>Expected Change</span>
               <span className={`font-semibold ${
                 (rec.expected_change_pct ?? 0) > 0 
                   ? "text-emerald-600 dark:text-emerald-400" 
@@ -116,13 +116,13 @@ export default function Recommendations() {
             </div>
           </div>
 
-          <div className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+          <div className="text-sm mb-4 line-clamp-3" style={{ color: "var(--text-soft)" }}>
             {rec.reasoning}
           </div>
 
-          <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between gap-3 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
             <span
-              className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold ${getConfidenceColor(
+              className={`px-2.5 sm:px-3 py-1 text-xs font-semibold ${getConfidenceColor(
                 rec.confidence
               )}`}
             >
@@ -136,7 +136,7 @@ export default function Recommendations() {
             ) : (
               <button
                 onClick={() => acknowledgeRecommendation(rec.id)}
-                className="px-3 sm:px-4 py-2 rounded-lg bg-emerald-600 text-white text-xs sm:text-sm font-semibold hover:bg-emerald-700 active:bg-emerald-800 transition-colors"
+                className="px-3 sm:px-4 py-2 bg-[rgb(var(--emerald-main))] text-white text-xs sm:text-sm font-semibold hover:opacity-90 transition-opacity"
               >
                 Acknowledge
               </button>
@@ -146,8 +146,8 @@ export default function Recommendations() {
       ))}
 
       {recommendations.length === 0 && (
-        <div className="col-span-full text-center py-12 sm:py-16 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
-          <p className="text-gray-600 dark:text-gray-400">No active recommendations yet.</p>
+        <div className="col-span-full glass-card text-center py-12 sm:py-16" style={{ borderStyle: "dashed" }}>
+          <p style={{ color: "var(--text-soft)" }}>No active recommendations yet.</p>
         </div>
       )}
     </div>
@@ -275,10 +275,10 @@ export default function Recommendations() {
     <DashboardLayout>
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-20">
         <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-gray-900 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2" style={{ color: "var(--text-main)" }}>
             Recommendations
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+          <p className="text-sm sm:text-base" style={{ color: "var(--text-soft)" }}>
             Actionable buy/sell insights with confidence scores and history.
           </p>
         </div>
@@ -288,11 +288,12 @@ export default function Recommendations() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all border shadow-sm ${
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition-all border ${
                 activeTab === tab.id
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-emerald-500/20"
-                  : "bg-white dark:bg-gray-950 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-white"
+                  ? "bg-[rgb(var(--emerald-main))] text-white"
+                  : "glass-card"
               }`}
+              style={activeTab !== tab.id ? { color: "var(--text-main)" } : {}}
             >
               {tab.icon}
               <span className="hidden sm:inline">{tab.label}</span>
@@ -301,21 +302,21 @@ export default function Recommendations() {
         </div>
 
         {successMessage && (
-          <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200">
+          <div className="mb-6 border px-4 py-3" style={{ borderColor: "rgba(16, 185, 129, 0.3)", background: "rgba(16, 185, 129, 0.1)", color: "var(--text-main)" }}>
             {successMessage}
           </div>
         )}
 
         {error && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-200">
+          <div className="mb-6 border px-4 py-3" style={{ borderColor: "rgba(239, 68, 68, 0.3)", background: "rgba(239, 68, 68, 0.1)", color: "var(--text-main)" }}>
             {error}
           </div>
         )}
 
         {isLoading ? (
           <div className="space-y-6">
-            <Skeleton className="h-48 rounded-xl" />
-            <Skeleton className="h-48 rounded-xl" />
+            <Skeleton className="h-48" />
+            <Skeleton className="h-48" />
           </div>
         ) : activeTab === "active" ? (
           renderActive()

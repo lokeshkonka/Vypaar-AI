@@ -79,20 +79,21 @@ export default function AlertCard({ alert }: AlertCardProps) {
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${getSignalColor(alert.signal)}`}>
+    <div className="glass-card p-4">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+          <h3 className="font-semibold text-lg" style={{ color: "var(--text-main)" }}>
             {alert.commodity_name}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{alert.market_name}</p>
+          <p className="text-sm" style={{ color: "var(--text-soft)" }}>{alert.market_name}</p>
         </div>
         {alert.signal && (
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ml-2 ${getSignalBadgeColor(
+            className={`px-3 py-1 text-xs font-semibold whitespace-nowrap ml-2 ${getSignalBadgeColor(
               alert.signal
             )}`}
+            style={{ borderRadius: 0 }}
           >
             {alert.signal} {alert.signal_strength && `(${alert.signal_strength})`}
           </span>
@@ -100,31 +101,31 @@ export default function AlertCard({ alert }: AlertCardProps) {
       </div>
 
       {/* Price Info */}
-      <div className="space-y-2 mb-4 pb-4 border-b border-opacity-20 dark:border-opacity-20">
+      <div className="space-y-2 mb-4 pb-4 border-b" style={{ borderColor: "var(--border)" }}>
         {alert.current_price !== null && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Current Price:</span>
-            <span className="font-semibold text-gray-900 dark:text-white">
+            <span className="text-sm" style={{ color: "var(--text-soft)" }}>Current Price:</span>
+            <span className="font-semibold" style={{ color: "var(--text-main)" }}>
               ₹{alert.current_price.toFixed(2)}
             </span>
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Buy Threshold:</span>
+          <span className="text-sm" style={{ color: "var(--text-soft)" }}>Buy Threshold:</span>
           <span className="font-semibold text-green-600 dark:text-green-400">
             ₹{alert.buy_threshold.toFixed(2)}
           </span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Sell Threshold:</span>
+          <span className="text-sm" style={{ color: "var(--text-soft)" }}>Sell Threshold:</span>
           <span className="font-semibold text-red-600 dark:text-red-400">
             ₹{alert.sell_threshold.toFixed(2)}
           </span>
         </div>
         {alert.current_price !== null && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-sm" style={{ color: "var(--text-soft)" }}>Status:</span>
+            <span className="text-sm font-medium" style={{ color: "var(--text-main)" }}>
               {getPriceStatus(alert.current_price, alert.buy_threshold, alert.sell_threshold)}
             </span>
           </div>
@@ -134,17 +135,18 @@ export default function AlertCard({ alert }: AlertCardProps) {
       {/* Configuration */}
       <div className="space-y-2 mb-4">
         <div className="flex justify-between items-center text-sm">
-          <span className="text-gray-600 dark:text-gray-400">Priority:</span>
-          <span className="font-medium text-gray-900 dark:text-white">{alert.priority}</span>
+          <span style={{ color: "var(--text-soft)" }}>Priority:</span>
+          <span className="font-medium" style={{ color: "var(--text-main)" }}>{alert.priority}</span>
         </div>
         <div className="flex justify-between items-center text-sm">
-          <span className="text-gray-600 dark:text-gray-400">Status:</span>
+          <span style={{ color: "var(--text-soft)" }}>Status:</span>
           <span
             className={`font-medium ${
               alert.enabled
                 ? "text-green-600 dark:text-green-400"
-                : "text-gray-500 dark:text-gray-400"
+                : ""
             }`}
+            style={!alert.enabled ? { color: "var(--text-soft)" } : {}}
           >
             {alert.enabled ? "Active" : "Inactive"}
           </span>
@@ -155,7 +157,7 @@ export default function AlertCard({ alert }: AlertCardProps) {
       <div className="flex gap-2">
         <button
           onClick={handleToggleEnabled}
-          className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+          className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
             alert.enabled
               ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-800"
               : "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 hover:bg-green-200 dark:hover:bg-green-800"
@@ -166,7 +168,7 @@ export default function AlertCard({ alert }: AlertCardProps) {
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className="px-3 py-2 rounded text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-800 transition-colors disabled:opacity-50"
+          className="px-3 py-2 text-sm font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 hover:bg-red-200 dark:hover:bg-red-800 transition-colors disabled:opacity-50"
         >
           {isDeleting ? "..." : "Delete"}
         </button>

@@ -155,28 +155,28 @@ export default function UserSettings() {
         {/* Header */}
         <div className="mb-8">
           <Breadcrumbs items={breadcrumbs} />
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mt-4">Settings</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your profile, preferences, and security settings</p>
+          <h1 className="text-4xl font-bold mt-4" style={{ color: "var(--text-main)" }}>Settings</h1>
+          <p className="mt-2" style={{ color: "var(--text-soft)" }}>Manage your profile, preferences, and security settings</p>
         </div>
 
         {/* Success Message */}
         {successMessage && (
-          <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center gap-3">
+          <div className="mb-6 p-4 border flex items-center gap-3" style={{ borderColor: "rgba(16, 185, 129, 0.3)", background: "rgba(16, 185, 129, 0.1)" }}>
             <FiCheck className="text-emerald-600 dark:text-emerald-400" />
-            <span className="text-emerald-700 dark:text-emerald-300">{successMessage}</span>
+            <span style={{ color: "var(--text-main)" }}>{successMessage}</span>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
+          <div className="mb-6 p-4 border flex items-center gap-3" style={{ borderColor: "rgba(239, 68, 68, 0.3)", background: "rgba(239, 68, 68, 0.1)" }}>
             <FiX className="text-red-600 dark:text-red-400" />
-            <span className="text-red-700 dark:text-red-300">{error}</span>
+            <span style={{ color: "var(--text-main)" }}>{error}</span>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex gap-4 mb-8 border-b" style={{ borderColor: "var(--border)" }}>
           {[
             { id: "profile", label: "Profile", icon: FiUser },
             { id: "notifications", label: "Notifications", icon: FiBell },
@@ -188,9 +188,10 @@ export default function UserSettings() {
               onClick={() => setActiveTab(id as any)}
               className={`flex items-center gap-2 px-4 py-3 font-medium border-b-2 transition ${
                 activeTab === id
-                  ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  ? "border-[rgb(var(--emerald-main))] text-emerald-600 dark:text-emerald-400"
+                  : "border-transparent hover:opacity-70"
               }`}
+              style={activeTab !== id ? { color: "var(--text-soft)" } : {}}
             >
               <Icon size={18} />
               {label}
@@ -199,16 +200,16 @@ export default function UserSettings() {
         </div>
 
         {/* Content */}
-        <div className="bg-white dark:bg-[#1a2f2f] rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+        <div className="glass-card p-6 sm:p-8">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+              <div className="animate-spin h-8 w-8 border-b-2 border-[rgb(var(--emerald-main))]"></div>
             </div>
           ) : activeTab === "profile" ? (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
                     First Name
                   </label>
                   <input
@@ -216,11 +217,12 @@ export default function UserSettings() {
                     value={editMode ? formData.first_name : profile?.first_name}
                     onChange={(e) => editMode && setFormData({ ...formData, first_name: e.target.value })}
                     disabled={!editMode}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0a1515] text-gray-900 dark:text-white disabled:opacity-50"
+                    className="w-full px-4 py-2 border focus:outline-none focus:ring-2 transition disabled:opacity-50"
+                    style={{ borderColor: "var(--border)", background: "var(--panel)", color: "var(--text-main)", borderRadius: 0 }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
                     Last Name
                   </label>
                   <input
@@ -228,11 +230,12 @@ export default function UserSettings() {
                     value={editMode ? formData.last_name : profile?.last_name}
                     onChange={(e) => editMode && setFormData({ ...formData, last_name: e.target.value })}
                     disabled={!editMode}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0a1515] text-gray-900 dark:text-white disabled:opacity-50"
+                    className="w-full px-4 py-2 border focus:outline-none focus:ring-2 transition disabled:opacity-50"
+                    style={{ borderColor: "var(--border)", background: "var(--panel)", color: "var(--text-main)", borderRadius: 0 }}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
                     Email
                   </label>
                   <input
@@ -240,7 +243,8 @@ export default function UserSettings() {
                     value={editMode ? formData.email : profile?.email}
                     onChange={(e) => editMode && setFormData({ ...formData, email: e.target.value })}
                     disabled={!editMode}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#0a1515] text-gray-900 dark:text-white disabled:opacity-50"
+                    className="w-full px-4 py-2 border focus:outline-none focus:ring-2 transition disabled:opacity-50"
+                    style={{ borderColor: "var(--border)", background: "var(--panel)", color: "var(--text-main)", borderRadius: 0 }}
                   />
                 </div>
                 <div>
@@ -284,7 +288,7 @@ export default function UserSettings() {
                 {!editMode ? (
                   <button
                     onClick={() => setEditMode(true)}
-                    className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition flex items-center gap-2"
+                    className="px-6 py-2.5 bg-[rgb(var(--emerald-main))] text-white hover:opacity-90 transition flex items-center gap-2"
                   >
                     <FiUser size={18} /> Edit Profile
                   </button>
@@ -292,7 +296,7 @@ export default function UserSettings() {
                   <>
                     <button
                       onClick={handleSaveProfile}
-                      className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition flex items-center gap-2"
+                      className="px-6 py-2.5 bg-[rgb(var(--emerald-main))] text-white hover:opacity-90 transition flex items-center gap-2"
                     >
                       <FiSave size={18} /> Save Changes
                     </button>
@@ -301,7 +305,8 @@ export default function UserSettings() {
                         setEditMode(false);
                         setFormData({});
                       }}
-                      className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                      className="px-6 py-2.5 border hover:opacity-70 transition"
+                      style={{ borderColor: "var(--border)", color: "var(--text-main)" }}
                     >
                       Cancel
                     </button>

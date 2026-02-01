@@ -22,6 +22,7 @@ import {
   FiUpload,
   FiSettings,
   FiTarget,
+  FiMessageSquare,
 } from "react-icons/fi";
 
 import NavLoader from "./NavLoader";
@@ -29,9 +30,7 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useNotify } from "../../../context/NotifyContext";
 import NotificationComponent from "./NotificationComponent";
 
-/* =========================
-   NAVBAR
-   ========================= */
+
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -76,7 +75,18 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </div>
 
           {/* CENTER */}
-          <nav className="hidden md:flex items-center gap-10 text-sm">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-10 text-sm">
+            <NavLink
+              to="/dashboard/discussions"
+              className={({ isActive }) =>
+                isActive
+                  ? "text-black dark:text-white font-medium"
+                  : "text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+              }
+            >
+              Discussions
+            </NavLink>
+
             <NavLink
               to="/blog"
               className={({ isActive }) =>
@@ -101,25 +111,25 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           </nav>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-4 ">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="cursor-pointer rounded-2xl translate-x-3 p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition"
+              className="cursor-pointer rounded-2xl p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
 
             {/* Notifications */}
-            <div className=" px-3 translate-y-1 ">
+            <div className="relative">
               <button
                 onClick={() => setShowNotif(v => !v)}
-                className="cursor-pointer  relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
+                className="cursor-pointer p-2 relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
               >
                 <FiBell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-400" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-400" />
                 )}
               </button>
 
@@ -229,6 +239,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               }}
             />
             <SideItem
+              icon={<FiMessageSquare />}
+              label="Discussions"
+              active={isActive("/dashboard/discussions")}
+              onClick={() => {
+                navigate("/dashboard/discussions");
+                setOpen(false);
+              }}
+            />
+            <SideItem
               icon={<FiUpload />}
               label="Import Data"
               active={isActive("/data/import")}
@@ -262,14 +281,21 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           {/* MOBILE LINKS */}
           <div className="md:hidden space-y-2">
             <NavLink
-              to="/pricing"
+              to="/dashboard/discussions"
+              onClick={() => setOpen(false)}
+              className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
+            >
+              Discussions
+            </NavLink>
+            <NavLink
+              to="/dashboard/pricing"
               onClick={() => setOpen(false)}
               className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
             >
               Pricing
             </NavLink>
             <NavLink
-              to="/blog"
+              to="/dashboard/blog"
               onClick={() => setOpen(false)}
               className="block text-sm text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white"
             >

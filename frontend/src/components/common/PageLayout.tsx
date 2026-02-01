@@ -1,5 +1,5 @@
 import React from "react";
-import { uiClasses } from "../../lib/layoutConstants";
+import { uiClasses } from "../../libs/layoutConstants";
 
 interface PageLayoutProps {
   children: React.ReactNode;
