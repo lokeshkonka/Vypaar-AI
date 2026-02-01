@@ -127,14 +127,14 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+      className="glass-card p-5 sm:p-6"
     >
-      <h3 className="text-lg font-semibold mb-6 text-gray-900 dark:text-white">
+      <h3 className="text-lg font-semibold mb-6" style={{ color: "var(--text-main)" }}>
         Create Buy/Sell Alert
       </h3>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded text-red-700 dark:text-red-100 text-sm">
+        <div className="mb-4 p-3 border text-sm" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.3)", color: "var(--text-main)" }}>
           {error}
         </div>
       )}
@@ -142,13 +142,19 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Commodity */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Commodity *
           </label>
           <select
             value={formData.commodity_id}
             onChange={(e) => setFormData({ ...formData, commodity_id: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border focus:outline-none focus:ring-2 transition"
+            style={{ 
+              borderColor: "var(--border)", 
+              background: "var(--panel)", 
+              color: "var(--text-main)",
+              borderRadius: 0
+            }}
             required
           >
             <option value="">Select commodity</option>
@@ -162,13 +168,19 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
 
         {/* Market */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Market *
           </label>
           <select
             value={formData.market_id}
             onChange={(e) => setFormData({ ...formData, market_id: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border focus:outline-none focus:ring-2 transition"
+            style={{ 
+              borderColor: "var(--border)", 
+              background: "var(--panel)", 
+              color: "var(--text-main)",
+              borderRadius: 0
+            }}
             required
           >
             <option value="">Select market</option>
@@ -182,7 +194,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
 
         {/* Buy Threshold */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Buy Threshold (₹) *
           </label>
           <input
@@ -192,14 +204,20 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
             value={formData.buy_threshold}
             onChange={(e) => setFormData({ ...formData, buy_threshold: e.target.value })}
             placeholder="Price at which to trigger BUY"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border focus:outline-none focus:ring-2 transition"
+            style={{ 
+              borderColor: "var(--border)", 
+              background: "var(--panel)", 
+              color: "var(--text-main)",
+              borderRadius: 0
+            }}
             required
           />
         </div>
 
         {/* Sell Threshold */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Sell Threshold (₹) *
           </label>
           <input
@@ -209,20 +227,32 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
             value={formData.sell_threshold}
             onChange={(e) => setFormData({ ...formData, sell_threshold: e.target.value })}
             placeholder="Price at which to trigger SELL"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border focus:outline-none focus:ring-2 transition"
+            style={{ 
+              borderColor: "var(--border)", 
+              background: "var(--panel)", 
+              color: "var(--text-main)",
+              borderRadius: 0
+            }}
             required
           />
         </div>
 
         {/* Priority */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Priority
           </label>
           <select
             value={formData.priority}
             onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 border focus:outline-none focus:ring-2 transition"
+            style={{ 
+              borderColor: "var(--border)", 
+              background: "var(--panel)", 
+              color: "var(--text-main)",
+              borderRadius: 0
+            }}
           >
             <option value="LOW">Low</option>
             <option value="MEDIUM">Medium</option>
@@ -234,7 +264,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
 
       {/* Message */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
           Alert Message (Optional)
         </label>
         <textarea
@@ -242,14 +272,20 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
           onChange={(e) => setFormData({ ...formData, message: e.target.value })}
           placeholder="Custom message for this alert"
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 border focus:outline-none focus:ring-2 transition"
+          style={{ 
+            borderColor: "var(--border)", 
+            background: "var(--panel)", 
+            color: "var(--text-main)",
+            borderRadius: 0
+          }}
         />
       </div>
 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white font-medium py-2 rounded-lg transition-colors disabled:opacity-50"
+        className="w-full bg-[rgb(var(--emerald-main))] hover:opacity-90 text-white font-medium py-2.5 transition-opacity disabled:opacity-50"
       >
         {isLoading ? "Creating..." : "Create Alert"}
       </button>

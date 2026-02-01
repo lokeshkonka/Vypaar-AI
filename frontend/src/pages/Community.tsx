@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, Loader } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, MessageSquare, Users, TrendingUp } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
+import GraphBackgroundBottom from "../components/Background/graphBackgroundBottom";
 
 interface Discussion {
   id: string;
@@ -163,62 +164,77 @@ export default function Community() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Discussion Board
-              </h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-                Discuss commodity prices and trading strategies with the community.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setCreateError(null);
-                setIsComposeOpen(true);
-              }}
-              className="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 active:bg-emerald-800 transition-colors shadow-sm"
-            >
-              New Message
-            </button>
+      <div className="relative min-h-screen overflow-hidden" style={{ background: "var(--bg-main)" }}>
+        {/* Background Effect */}
+        <div className="fixed inset-0 pointer-events-none opacity-30">
+          <GraphBackgroundBottom />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 py-20 sm:py-24 lg:py-28">
+          {/* Header */}
+          <div className="mb-6 sm:mb-8 lg:mb-10 text-center">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4" style={{ color: "var(--text-main)" }}>
+              Discussion Board
+            </h1>
+            <p className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto" style={{ color: "var(--text-soft)" }}>
+              Connect with traders, share insights, and discuss commodity market trends.
+            </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 mb-6 space-y-3 shadow-sm">
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
-              />
-              <input
-                type="text"
-                placeholder="Search discussions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition"
-              />
-            </div>
+          {/* Search & Filter Card */}
+          <div className="glass-card p-4 sm:p-5 lg:p-6 mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="relative flex-1">
+                <Search
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--text-soft)" }}
+                />
+                <input
+                  type="text"
+                  placeholder="Search discussions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border focus:outline-none focus:ring-2 transition"
+                  style={{ 
+                    borderColor: "var(--border)", 
+                    background: "var(--panel)", 
+                    color: "var(--text-main)",
+                    borderRadius: 0
+                  }}
+                />
+              </div>
 
-            <select
-              value={selectedCommodity || ""}
-              onChange={(e) => setSelectedCommodity(e.target.value || null)}
-              className="w-full px-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition"
-            >
-              <option value="">All Commodities</option>
-              {commodities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              <select
+                value={selectedCommodity || ""}
+                onChange={(e) => setSelectedCommodity(e.target.value || null)}
+                className="sm:w-56 px-4 py-3 text-sm border focus:outline-none focus:ring-2 transition"
+                style={{ 
+                  borderColor: "var(--border)", 
+                  background: "var(--panel)", 
+                  color: "var(--text-main)",
+                  borderRadius: 0
+                }}
+              >
+                <option value="">All Commodities</option>
+                {commodities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {loading && (
-            <div className="flex items-center justify-center py-16">
+            <div className="flex items-center justify-center py-16 sm:py-20">
               <div className="text-center">
-                <Loader className="w-10 h-10 text-emerald-500 dark:text-emerald-400 animate-spin mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                <div className="relative inline-block">
+                  <Loader className="w-12 h-12 sm:w-14 sm:h-14 text-emerald-500 dark:text-emerald-400 animate-spin" />
+                  <div className="absolute inset-0 blur-xl bg-emerald-500/30 dark:bg-emerald-400/30 animate-pulse"></div>
+                </div>
+                <p className="text-gray-600 dark:text-gray-400 font-medium mt-4 text-sm sm:text-base">
                   Loading discussions...
                 </p>
               </div>
@@ -226,13 +242,13 @@ export default function Community() {
           )}
 
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-5 mb-6 shadow-sm">
-              <p className="text-red-700 dark:text-red-300 text-sm">
+            <div className="bg-red-50/80 dark:bg-red-900/20 backdrop-blur-xl border border-red-200 dark:border-red-800 rounded-2xl p-5 sm:p-6 mb-6 shadow-xl shadow-red-500/5">
+              <p className="text-red-700 dark:text-red-300 text-sm sm:text-base mb-3">
                 <span className="font-semibold">Error:</span> {error}
               </p>
               <button
                 onClick={fetchDiscussions}
-                className="mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-sm font-medium rounded-lg transition shadow-sm"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 active:scale-95 text-white text-sm font-medium rounded-xl transition shadow-lg shadow-red-500/20"
               >
                 Retry
               </button>
@@ -305,28 +321,31 @@ export default function Community() {
           )}
 
           {!loading && !error && discussions.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 text-center shadow-sm hover:shadow-md transition">
-                <div className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-5 mt-6 sm:mt-8 lg:mt-10">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 dark:border-gray-700 text-center shadow-lg hover:shadow-2xl hover:shadow-emerald-500/10 transition-all group">
+                <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 dark:text-emerald-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">
                   {discussions.length}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   Discussions
                 </div>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 text-center shadow-sm hover:shadow-md transition">
-                <div className="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 dark:border-gray-700 text-center shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 transition-all group">
+                <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
                   {commodities.length}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   Commodities
                 </div>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-700 text-center shadow-sm hover:shadow-md transition">
-                <div className="text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl p-4 sm:p-5 lg:p-6 border border-gray-200 dark:border-gray-700 text-center shadow-lg hover:shadow-2xl hover:shadow-purple-500/10 transition-all group">
+                <Users className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 dark:text-purple-400 mx-auto mb-3 group-hover:scale-110 transition-transform" />
+                <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                   {discussions.reduce((sum, d) => sum + d.replies, 0)}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   Total Replies
                 </div>
               </div>
