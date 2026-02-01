@@ -18,7 +18,7 @@ export default function Navbar() {
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-      className="w-full z-9999"
+      className="w-full z-50"
     >
       {/* OUTER WRAPPER */}
       <div className="w-full flex justify-center">
@@ -31,7 +31,7 @@ export default function Navbar() {
             flex
             items-center
             gap-8
-            z-9999
+            z-50
           "
         >
           {/* LOGO */}

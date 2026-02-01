@@ -25,32 +25,84 @@ def generate_quick_data():
     """Generate realistic market data for fast training"""
     print("   • Generating realistic fallback market data...")
     
-    commodities = ["Wheat", "Rice", "Onion", "Potato", "Tomato"]
-    markets = ["Azadpur (Delhi)", "APMC Mumbai", "Chennai", "Bangalore", "Kolkata"]
-    states = ["Delhi", "Maharashtra", "Tamil Nadu", "Karnataka", "West Bengal"]
+    # Expanded commodities list - 15 major agricultural products
+    commodities = [
+        "Wheat", "Rice", "Onion", "Potato", "Tomato",
+        "Soybean", "Cotton", "Sugarcane", "Maize", "Groundnut",
+        "Chilli", "Turmeric", "Garlic", "Ginger", "Mustard"
+    ]
+    
+    # Expanded markets - 10 major mandis across India
+    markets = [
+        "Azadpur (Delhi)", "APMC Mumbai", "Chennai Koyambedu", 
+        "Bangalore APMC", "Kolkata Mechua", "Ahmedabad APMC",
+        "Lucknow Aminabad", "Hyderabad Bowenpally", "Pune Market Yard",
+        "Jaipur Muhana"
+    ]
+    
+    states = [
+        "Delhi", "Maharashtra", "Tamil Nadu", "Karnataka", "West Bengal",
+        "Gujarat", "Uttar Pradesh", "Telangana", "Maharashtra", "Rajasthan"
+    ]
+    
+    # Base prices for each commodity (realistic ₹/quintal)
+    base_prices = {
+        "Wheat": 2200, "Rice": 3500, "Onion": 1500, "Potato": 1200, "Tomato": 2000,
+        "Soybean": 4500, "Cotton": 6500, "Sugarcane": 350, "Maize": 2000, "Groundnut": 5500,
+        "Chilli": 12000, "Turmeric": 8000, "Garlic": 4000, "Ginger": 3500, "Mustard": 5000
+    }
     
     records = []
-    base_date = datetime.now() - timedelta(days=90)
+    base_date = datetime.now() - timedelta(days=180)  # 6 months of data
     
-    for day in range(90):
+    for day in range(180):  # 180 days instead of 90
         current_date = base_date + timedelta(days=day)
         month = current_date.month
+        day_of_week = current_date.weekday()
         is_festival = month in [3, 10, 11, 12]
+        is_harvest = month in [4, 5, 10, 11]
+        is_monsoon = month in [6, 7, 8, 9]
         
         for commodity in commodities:
             for i, market in enumerate(markets):
-                base_price = 800 + (hash(commodity) % 3000)
+                # Use realistic base prices
+                base_price = base_prices.get(commodity, 2000)
                 
-                if month in [10, 11]:
-                    base_price *= 0.85 if commodity == "Wheat" else 1.0
-                elif month in [5, 6]:
-                    base_price *= 1.15 if commodity == "Onion" else 1.0
+                # Seasonal adjustments
+                if is_harvest:
+                    if commodity in ["Wheat", "Rice", "Maize"]:
+                        base_price *= 0.88  # Lower during harvest due to supply
+                    elif commodity in ["Onion", "Potato"]:
+                        base_price *= 0.92
+                        
+                if is_monsoon:
+                    if commodity in ["Tomato", "Onion", "Chilli"]:
+                        base_price *= 1.25  # Higher during monsoon disruptions
+                    elif commodity in ["Rice"]:
+                        base_price *= 0.95
                 
+                # Festival premium
                 if is_festival:
-                    base_price *= 1.12 if commodity in ["Onion", "Tomato"] else 1.05
+                    if commodity in ["Onion", "Tomato", "Potato", "Chilli", "Ginger", "Garlic"]:
+                        base_price *= 1.15
+                    else:
+                        base_price *= 1.05
                 
-                market_factor = 0.95 + (i * 0.03)
-                final_price = base_price * market_factor
+                # Market factor (regional variation)
+                market_factor = 0.92 + (i * 0.02)
+                
+                # Weekend effect
+                if day_of_week >= 5:
+                    base_price *= 1.02
+                
+                # Random daily variation (±5%)
+                daily_variation = 1 + np.random.uniform(-0.05, 0.05)
+                
+                final_price = base_price * market_factor * daily_variation
+                
+                # Arrival quantity varies by commodity and market
+                base_arrival = 500 + (hash(commodity + market) % 3000)
+                arrival = int(base_arrival * (0.7 + np.random.uniform(0, 0.6)))
                 
                 records.append({
                     "date": current_date,
@@ -58,7 +110,7 @@ def generate_quick_data():
                     "market": market,
                     "state": states[i % len(states)],
                     "price": final_price,
-                    "arrival": int(500 + (day * 10) % 5000),
+                    "arrival": arrival,
                 })
     
     df = pd.DataFrame(records)
@@ -118,16 +170,24 @@ def main():
     print(f"   • Features: {len(feature_cols)} | Samples: {len(y)}")
     print(f"   • Feature list: {', '.join(feature_cols[:6])}...\n")
     
-    print("🤖 STEP 3: Training Lightweight Models")
+    print("🤖 STEP 3: Training Ensemble Models")
     print("-" * 70)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     
     results = {}
     
-    # Model 1: Random Forest
-    print("   • Training Random Forest (light)...")
-    rf = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
+    # Model 1: Random Forest with better hyperparameters
+    print("   • Training Random Forest...")
+    rf = RandomForestRegressor(
+        n_estimators=150,
+        max_depth=15,
+        min_samples_split=5,
+        min_samples_leaf=2,
+        max_features='sqrt',
+        n_jobs=-1,
+        random_state=42
+    )
     rf.fit(X_train, y_train)
     y_pred_rf = rf.predict(X_test)
     mae_rf = mean_absolute_error(y_test, y_pred_rf)
@@ -136,9 +196,17 @@ def main():
     results['RandomForest'] = {'mae': mae_rf, 'rmse': rmse_rf, 'r2': r2_rf}
     print(f"   ✓ R²={r2_rf:.3f} | MAE=₹{mae_rf:.0f} | RMSE=₹{rmse_rf:.0f}")
     
-    # Model 2: Gradient Boosting
-    print("   • Training Gradient Boosting (light)...")
-    gb = GradientBoostingRegressor(n_estimators=100, max_depth=5, learning_rate=0.1, random_state=42)
+    # Model 2: Gradient Boosting with tuned parameters
+    print("   • Training Gradient Boosting...")
+    gb = GradientBoostingRegressor(
+        n_estimators=200,
+        max_depth=8,
+        learning_rate=0.08,
+        min_samples_split=5,
+        min_samples_leaf=3,
+        subsample=0.8,
+        random_state=42
+    )
     gb.fit(X_train, y_train)
     y_pred_gb = gb.predict(X_test)
     mae_gb = mean_absolute_error(y_test, y_pred_gb)
@@ -180,7 +248,6 @@ def main():
     model_path = model_dir / f"ensemble_{timestamp}.joblib"
     preprocessor_path = model_dir / f"preprocessor_{timestamp}.joblib"
     
-    # Save ensemble with metadata
     joblib.dump({
         'random_forest': rf,
         'gradient_boosting': gb,
@@ -188,18 +255,9 @@ def main():
         'best_model_name': best_model_name,
         'features': feature_cols,
         'timestamp': timestamp,
-        'training_samples': len(df),
     }, model_path)
     
-    # Save preprocessor with feature metadata
-    preprocessor_metadata = {
-        'preprocessor': preprocessor,
-        'feature_cols': feature_cols,
-        'numeric_features': preprocessor.numeric_features,
-        'categorical_features': preprocessor.categorical_features,
-        'feature_names': feature_cols,
-    }
-    joblib.dump(preprocessor_metadata, preprocessor_path)
+    joblib.dump(preprocessor, preprocessor_path)
     
     print(f"   ✓ Ensemble: {model_path.name}")
     print(f"   ✓ Preprocessor: {preprocessor_path.name}\n")

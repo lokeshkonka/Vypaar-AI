@@ -2,6 +2,7 @@ import TableComponent from "../ui/TableComponent";
 import CardComponent from "../ui/CardComponent";
 import { useNavigate } from "react-router-dom";
 import { useInventory } from "../../context/InventoryContext";
+import AddStockButton from "./AddStockButton";
 
 export default function YourStock() {
   const { inventory, isUpdating, isLoading, updateItem } = useInventory();
@@ -11,8 +12,12 @@ export default function YourStock() {
     <div className="space-y-4">
       {/* TOP ROW: Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Add Stock Button */}
+        <AddStockButton />
+        
         {/* Spacer */}
-        <div className="lg:col-span-2"></div>
+        <div className="lg:col-span-1"></div>
+        
         {/* Actions */}
 <CardComponent title="Forecast Actions">
   <p className="text-sm text-soft leading-relaxed mb-2">

@@ -21,14 +21,39 @@ from app.database.repositories import (
 )
 
 COMMODITIES = [
+    # Cereals
     {"name": "Wheat", "category": "Cereals", "unit": "Quintal"},
     {"name": "Rice", "category": "Cereals", "unit": "Quintal"},
+    {"name": "Maize", "category": "Cereals", "unit": "Quintal"},
+    # Vegetables
     {"name": "Potato", "category": "Vegetables", "unit": "Quintal"},
+    {"name": "Onion", "category": "Vegetables", "unit": "Quintal"},
+    {"name": "Tomato", "category": "Vegetables", "unit": "Quintal"},
+    {"name": "Garlic", "category": "Vegetables", "unit": "Quintal"},
+    {"name": "Ginger", "category": "Vegetables", "unit": "Quintal"},
+    {"name": "Chilli", "category": "Vegetables", "unit": "Quintal"},
+    # Oilseeds
+    {"name": "Soybean", "category": "Oilseeds", "unit": "Quintal"},
+    {"name": "Groundnut", "category": "Oilseeds", "unit": "Quintal"},
+    {"name": "Mustard", "category": "Oilseeds", "unit": "Quintal"},
+    # Cash Crops
+    {"name": "Cotton", "category": "Cash Crops", "unit": "Quintal"},
+    {"name": "Sugarcane", "category": "Cash Crops", "unit": "Quintal"},
+    # Spices
+    {"name": "Turmeric", "category": "Spices", "unit": "Quintal"},
 ]
 
 MARKETS = [
     {"name": "Azadpur", "state": "Delhi", "district": "North Delhi"},
-    {"name": "Mumbai (Dadar)", "state": "Maharashtra", "district": "Mumbai"},
+    {"name": "Mumbai APMC", "state": "Maharashtra", "district": "Mumbai"},
+    {"name": "Chennai Koyambedu", "state": "Tamil Nadu", "district": "Chennai"},
+    {"name": "Bangalore APMC", "state": "Karnataka", "district": "Bangalore"},
+    {"name": "Kolkata Mechua", "state": "West Bengal", "district": "Kolkata"},
+    {"name": "Ahmedabad APMC", "state": "Gujarat", "district": "Ahmedabad"},
+    {"name": "Lucknow Aminabad", "state": "Uttar Pradesh", "district": "Lucknow"},
+    {"name": "Hyderabad Bowenpally", "state": "Telangana", "district": "Hyderabad"},
+    {"name": "Pune Market Yard", "state": "Maharashtra", "district": "Pune"},
+    {"name": "Jaipur Muhana", "state": "Rajasthan", "district": "Jaipur"},
 ]
 
 async def seed():
@@ -61,17 +86,34 @@ async def seed():
             market_ids[m["name"]] = created.id
         logger.info(f"Markets seeded: {market_ids}")
 
-        # Seed 14 days of prices for all commodities in Azadpur and Mumbai
-        start_date = datetime.utcnow().date() - timedelta(days=14)
+        # Seed 30 days of prices for all commodities in all markets
+        start_date = datetime.utcnow().date() - timedelta(days=30)
         prices = []
-        for day in range(14):
+        market_names = [m["name"] for m in MARKETS]
+        
+        for day in range(30):
             date = start_date + timedelta(days=day)
-            for market_name in ["Azadpur", "Mumbai (Dadar)"]:
+            for market_name in market_names:
                 market_id = market_ids[market_name]
                 for commodity in COMMODITIES:
                     commodity_id = commodity_ids[commodity["name"]]
-                    base_price = 2500.0 + (commodity_id * 120)
-                    # simple sinusoidal variation
+                    # Base prices per commodity category
+                    if commodity["category"] == "Cereals":
+                        base_price = 2500.0
+                    elif commodity["category"] == "Vegetables":
+                        base_price = 2000.0
+                    elif commodity["category"] == "Oilseeds":
+                        base_price = 5000.0
+                    elif commodity["category"] == "Cash Crops":
+                        base_price = 4000.0
+                    elif commodity["category"] == "Spices":
+                        base_price = 8000.0
+                    else:
+                        base_price = 3000.0
+                    
+                    # Add variation based on commodity and market
+                    base_price += (commodity_id * 100) + (market_id * 50)
+                    # Sinusoidal daily variation
                     modal = base_price * (1 + (0.05 * ((day % 7) - 3) / 3))
                     prices.append({
                         "commodity_id": commodity_id,
@@ -81,7 +123,7 @@ async def seed():
                         "min_price": round(modal * 0.9, 2),
                         "max_price": round(modal * 1.1, 2),
                         "modal_price": round(modal, 2),
-                        "arrival": round(1000 + 50 * day, 2),
+                        "arrival": round(1000 + 50 * day + market_id * 100, 2),
                     })
         upserted = 0
         for price in prices:

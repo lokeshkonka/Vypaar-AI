@@ -51,7 +51,7 @@ export default function NavLoader({ open, children }: NavLoaderProps) {
         <>
           {/* BACKDROP (subtle, non-glassy) */}
           <motion.div
-            className="fixed inset-0 z-40 bg-black/30"
+            className="fixed inset-0 z-[60] bg-black/30"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -60,7 +60,7 @@ export default function NavLoader({ open, children }: NavLoaderProps) {
           {/* DRAWER */}
           <motion.aside
             className="
-              fixed left-0 top-0 z-50 h-full w-72
+              fixed left-0 top-0 z-[70] h-full w-72
               bg-[#0f1f1b]
               border-r border-[#1f3a33]
               shadow-lg

@@ -52,7 +52,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
   return (
     <>
       {/* ================= TOP NAVBAR ================= */}
-      <header className="fixed top-0 z-30 w-full bg-white dark:bg-[#0f1f1b] border-b border-gray-200 dark:border-[#1f3a33]">
+      <header className="fixed top-0 z-50 w-full bg-white dark:bg-[#0f1f1b] border-b border-gray-200 dark:border-[#1f3a33]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
 
           {/* LEFT */}

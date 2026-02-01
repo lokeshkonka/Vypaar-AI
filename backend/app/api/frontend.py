@@ -484,6 +484,81 @@ async def update_inventory(
         raise HTTPException(status_code=500, detail="Unable to update inventory")
 
 
+class AddInventoryRequest(BaseModel):
+    commodity_id: int
+    market_id: int
+    quantity: float
+    unit_cost: Optional[float] = 0
+    notes: Optional[str] = ""
+
+
+@router.post(
+    "/inventory",
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_inventory(
+    request: AddInventoryRequest,
+    inventory_repo: InventoryRepository = Depends(get_inventory_repo),
+    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
+    market_repo: MarketRepository = Depends(get_market_repo),
+):
+    """Add new inventory item."""
+    try:
+        # Validate commodity and market exist
+        commodity = await commodity_repo.get_by_id(request.commodity_id)
+        market = await market_repo.get_by_id(request.market_id)
+        
+        if not commodity:
+            raise HTTPException(status_code=404, detail="Commodity not found")
+        if not market:
+            raise HTTPException(status_code=404, detail="Market not found")
+        
+        # Check if inventory item already exists for this commodity/market pair
+        existing = await inventory_repo.get_by_commodity_market(
+            commodity_id=request.commodity_id,
+            market_id=request.market_id
+        )
+        
+        if existing:
+            # Update existing inventory
+            await inventory_repo.update(
+                existing.id,
+                current_stock=existing.current_stock + request.quantity,
+                unit_cost=request.unit_cost or existing.unit_cost,
+            )
+            await inventory_repo.db.commit()
+            
+            return {
+                "status": "success",
+                "message": f"Updated stock for {commodity.name} at {market.name}",
+                "inventory_id": existing.id,
+                "new_quantity": existing.current_stock + request.quantity,
+            }
+        else:
+            # Create new inventory item
+            new_item = await inventory_repo.create(
+                commodity_id=request.commodity_id,
+                market_id=request.market_id,
+                current_stock=request.quantity,
+                optimal_stock=request.quantity * 1.2,  # Suggest 20% buffer
+                unit_cost=request.unit_cost or 0,
+            )
+            await inventory_repo.db.commit()
+            
+            return {
+                "status": "success",
+                "message": f"Added {request.quantity} quintals of {commodity.name} at {market.name}",
+                "inventory_id": new_item.id,
+                "quantity": request.quantity,
+            }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception(f"Add inventory failed: {exc}")
+        await inventory_repo.db.rollback()
+        raise HTTPException(status_code=500, detail="Unable to add inventory")
+
+
 @router.get(
     "/product-analysis",
     response_model=ProductAnalysisResponse,
@@ -698,3 +773,218 @@ async def get_markets(market_repo: MarketRepository = Depends(get_market_repo)):
     except Exception as exc:  # noqa: BLE001
         logger.exception(f"Failed to fetch markets: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch markets")
+
+
+class PriceHistoryPoint(BaseModel):
+    date: str
+    price: float
+    min_price: Optional[float] = None
+    max_price: Optional[float] = None
+    predicted: Optional[float] = None
+
+
+class PriceHistoryResponse(BaseModel):
+    commodity: str
+    market: str
+    days: int
+    prices: List[PriceHistoryPoint]
+    trend: str
+    changePercent: float
+
+
+@router.get(
+    "/price-history",
+    response_model=PriceHistoryResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_price_history(
+    commodity: str = Query(..., description="Commodity name"),
+    market: str = Query(..., description="Market name"),
+    days: int = Query(30, description="Number of days of history"),
+    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
+    market_repo: MarketRepository = Depends(get_market_repo),
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
+):
+    """Get historical price data for a commodity in a specific market."""
+    try:
+        # Find commodity and market
+        commodity_obj = await commodity_repo.get_by_name(commodity)
+        market_obj = await market_repo.get_by_name(market)
+        
+        if not commodity_obj or not market_obj:
+            raise HTTPException(status_code=404, detail="Commodity or market not found")
+        
+        # Get price history
+        prices = await market_price_repo.get_price_history(
+            commodity_id=commodity_obj.id,
+            market_id=market_obj.id,
+            days=days
+        )
+        
+        if not prices:
+            raise HTTPException(status_code=404, detail="No price history found")
+        
+        # Transform to response format
+        price_points = []
+        for p in prices:
+            price_val = p.price or p.modal_price or 0
+            price_points.append(PriceHistoryPoint(
+                date=p.date.isoformat() if hasattr(p.date, 'isoformat') else str(p.date),
+                price=float(price_val),
+                min_price=float(p.min_price) if p.min_price else None,
+                max_price=float(p.max_price) if p.max_price else None,
+            ))
+        
+        # Calculate trend
+        if len(price_points) >= 2:
+            first_price = price_points[0].price
+            last_price = price_points[-1].price
+            change = ((last_price - first_price) / first_price) * 100 if first_price > 0 else 0
+            trend = "up" if change > 0 else "down" if change < 0 else "stable"
+        else:
+            change = 0
+            trend = "stable"
+        
+        return PriceHistoryResponse(
+            commodity=commodity,
+            market=market,
+            days=days,
+            prices=price_points,
+            trend=trend,
+            changePercent=round(change, 2),
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception(f"Failed to fetch price history: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to fetch price history")
+
+
+class MarketComparisonItem(BaseModel):
+    market: str
+    price: float
+    minPrice: float
+    maxPrice: float
+    change: float
+
+
+class MarketComparisonResponse(BaseModel):
+    commodity: str
+    markets: List[MarketComparisonItem]
+
+
+@router.get(
+    "/market-comparison",
+    response_model=MarketComparisonResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_market_comparison(
+    commodity: str = Query(..., description="Commodity name"),
+    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
+    market_repo: MarketRepository = Depends(get_market_repo),
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
+):
+    """Compare prices for a commodity across all markets."""
+    try:
+        commodity_obj = await commodity_repo.get_by_name(commodity)
+        if not commodity_obj:
+            raise HTTPException(status_code=404, detail="Commodity not found")
+        
+        markets = await market_repo.get_all()
+        if not markets:
+            raise HTTPException(status_code=404, detail="No markets found")
+        
+        comparison_items = []
+        
+        for market in markets:
+            prices = await market_price_repo.get_price_history(
+                commodity_id=commodity_obj.id,
+                market_id=market.id,
+                days=7
+            )
+            
+            if prices:
+                latest_price = prices[-1].price or prices[-1].modal_price or 0
+                min_price = min(p.min_price or p.price or 0 for p in prices)
+                max_price = max(p.max_price or p.price or 0 for p in prices)
+                
+                # Calculate week-over-week change
+                if len(prices) >= 2:
+                    first_price = prices[0].price or prices[0].modal_price or 0
+                    change = ((latest_price - first_price) / first_price * 100) if first_price else 0
+                else:
+                    change = 0
+                
+                comparison_items.append(MarketComparisonItem(
+                    market=market.name,
+                    price=float(latest_price),
+                    minPrice=float(min_price),
+                    maxPrice=float(max_price),
+                    change=round(float(change), 2),
+                ))
+        
+        # Sort by price
+        comparison_items.sort(key=lambda x: x.price)
+        
+        return MarketComparisonResponse(
+            commodity=commodity,
+            markets=comparison_items,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception(f"Failed to get market comparison: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to fetch market comparison")
+
+
+class ExportPricesItem(BaseModel):
+    date: str
+    commodity: str
+    market: str
+    price: float
+    min_price: Optional[float]
+    max_price: Optional[float]
+    arrival: Optional[float]
+
+
+@router.get(
+    "/export/prices",
+    response_model=List[ExportPricesItem],
+    status_code=status.HTTP_200_OK,
+)
+async def export_prices(
+    days: int = Query(30, description="Number of days to export"),
+    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
+    market_repo: MarketRepository = Depends(get_market_repo),
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
+):
+    """Export price data for download."""
+    try:
+        commodities = await commodity_repo.get_all()
+        markets = await market_repo.get_all()
+        
+        export_data = []
+        
+        for commodity in commodities[:10]:  # Limit to 10 commodities
+            for market in markets[:5]:  # Limit to 5 markets
+                prices = await market_price_repo.get_price_history(
+                    commodity_id=commodity.id,
+                    market_id=market.id,
+                    days=days
+                )
+                
+                for price in prices:
+                    export_data.append(ExportPricesItem(
+                        date=price.date.isoformat() if hasattr(price.date, 'isoformat') else str(price.date),
+                        commodity=commodity.name,
+                        market=market.name,
+                        price=float(price.price or price.modal_price or 0),
+                        min_price=float(price.min_price) if price.min_price else None,
+                        max_price=float(price.max_price) if price.max_price else None,
+                        arrival=float(price.arrival) if price.arrival else None,
+                    ))
+        
+        return export_data
+    except Exception as exc:
+        logger.exception(f"Export failed: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to export prices")

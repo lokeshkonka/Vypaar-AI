@@ -5,7 +5,7 @@ export default function CardComponent({
   icon,
   children,
 }: {
-  title?: string;
+  title?: string | React.ReactNode;
   icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -38,17 +38,23 @@ export default function CardComponent({
             </span>
           )}
 
-          <h3
-            className="
-              text-lg sm:text-base
-              font-semibold
-              tracking-wide
-              uppercase
-              text-main
-            "
-          >
-            {title}
-          </h3>
+          {typeof title === 'string' ? (
+            <h3
+              className="
+                text-lg sm:text-base
+                font-semibold
+                tracking-wide
+                uppercase
+                text-main
+              "
+            >
+              {title}
+            </h3>
+          ) : (
+            <div className="flex-1 text-lg sm:text-base font-semibold tracking-wide uppercase text-main">
+              {title}
+            </div>
+          )}
         </div>
       )}
 
