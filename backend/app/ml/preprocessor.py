@@ -251,13 +251,19 @@ class DataPreprocessor:
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Prepare data for model training.
+        
+        Uses the same 16 standard features as prepare_prediction_data for consistency:
+        - commodity_id, market_id, arrival
+        - day_of_week, month, season, week_of_year, quarter
+        - is_festival, festival_effect, holiday_proximity, monsoon_factor, harvest_season
+        - price, month_sin, month_cos
 
         Args:
             data: Input DataFrame
             target_col: Target column name
             date_col: Date column name
-            categorical_cols: List of categorical columns
-            numeric_cols: List of numeric columns
+            categorical_cols: List of categorical columns (ignored, using standard features)
+            numeric_cols: List of numeric columns (ignored, using standard features)
             handle_missing: Whether to handle missing values
             handle_outliers_: Whether to handle outliers
 
@@ -266,59 +272,88 @@ class DataPreprocessor:
         """
         data_processed = data.copy()
 
-        # Handle missing values
-        if handle_missing and data_processed.isnull().any().any():
-            numeric_cols_to_impute = (
-                numeric_cols or data_processed.select_dtypes(include=[np.number]).columns.tolist()
-            )
-            data_processed[numeric_cols_to_impute] = self.imputer.fit_transform(
-                data_processed[numeric_cols_to_impute]
-            )
-            logger.info(f"Handled missing values in {len(numeric_cols_to_impute)} columns")
+        # Handle missing values for key columns
+        key_numeric_cols = ['price', 'arrival', 'commodity_id', 'market_id', 'min_price', 'max_price', 'modal_price']
+        cols_to_impute = [c for c in key_numeric_cols if c in data_processed.columns]
+        if handle_missing and cols_to_impute:
+            for col in cols_to_impute:
+                if data_processed[col].isnull().any():
+                    data_processed[col] = data_processed[col].fillna(data_processed[col].median())
+            logger.info(f"Handled missing values in {len(cols_to_impute)} columns")
 
-        # Extract temporal features
+        # Extract temporal features (includes festival indicators)
         temporal_features = self.extract_temporal_features(data_processed[date_col])
 
-        # Encode categorical variables
-        if categorical_cols:
-            data_processed = self.encode_categorical(
-                data_processed, categorical_cols, fit=True
-            )
-
-        # Prepare feature columns
-        if numeric_cols is None:
-            numeric_cols = data_processed.select_dtypes(include=[np.number]).columns.tolist()
-            # Remove target from numeric cols
-            if target_col in numeric_cols:
-                numeric_cols.remove(target_col)
-
-        # Handle outliers
-        if handle_outliers_:
-            for col in numeric_cols:
-                data_processed[col] = self.handle_outliers(
-                    data_processed[col].values, strategy="clip"
-                )
-
-        # Combine features
-        feature_cols = numeric_cols + (categorical_cols or [])
-        features = data_processed[feature_cols].copy()
+        # Build features dataframe with standard 16 features
+        features = pd.DataFrame()
         
-        # Add temporal features
-        features = pd.concat([features, temporal_features], axis=1)
+        # Add numeric columns that exist
+        for col in ['commodity_id', 'market_id', 'arrival']:
+            if col in data_processed.columns:
+                features[col] = data_processed[col].values
+            else:
+                features[col] = 0.0
+        
+        # Add price column (will be used as a lagged feature, not the target)
+        # Use modal_price or min_price as proxy for historical price info
+        if 'modal_price' in data_processed.columns:
+            features['price'] = data_processed['modal_price'].values
+        elif 'min_price' in data_processed.columns:
+            features['price'] = data_processed['min_price'].values
+        else:
+            features['price'] = 0.0
+        
+        # Add temporal/festival features
+        features = pd.concat([features.reset_index(drop=True), temporal_features.reset_index(drop=True)], axis=1)
+        
+        # Define standard 16 features for model compatibility (same as prepare_prediction_data)
+        standard_features = [
+            'commodity_id',      # 1
+            'market_id',         # 2
+            'arrival',           # 3
+            'day_of_week',       # 4
+            'month',             # 5
+            'season',            # 6
+            'is_festival',       # 7
+            'festival_effect',   # 8
+            'holiday_proximity', # 9
+            'monsoon_factor',    # 10
+            'harvest_season',    # 11
+            'price',             # 12
+            'week_of_year',      # 13
+            'quarter',           # 14
+            'month_sin',         # 15
+            'month_cos',         # 16
+        ]
+        
+        # Fill missing features with defaults
+        for col in standard_features:
+            if col not in features.columns:
+                features[col] = 0.0
+        
+        # Select only standard features in order
+        features = features[standard_features].copy()
+        
+        # Handle outliers on numeric features
+        if handle_outliers_:
+            for col in ['arrival', 'price']:
+                if col in features.columns:
+                    features[col] = self.handle_outliers(features[col].values, strategy="clip")
         
         # Scale numeric features
-        for col in numeric_cols:
-            features[col] = self.scale_features(features[col].values, col, fit=True)
+        for col in ['arrival', 'price']:
+            if col in features.columns:
+                features[col] = self.scale_features(features[col].values, col, fit=True)
 
         # Store feature names for later use
-        self.feature_names = features.columns.tolist()
-        self.numeric_features = numeric_cols
-        self.categorical_features = categorical_cols or []
+        self.feature_names = standard_features
+        self.numeric_features = ['commodity_id', 'market_id', 'arrival', 'price']
+        self.categorical_features = []
 
         # Extract target
         target = data_processed[target_col].values
 
-        # Convert features to numeric dtype to safely check NaNs
+        # Convert features to numeric dtype
         features = features.apply(pd.to_numeric, errors="coerce")
 
         # Remove rows with NaN in features or target
@@ -405,14 +440,10 @@ class DataPreprocessor:
         feature_variance = np.var(features, axis=0)
         total_variance = np.sum(feature_variance)
         
-        # Handle zero total variance (single sample or constant features)
+        # Handle zero variance case (e.g., single sample)
         if total_variance == 0:
-            n_features = len(self.feature_names) if self.feature_names else features.shape[1] if features.ndim > 1 else 1
-            equal_importance = 1.0 / max(n_features, 1)
-            return {
-                name: equal_importance
-                for name in (self.feature_names or [f"feature_{i}" for i in range(n_features)])
-            }
+            n_features = len(self.feature_names)
+            return {name: 1.0 / n_features for name in self.feature_names}
         
         importance = {
             name: float(variance / total_variance)

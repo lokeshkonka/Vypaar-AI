@@ -41,102 +41,102 @@ export function ContextAnalysisProvider({
           
           // Skip if selection is incomplete
           if (!selection.market || !selection.product) {
+            // Fallback to product-analysis endpoint without filters
+            const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
+            if (res.ok) {
+              const data = await res.json();
+              setAnalysis(data);
+            }
             return;
           }
           
-          // Call forecast endpoint with selection data
-          const forecastPayload = {
-            state: selection.state || "",
-            city: selection.city || "",
-            market: selection.market,
-            category: selection.category || "",
-            product: selection.product,
-            forecast_range: Number(selection.forecastRange || 7),
-          };
-          
-          const forecastRes = await fetch(`${BACKEND_URL}/api/forecast`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(forecastPayload),
+          // Fetch product analysis with commodity and market filters
+          const analysisParams = new URLSearchParams({
+            commodity_name: selection.product,
+            market_name: selection.market,
+            days: String(selection.forecastRange || 7),
           });
           
-          if (forecastRes.ok) {
-            const forecastData = await forecastRes.json();
+          const analysisRes = await fetch(`${BACKEND_URL}/api/product-analysis?${analysisParams}`);
+          
+          if (analysisRes.ok) {
+            const analysisData = await analysisRes.json();
             
-            // Transform forecast data to match AnalysisContextValue
-            const demandGraphData = forecastData.forecasts?.map((f: any, idx: number) => ({
-              day: `Day ${idx + 1}`,
-              actual: f.predicted_price * 0.95, // Simulated actual
-              forecast: f.predicted_price,
-            })) || [];
-            
-            // Calculate stock metrics from forecast
-            const avgPredictedPrice = forecastData.averagePrice || 0;
-            const predictedDemand = Math.round(avgPredictedPrice * 1.2);
-            
-            // Generate weather and festival impacts
-            const weatherImpact: ImpactItem[] = [
-              { 
-                title: "Temperature Rise", 
-                subtitle: "Expected 3°C increase", 
-                delta: "+12%", 
-                positive: forecastData.trend === "up" 
-              },
-              { 
-                title: "Rainfall Pattern", 
-                subtitle: "Moderate precipitation", 
-                delta: "+5%", 
-                positive: true 
-              },
-            ];
-            
-            const festivalImpact: ImpactItem[] = [
-              { 
-                title: "Upcoming Festival", 
-                subtitle: "High demand expected", 
-                delta: "+25%", 
-                positive: true 
-              },
-              { 
-                title: "Market Holiday", 
-                subtitle: "Reduced supply window", 
-                delta: "-8%", 
-                positive: false 
-              },
-            ];
-            
+            // Use real data from backend
             setAnalysis({
-              selectorData: {
-                market: forecastData.market || selection.market,
-                product: forecastData.product || selection.product,
-                forecastRange: `${forecastData.rangeDays || selection.forecastRange} Days`,
+              selectorData: analysisData.selectorData || {
+                market: selection.market,
+                product: selection.product,
+                forecastRange: `${selection.forecastRange || 7} Days`,
               },
-              stockMetrics: {
-                predictedDemand,
-                stockNeeded: Math.round(predictedDemand * 1.15),
-                overstockRisk: forecastData.trend === "down" ? 35 : 15,
-                understockRisk: forecastData.trend === "up" ? 40 : 20,
+              stockMetrics: analysisData.stockMetrics || {
+                predictedDemand: 0,
+                stockNeeded: 0,
+                overstockRisk: 0,
+                understockRisk: 0,
               },
-              demandGraphData,
-              impactData: {
-                festival: festivalImpact,
-                weather: weatherImpact,
-              },
-              recommendationTable: [
-                {
-                  product: forecastData.product || selection.product,
-                  current: Math.round(avgPredictedPrice * 0.8),
-                  suggested: Math.round(predictedDemand * 1.15),
-                  buffer: 15,
-                  risk: forecastData.trend === "up" ? "High" : "Low",
-                },
-              ],
+              demandGraphData: analysisData.demandGraphData || [],
+              impactData: analysisData.impactData || { festival: [], weather: [] },
+              recommendationTable: analysisData.recommendationTable || [],
             });
           } else {
-            throw new Error('Forecast API failed');
+            // Fallback: try forecast endpoint for basic data
+            const forecastPayload = {
+              state: selection.state || "",
+              city: selection.city || "",
+              market: selection.market,
+              category: selection.category || "",
+              product: selection.product,
+              forecast_range: Number(selection.forecastRange || 7),
+            };
+            
+            const forecastRes = await fetch(`${BACKEND_URL}/api/forecast`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(forecastPayload),
+            });
+            
+            if (forecastRes.ok) {
+              const forecastData = await forecastRes.json();
+              
+              // Transform forecast data to match AnalysisContextValue
+              const demandGraphData = forecastData.forecasts?.map((f: any, idx: number) => ({
+                day: `Day ${idx + 1}`,
+                actual: f.predicted_price * 0.95,
+                forecast: f.predicted_price,
+              })) || [];
+              
+              const avgPredictedPrice = forecastData.averagePrice || 0;
+              const predictedDemand = Math.round(avgPredictedPrice * 1.2);
+              
+              setAnalysis({
+                selectorData: {
+                  market: forecastData.market || selection.market,
+                  product: forecastData.product || selection.product,
+                  forecastRange: `${forecastData.rangeDays || selection.forecastRange} Days`,
+                },
+                stockMetrics: {
+                  predictedDemand,
+                  stockNeeded: Math.round(predictedDemand * 1.15),
+                  overstockRisk: forecastData.trend === "down" ? 35 : 15,
+                  understockRisk: forecastData.trend === "up" ? 40 : 20,
+                },
+                demandGraphData,
+                impactData: { festival: [], weather: [] },
+                recommendationTable: [
+                  {
+                    product: forecastData.product || selection.product,
+                    current: Math.round(avgPredictedPrice * 0.8),
+                    suggested: Math.round(predictedDemand * 1.15),
+                    buffer: 15,
+                    risk: forecastData.trend === "up" ? "High" : "Low",
+                  },
+                ],
+              });
+            }
           }
         } else {
-          // Fallback: fetch from backend product-analysis endpoint
+          // No selection - fetch default product analysis
           const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
           if (res.ok) {
             const data = await res.json();
