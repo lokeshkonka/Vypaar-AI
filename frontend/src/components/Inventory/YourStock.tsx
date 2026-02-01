@@ -11,10 +11,25 @@ export default function YourStock() {
   return (
     <div className="space-y-4">
       {/* TOP ROW: Actions */}
+<<<<<<< Updated upstream
       <CardComponent title="Forecast Actions">
         <p className="text-sm text-soft leading-relaxed mb-2">
           Modify your forecast configuration such as time horizon (7 or 14 days),
         </p>
+=======
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Add Stock Button */}
+        <AddStockButton />
+        
+        {/* Spacer */}
+        <div className="lg:col-span-1"></div>
+        
+        {/* Actions */}
+<CardComponent title="Forecast Actions">
+  <p className="text-sm text-soft leading-relaxed mb-2">
+    Modify your forecast configuration such as time horizon (7 or 14 days),
+  </p>
+>>>>>>> Stashed changes
 
         <button
           onClick={() => navigate("/dashboard/selector")}
