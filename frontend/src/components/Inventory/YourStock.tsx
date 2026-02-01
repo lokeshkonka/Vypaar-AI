@@ -25,16 +25,17 @@ export default function YourStock() {
           </p>
 
           <button
-          onClick={() => navigate("/dashboard/selector")}
-          className="
-            w-full py-3 text-sm font-semibold
-            bg-emerald-600 dark:text-white text-black hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]
-            transition
-          "
-        >
-          Change Forecast
-        </button>
-      </CardComponent>
+            onClick={() => navigate("/dashboard/selector")}
+            className="
+              w-full py-3 text-sm font-semibold
+              bg-emerald-600 dark:text-white text-black hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]
+              transition
+            "
+          >
+            Change Forecast
+          </button>
+        </CardComponent>
+      </div>
 
       {/* BOTTOM ROW: Table */}
       <TableComponent
