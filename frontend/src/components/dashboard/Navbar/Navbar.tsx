@@ -241,10 +241,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               }}
             />
             <SideItem
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
               icon={<FiStar />}
               label="Watchlist"
               active={isActive("/dashboard/watchlist")}
@@ -268,16 +264,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               active={isActive("/dashboard/community")}
               onClick={() => {
                 navigate("/dashboard/community");
-<<<<<<< Updated upstream
-=======
-              icon={<FiMessageSquare />}
-              label="Discussions"
-              active={isActive("/dashboard/discussions")}
-              onClick={() => {
-                navigate("/dashboard/discussions");
->>>>>>> c968deacfe93c8176c7af6da40f2e51102042ffa
-=======
->>>>>>> Stashed changes
                 setOpen(false);
               }}
             />
