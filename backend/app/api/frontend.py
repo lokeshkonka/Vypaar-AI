@@ -728,7 +728,7 @@ async def get_commodities(commodity_repo: CommodityRepository = Depends(get_comm
     """Get all commodities for frontend selectors."""
     try:
         commodities = await commodity_repo.get_all()
-        return [{"id": c.id, "name": c.name} for c in commodities]
+        return [{"id": c.id, "name": c.name, "category": c.category or "Other"} for c in commodities]
     except Exception as exc:  # noqa: BLE001
         logger.exception(f"Failed to fetch commodities: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch commodities")

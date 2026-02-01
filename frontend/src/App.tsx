@@ -16,7 +16,10 @@ import DataImport from "./pages/DataImport";
 import UserSettings from "./pages/UserSettings";
 import Recommendations from "./pages/Recommendations";
 import Community from "./pages/Community";
+import Watchlist from "./pages/Watchlist";
+import SupplyChain from "./pages/SupplyChain";
 import ErrorPage from "./pages/ErrorPage";
+import AIChatbot from "./components/AIChatbot/AIChatbot";
 import { DataImportProvider } from "./context/DataImportContext";
 import { UserSettingsProvider } from "./context/UserSettingsContext";
 import { RecommendationProvider } from "./context/RecommendationContext";
@@ -139,6 +142,32 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/watchlist"
+          element={
+            <>
+              <SignedIn>
+                <Watchlist />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          }
+        />
+        <Route
+          path="/dashboard/supply-chain"
+          element={
+            <>
+              <SignedIn>
+                <SupplyChain />
+              </SignedIn>
+              <SignedOut>
+                <Navigate to="/auth" replace />
+              </SignedOut>
+            </>
+          }
+        />
+        <Route
           path="/dashboard/discussions"
           element={
             <>
@@ -190,6 +219,11 @@ function App() {
         <Route path="*" element={<ErrorPage statusCode={404} />} />
 
       </Routes>
+      
+      {/* Global AI Chatbot - appears on all pages */}
+      <SignedIn>
+        <AIChatbot />
+      </SignedIn>
     </BrowserRouter>
   </ErrorBoundary>
   );

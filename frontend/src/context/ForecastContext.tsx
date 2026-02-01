@@ -35,6 +35,7 @@ interface Market {
 interface Commodity {
   id: number;
   name: string;
+  category?: string;
 }
 
 export interface Product {
@@ -112,30 +113,88 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     fetchData();
   }, []);
 
-  // Commodity categories mapping
+  // Commodity categories - dynamically retrieved from backend data or use fallback mapping
   const COMMODITY_CATEGORIES: { [key: string]: string } = {
+    // Vegetables
     "Tomato": "Vegetables",
     "Potato": "Vegetables",
+    "Onion": "Vegetables",
+    "Brinjal": "Vegetables",
+    "Cabbage": "Vegetables",
+    "Cauliflower": "Vegetables",
+    "Carrot": "Vegetables",
+    "Capsicum": "Vegetables",
+    "Green Chilli": "Vegetables",
+    "Bottle Gourd": "Vegetables",
+    "Bitter Gourd": "Vegetables",
+    "Lady Finger": "Vegetables",
+    "Pumpkin": "Vegetables",
+    "Cucumber": "Vegetables",
+    "Radish": "Vegetables",
+    "Spinach": "Vegetables",
+    "Beans": "Vegetables",
+    "Peas": "Vegetables",
+    "Ginger": "Vegetables",
+    "Garlic": "Vegetables",
+    // Grains
     "Wheat": "Grains",
     "Rice": "Grains",
+    "Maize": "Grains",
+    "Bajra": "Grains",
+    "Jowar": "Grains",
+    "Ragi": "Grains",
+    "Barley": "Grains",
+    // Pulses
+    "Tur (Arhar)": "Pulses",
+    "Chana": "Pulses",
+    "Moong Dal": "Pulses",
+    "Urad Dal": "Pulses",
+    "Masoor Dal": "Pulses",
+    // Fruits
+    "Apple": "Fruits",
+    "Banana": "Fruits",
+    "Mango": "Fruits",
+    "Orange": "Fruits",
+    "Grapes": "Fruits",
+    "Papaya": "Fruits",
+    "Pomegranate": "Fruits",
+    "Guava": "Fruits",
+    "Watermelon": "Fruits",
+    // Spices
+    "Turmeric": "Spices",
+    "Coriander": "Spices",
+    "Cumin": "Spices",
+    "Red Chilli": "Spices",
+    "Black Pepper": "Spices",
+    // Oilseeds
+    "Groundnut": "Oilseeds",
+    "Mustard": "Oilseeds",
+    "Soyabean": "Oilseeds",
+    "Sunflower": "Oilseeds",
   };
 
   const categories = useMemo(() => {
-    return Array.from(
-      new Set(
-        commodities
-          .map((c) => COMMODITY_CATEGORIES[c.name])
-          .filter((cat) => cat !== undefined)
-      )
-    ).sort();
+    const categorySet = new Set<string>();
+    commodities.forEach((c) => {
+      let category = c.category || COMMODITY_CATEGORIES[c.name] || "Other";
+      // Normalize Cereals to Grains for consistency
+      if (category === "Cereals") category = "Grains";
+      categorySet.add(category);
+    });
+    return Array.from(categorySet).sort();
   }, [commodities]);
 
   const products = useMemo(() => {
-    return commodities.map((c) => ({
-      id: c.id,
-      name: c.name,
-      category: COMMODITY_CATEGORIES[c.name] || "Other",
-    }));
+    return commodities.map((c) => {
+      let category = c.category || COMMODITY_CATEGORIES[c.name] || "Other";
+      // Normalize Cereals to Grains for consistency
+      if (category === "Cereals") category = "Grains";
+      return {
+        id: c.id,
+        name: c.name,
+        category,
+      };
+    });
   }, [commodities]);
 
   const forecastRanges = [

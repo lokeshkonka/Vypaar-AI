@@ -8,6 +8,7 @@ import DecisionInsightCard from "../components/Inventory/DecisionInsightCard";
 import StockCompare from "../components/Inventory/StockCompare";
 import YourStock from "../components/Inventory/YourStock";
 import StockComponent from "../components/ProductAnalysis/StockComponent";
+import BulkImport from "../components/Inventory/BulkImport";
 import { InventoryProvider } from "../context/InventoryContext";
 import { ForecastProvider } from "../context/ForecastContext";
 
@@ -44,6 +45,9 @@ export default function Inventory() {
 
           {/* Stock Comparison */}
           <StockCompare />
+
+          {/* Bulk Import */}
+          <BulkImport />
 
           {/* Your Stock Table */}
           <ForecastProvider>

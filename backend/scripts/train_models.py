@@ -73,15 +73,21 @@ def load_training_data(
         # Convert to DataFrame
         data_list = []
         for price in prices:
+            # Handle None values with sensible defaults
+            price_val = price.price or 0
+            min_price = price.min_price if price.min_price is not None else price_val * 0.9
+            max_price = price.max_price if price.max_price is not None else price_val * 1.1
+            modal_price = price.modal_price if price.modal_price is not None else price_val
+            
             data_list.append(
                 {
                     'date': price.date,
                     'commodity_id': price.commodity_id,
                     'market_id': price.market_id,
-                    'price': price.price,
-                    'min_price': price.min_price,
-                    'max_price': price.max_price,
-                    'modal_price': price.modal_price,
+                    'price': price_val,
+                    'min_price': min_price,
+                    'max_price': max_price,
+                    'modal_price': modal_price,
                     'arrival': price.arrival or 0,
                 }
             )

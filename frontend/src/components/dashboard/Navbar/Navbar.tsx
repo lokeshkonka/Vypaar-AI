@@ -22,6 +22,9 @@ import {
   FiUpload,
   FiSettings,
   FiTarget,
+  FiStar,
+  FiTruck,
+  FiUsers,
 } from "react-icons/fi";
 
 import NavLoader from "./NavLoader";
@@ -225,6 +228,33 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               active={isActive("/dashboard/recommendations")}
               onClick={() => {
                 navigate("/dashboard/recommendations");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiStar />}
+              label="Watchlist"
+              active={isActive("/dashboard/watchlist")}
+              onClick={() => {
+                navigate("/dashboard/watchlist");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiTruck />}
+              label="Supply Chain"
+              active={isActive("/dashboard/supply-chain")}
+              onClick={() => {
+                navigate("/dashboard/supply-chain");
+                setOpen(false);
+              }}
+            />
+            <SideItem
+              icon={<FiUsers />}
+              label="Community"
+              active={isActive("/dashboard/community")}
+              onClick={() => {
+                navigate("/dashboard/community");
                 setOpen(false);
               }}
             />

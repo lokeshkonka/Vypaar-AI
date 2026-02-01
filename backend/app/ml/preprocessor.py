@@ -338,13 +338,11 @@ class DataPreprocessor:
         """
         Prepare data for prediction (uses fitted preprocessor).
         
-        Generates 16 features for ML models:
-        - 3: commodity one-hot encoding
-        - 3: market one-hot encoding
-        - 2: state one-hot encoding  
-        - 1: arrival quantity
-        - 7: festival/temporal indicators
-        - 1: price (optional, for model compatibility)
+        Generates features matching the training data (29 features):
+        - numeric: commodity_id, market_id, arrival, min_price, max_price, modal_price
+        - temporal: day_of_week, day_of_month, month, quarter, week_of_year, day_of_year, season
+        - cyclical: month_sin, month_cos, day_sin, day_cos
+        - festival: is_festival, festival_effect, holiday_proximity, etc.
 
         Args:
             data: Input DataFrame (must contain commodity_id, market_id, arrival, date columns)
@@ -352,7 +350,7 @@ class DataPreprocessor:
             categorical_cols: List of categorical columns
 
         Returns:
-            Processed features as numpy array (shape: [n_samples, 16])
+            Processed features as numpy array
         """
         data_processed = data.copy()
 
@@ -362,61 +360,31 @@ class DataPreprocessor:
         # Build features dataframe with proper columns
         features = pd.DataFrame()
         
-        # Add numeric columns that exist
-        numeric_cols = ['price', 'arrival', 'commodity_id', 'market_id']
+        # Add numeric columns that exist (matching training data)
+        numeric_cols = ['commodity_id', 'market_id', 'arrival', 'min_price', 'max_price', 'modal_price']
         for col in numeric_cols:
             if col in data_processed.columns:
                 features[col] = data_processed[col]
             else:
-                features[col] = 0.0
+                # Derive from price if available
+                if col == 'min_price' and 'price' in data_processed.columns:
+                    features[col] = data_processed['price'] * 0.9
+                elif col == 'max_price' and 'price' in data_processed.columns:
+                    features[col] = data_processed['price'] * 1.1
+                elif col == 'modal_price' and 'price' in data_processed.columns:
+                    features[col] = data_processed['price']
+                else:
+                    features[col] = 0.0
         
         # Add temporal/festival features
         features = pd.concat([features, temporal_features], axis=1)
         
-        # Define standard 16 features for model compatibility
-        standard_features = [
-            'commodity_id',      # 1 - can be one-hot encoded later
-            'market_id',         # 2 - can be one-hot encoded later
-            'arrival',           # 3
-            'day_of_week',       # 4 - from temporal
-            'month',             # 5 - from temporal
-            'season',            # 6 - from temporal
-            'is_festival',       # 7 - from festival calendar
-            'festival_effect',   # 8 - from festival calendar
-            'holiday_proximity', # 9 - from festival calendar
-            'monsoon_factor',    # 10 - from festival calendar
-            'harvest_season',    # 11 - from festival calendar
-            'price',             # 12
-            'week_of_year',      # 13 - from temporal
-            'quarter',           # 14 - from temporal
-            'month_sin',         # 15 - from temporal
-            'month_cos',         # 16 - from temporal
-        ]
-        
-        # Fill missing features with defaults
-        for col in standard_features:
-            if col not in features.columns:
-                features[col] = 0.0
-        
-        # Select only standard features in order
-        features = features[standard_features].copy()
-        
-        # Scale numeric features (use fitted scalers if available)
-        for col in ['price', 'arrival']:
-            if col in features.columns:
-                try:
-                    values = features[col].values
-                    scaled = self.scale_features(values, col, fit=False)
-                    if scaled is not None:
-                        features[col] = scaled
-                except Exception as e:
-                    logger.debug(f"Could not scale {col}: {e}, using raw values")
-
         # Handle missing values
         features = features.fillna(features.mean(numeric_only=True))
+        features = features.fillna(0.0)
         
         # Update feature names for consistency
-        self.feature_names = standard_features
+        self.feature_names = features.columns.tolist()
         
         features_array = features.values
 
@@ -437,14 +405,18 @@ class DataPreprocessor:
         feature_variance = np.var(features, axis=0)
         total_variance = np.sum(feature_variance)
         
-        if total_variance > 0:
-            importance = {
-                name: float(variance / total_variance)
-                for name, variance in zip(self.feature_names, feature_variance)
+        # Handle zero total variance (single sample or constant features)
+        if total_variance == 0:
+            n_features = len(self.feature_names) if self.feature_names else features.shape[1] if features.ndim > 1 else 1
+            equal_importance = 1.0 / max(n_features, 1)
+            return {
+                name: equal_importance
+                for name in (self.feature_names or [f"feature_{i}" for i in range(n_features)])
             }
-        else:
-            # If all features have zero variance, give equal importance
-            n_features = len(self.feature_names)
-            importance = {name: 1.0 / n_features for name in self.feature_names}
+        
+        importance = {
+            name: float(variance / total_variance)
+            for name, variance in zip(self.feature_names, feature_variance)
+        }
         
         return importance
