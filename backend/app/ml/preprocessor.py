@@ -437,9 +437,14 @@ class DataPreprocessor:
         feature_variance = np.var(features, axis=0)
         total_variance = np.sum(feature_variance)
         
-        importance = {
-            name: float(variance / total_variance)
-            for name, variance in zip(self.feature_names, feature_variance)
-        }
+        if total_variance > 0:
+            importance = {
+                name: float(variance / total_variance)
+                for name, variance in zip(self.feature_names, feature_variance)
+            }
+        else:
+            # If all features have zero variance, give equal importance
+            n_features = len(self.feature_names)
+            importance = {name: 1.0 / n_features for name in self.feature_names}
         
         return importance

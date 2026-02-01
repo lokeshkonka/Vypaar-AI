@@ -180,6 +180,7 @@ def main():
     model_path = model_dir / f"ensemble_{timestamp}.joblib"
     preprocessor_path = model_dir / f"preprocessor_{timestamp}.joblib"
     
+    # Save ensemble with metadata
     joblib.dump({
         'random_forest': rf,
         'gradient_boosting': gb,
@@ -187,9 +188,18 @@ def main():
         'best_model_name': best_model_name,
         'features': feature_cols,
         'timestamp': timestamp,
+        'training_samples': len(df),
     }, model_path)
     
-    joblib.dump(preprocessor, preprocessor_path)
+    # Save preprocessor with feature metadata
+    preprocessor_metadata = {
+        'preprocessor': preprocessor,
+        'feature_cols': feature_cols,
+        'numeric_features': preprocessor.numeric_features,
+        'categorical_features': preprocessor.categorical_features,
+        'feature_names': feature_cols,
+    }
+    joblib.dump(preprocessor_metadata, preprocessor_path)
     
     print(f"   ✓ Ensemble: {model_path.name}")
     print(f"   ✓ Preprocessor: {preprocessor_path.name}\n")

@@ -105,11 +105,8 @@ class EnsembleManager:
             logger.error(f"Model directory not found: {self.model_dir}")
             return
 
-        logger.info(f"Loading models from: {self.model_dir}")
-        
         # Try tuned ensemble first
         tuned_files = list(self.model_dir.glob("ensemble_tuned_*.joblib"))
-        logger.info(f"Found {len(tuned_files)} tuned ensemble files")
         loaded_from_ensemble = False
         if tuned_files:
             latest_tuned = max(tuned_files, key=lambda p: p.stat().st_mtime)
@@ -134,7 +131,6 @@ class EnsembleManager:
         # Fallback: regular ensemble
         if not loaded_from_ensemble:
             ensemble_files = list(self.model_dir.glob("ensemble_*.joblib"))
-            logger.info(f"Found {len(ensemble_files)} ensemble files (regular)")
             if ensemble_files:
                 latest_ensemble = max(ensemble_files, key=lambda p: p.stat().st_mtime)
                 try:
@@ -186,6 +182,13 @@ class EnsembleManager:
                 if isinstance(preprocessor_data, dict):
                     self.preprocessor = preprocessor_data.get('preprocessor', preprocessor_data)
                     self.feature_cols = preprocessor_data.get('feature_cols', None)
+                    # Set feature names on the preprocessor object
+                    if self.preprocessor and hasattr(self.preprocessor, 'feature_names'):
+                        feature_names = preprocessor_data.get('feature_names', preprocessor_data.get('feature_cols', []))
+                        if feature_names:
+                            self.preprocessor.feature_names = feature_names
+                            self.preprocessor.numeric_features = preprocessor_data.get('numeric_features', feature_names)
+                            self.preprocessor.categorical_features = preprocessor_data.get('categorical_features', [])
                 else:
                     self.preprocessor = preprocessor_data
                 logger.info(f"Loaded preprocessor from {preprocessor_path}")
