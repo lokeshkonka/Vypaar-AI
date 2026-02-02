@@ -875,11 +875,27 @@ async def get_price_history(
         if not commodity_search or not market_search:
             raise HTTPException(status_code=422, detail="Both commodity and market are required")
         
+        # Try exact match first, then case-insensitive
         commodity_obj = await commodity_repo.get_by_name(commodity_search)
+        if not commodity_obj:
+            commodity_obj = await commodity_repo.get_by_name(commodity_search.title())
+        if not commodity_obj:
+            commodity_obj = await commodity_repo.get_by_name(commodity_search.capitalize())
+        
         market_obj = await market_repo.get_by_name(market_search)
+        if not market_obj:
+            market_obj = await market_repo.get_by_name(market_search.title())
         
         if not commodity_obj or not market_obj:
-            raise HTTPException(status_code=404, detail="Commodity or market not found")
+            # Return empty data instead of 404 to prevent frontend errors
+            return {
+                "commodity": commodity_search,
+                "market": market_search,
+                "days": days,
+                "prices": [],
+                "count": 0,
+                "message": "No data found for the specified commodity/market combination"
+            }
         
         history = await market_price_repo.get_price_history(
             commodity_id=commodity_obj.id,
@@ -1014,15 +1030,20 @@ async def export_prices(
                 )
                 
                 for price in prices:
-                    export_data.append({
-                        "date": price.date.isoformat() if price.date else "",
-                        "commodity": commodity.name,
-                        "market": market.name,
-                        "state": getattr(market, 'state', ''),
-                        "min_price": float(price.min_price) if price.min_price else 0,
-                        "max_price": float(price.max_price) if price.max_price else 0,
-                        "modal_price": float(price.modal_price) if price.modal_price else 0,
-                    })
+                    try:
+                        date_val = price.date.isoformat() if hasattr(price, 'date') and price.date else ""
+                        export_data.append({
+                            "date": date_val,
+                            "commodity": commodity.name,
+                            "market": market.name,
+                            "state": getattr(market, 'state', ''),
+                            "min_price": float(price.min_price) if price.min_price else 0,
+                            "max_price": float(price.max_price) if price.max_price else 0,
+                            "modal_price": float(price.modal_price) if price.modal_price else 0,
+                        })
+                    except Exception as e:
+                        logger.warning(f"Error processing price record: {e}")
+                        continue
         
         # Sort by date
         export_data.sort(key=lambda x: x["date"], reverse=True)
