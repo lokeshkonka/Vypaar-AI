@@ -92,6 +92,8 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
     e.preventDefault();
     setValidationError('');
 
+    console.log('Form data on submit:', formData);
+
     if (!formData.title.trim()) {
       setValidationError('Please enter a title');
       return;
@@ -100,8 +102,9 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
       setValidationError('Please enter content');
       return;
     }
-    if (!formData.commodity) {
+    if (!formData.commodity?.trim()) {
       setValidationError('Please select a commodity');
+      console.log('Commodity validation failed:', formData.commodity);
       return;
     }
 
@@ -200,7 +203,10 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
               </label>
               <select
                 value={formData.commodity}
-                onChange={(e) => setFormData({ ...formData, commodity: e.target.value })}
+                onChange={(e) => {
+                  console.log('Commodity selected:', e.target.value);
+                  setFormData({ ...formData, commodity: e.target.value });
+                }}
                 required
                 disabled={loading}
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -289,7 +295,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !formData.title || !formData.content || !formData.commodity}
+              disabled={isSubmitting || !formData.title.trim() || !formData.content.trim() || !formData.commodity?.trim()}
               className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
             >
               {isSubmitting ? 'Posting...' : 'Post Discussion'}
