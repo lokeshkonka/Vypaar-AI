@@ -1,9 +1,5 @@
 import { useEffect, useState } from "react";
-<<<<<<< Updated upstream
 import { Search, Heart, MessageCircle, Loader, Plus, X, Send, MessageSquare, TrendingUp, Users } from "lucide-react";
-=======
-import { Search, Heart, MessageCircle, Loader, Plus, X, Send } from "lucide-react";
->>>>>>> Stashed changes
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
 
@@ -293,9 +289,6 @@ export default function Community() {
                 </option>
               ))}
             </select>
-<<<<<<< Updated upstream
-            </div>
-=======
             
             <button
               onClick={() => setIsCreateOpen(true)}
@@ -304,7 +297,6 @@ export default function Community() {
               <Plus size={18} />
               Create New Post
             </button>
->>>>>>> Stashed changes
           </div>
 
           {loading && (
