@@ -88,9 +88,18 @@ class CommodityRepository(BaseRepository):
 
     async def get_by_name(self, name: str) -> Optional[Commodity]:
         """Get commodity by name."""
+        # First try exact match (case-insensitive)
         query = select(Commodity).where(Commodity.name.ilike(name))
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        commodity = result.scalar_one_or_none()
+        
+        # If not found, try partial match
+        if not commodity:
+            query = select(Commodity).where(Commodity.name.ilike(f"%{name}%"))
+            result = await self.db.execute(query)
+            commodity = result.scalar_one_or_none()
+        
+        return commodity
 
     async def get_by_category(self, category: str) -> List[Commodity]:
         """Get commodities by category."""
@@ -118,9 +127,18 @@ class MarketRepository(BaseRepository):
 
     async def get_by_name(self, name: str) -> Optional[Market]:
         """Get market by name."""
+        # First try exact match (case-insensitive)
         query = select(Market).where(Market.name.ilike(name))
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        market = result.scalar_one_or_none()
+        
+        # If not found, try partial match
+        if not market:
+            query = select(Market).where(Market.name.ilike(f"%{name}%"))
+            result = await self.db.execute(query)
+            market = result.scalar_one_or_none()
+        
+        return market
 
     async def get_by_state(self, state: str) -> List[Market]:
         """Get markets by state."""

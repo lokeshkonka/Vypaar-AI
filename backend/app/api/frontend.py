@@ -1015,10 +1015,10 @@ async def export_prices(
                 
                 for price in prices:
                     export_data.append({
-                        "date": price.arrival_date.isoformat() if price.arrival_date else str(price.created_at)[:10],
+                        "date": price.date.isoformat() if price.date else "",
                         "commodity": commodity.name,
                         "market": market.name,
-                        "state": market.state,
+                        "state": getattr(market, 'state', ''),
                         "min_price": float(price.min_price) if price.min_price else 0,
                         "max_price": float(price.max_price) if price.max_price else 0,
                         "modal_price": float(price.modal_price) if price.modal_price else 0,
