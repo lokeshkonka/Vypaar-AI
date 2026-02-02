@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Search, Heart, MessageCircle, Loader, Plus, X } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
-import { CreatePostModal } from "../components/community/CreatePostModal";
 
 interface Discussion {
   id: string;
