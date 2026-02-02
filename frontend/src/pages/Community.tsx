@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { Search, Heart, MessageCircle, Loader, Plus } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import CreatePostModal from "../components/community/CreatePostModal";
 import CommentsSection from "../components/community/CommentsSection";
+=======
+import { Search, Heart, MessageCircle, Loader, Plus, X } from "lucide-react";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { useUser } from "@clerk/clerk-react";
+>>>>>>> Stashed changes
 =======
 import { Search, Heart, MessageCircle, Loader, Plus, X } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
@@ -228,6 +234,66 @@ export default function Community() {
       if (!comments[discussionId]) {
         await fetchComments(discussionId);
       }
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!newTitle.trim() || !newContent.trim() || !newCommodity) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
+      
+      const response = await fetch("http://localhost:8000/api/v1/discussions/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          content: newContent,
+          commodity: newCommodity,
+          author: authorName,
+          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create discussion");
+      }
+
+      const newDiscussion = await response.json();
+      
+      // Add to discussions list
+      setDiscussions((prev) => [
+        {
+          id: newDiscussion.id,
+          author: newDiscussion.author,
+          avatar: newDiscussion.avatar_url,
+          title: newDiscussion.title,
+          content: newDiscussion.content,
+          commodity: newDiscussion.commodity,
+          timestamp: new Date(newDiscussion.created_at),
+          likes: 0,
+          replies: 0,
+        },
+        ...prev,
+      ]);
+
+      // Reset form
+      setNewTitle("");
+      setNewContent("");
+      setNewCommodity("");
+      setNewTags("");
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      console.error("Error creating discussion:", err);
+      alert("Failed to create discussion. Please try again.");
+    } finally {
+      setCreating(false);
     }
   };
 
