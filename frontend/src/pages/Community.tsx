@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Search, Heart, MessageCircle, Loader, Plus, X } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
-import { CreatePostModal } from "../components/community/CreatePostModal";
 
 interface Discussion {
   id: string;
@@ -123,8 +122,8 @@ export default function Community() {
   };
 
   const handleCreatePost = async () => {
-    if (!newTitle.trim() || !newContent.trim() || !newCommodity) {
-      alert("Please fill all required fields");
+    if (!newTitle.trim() || !newContent.trim() || !newCommodity.trim()) {
+      alert("Please fill all required fields (Title, Commodity, and Content)");
       return;
     }
 
