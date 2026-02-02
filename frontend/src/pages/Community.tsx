@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
+<<<<<<< Updated upstream
 import { Search, Heart, MessageCircle, Loader, Plus } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import CreatePostModal from "../components/community/CreatePostModal";
 import CommentsSection from "../components/community/CommentsSection";
+=======
+import { Search, Heart, MessageCircle, Loader, Plus, X } from "lucide-react";
+import { DashboardLayout } from "../components/layout/DashboardLayout";
+import { useUser } from "@clerk/clerk-react";
+>>>>>>> Stashed changes
 
 interface Discussion {
   id: string;
@@ -56,15 +62,12 @@ export default function Community() {
   const [selectedCommodity, setSelectedCommodity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCommodity, setNewCommodity] = useState("");
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [createLoading, setCreateLoading] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
-  const [comments, setComments] = useState<Record<string, Comment[]>>({});
+  const [newTags, setNewTags] = useState("");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchDiscussions();
@@ -222,11 +225,71 @@ export default function Community() {
     }
   };
 
+  const handleCreatePost = async () => {
+    if (!newTitle.trim() || !newContent.trim() || !newCommodity) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
+      
+      const response = await fetch("http://localhost:8000/api/v1/discussions/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: newTitle,
+          content: newContent,
+          commodity: newCommodity,
+          author: authorName,
+          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create discussion");
+      }
+
+      const newDiscussion = await response.json();
+      
+      // Add to discussions list
+      setDiscussions((prev) => [
+        {
+          id: newDiscussion.id,
+          author: newDiscussion.author,
+          avatar: newDiscussion.avatar_url,
+          title: newDiscussion.title,
+          content: newDiscussion.content,
+          commodity: newDiscussion.commodity,
+          timestamp: new Date(newDiscussion.created_at),
+          likes: 0,
+          replies: 0,
+        },
+        ...prev,
+      ]);
+
+      // Reset form
+      setNewTitle("");
+      setNewContent("");
+      setNewCommodity("");
+      setNewTags("");
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      console.error("Error creating discussion:", err);
+      alert("Failed to create discussion. Please try again.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-          <div className="mb-6 sm:mb-8 flex items-center justify-between">
+          <div className="mb-6 sm:mb-8 flex justify-between items-center">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Discussion Board
@@ -237,7 +300,7 @@ export default function Community() {
             </div>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition flex items-center gap-2 shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors shadow-sm"
             >
               <Plus size={20} />
               <span className="hidden sm:inline">New Post</span>
@@ -447,6 +510,95 @@ export default function Community() {
             </div>
           )}
         </div>
+
+        {/* Create Post Modal */}
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Create New Discussion
+                </h2>
+                <button
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                >
+                  <X size={24} className="text-gray-500 dark:text-gray-400" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="Enter discussion title"
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Commodity <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newCommodity}
+                    onChange={(e) => setNewCommodity(e.target.value)}
+                    placeholder="e.g., Tomato, Wheat, Potato"
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Content <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={newContent}
+                    onChange={(e) => setNewContent(e.target.value)}
+                    placeholder="Share your thoughts, questions, or insights..."
+                    rows={6}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={newTags}
+                    onChange={(e) => setNewTags(e.target.value)}
+                    placeholder="e.g., prices, trading, advice"
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={handleCreatePost}
+                    disabled={creating}
+                    className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white rounded-lg font-medium transition-colors"
+                  >
+                    {creating ? "Creating..." : "Create Discussion"}
+                  </button>
+                  <button
+                    onClick={() => setIsCreateModalOpen(false)}
+                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Create Post Modal */}
