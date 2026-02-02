@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, MessageSquare, Loader, Plus, X, TrendingUp } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, Plus, X } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
-import { CreatePostModal } from "../components/community/CreatePostModal";
 
 interface Discussion {
   id: string;
@@ -56,14 +55,11 @@ export default function Community() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCommodity, setNewCommodity] = useState("");
-  const [newMarket, setNewMarket] = useState("");
   const [newTags, setNewTags] = useState("");
-  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
-  const [comments, setComments] = useState<Record<string, Comment[]>>({});
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchDiscussions();
@@ -125,63 +121,15 @@ export default function Community() {
     );
   };
 
-  const handleAddComment = async (discussionId: string, content: string) => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/v1/discussions/${discussionId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content,
-          author: user?.fullName || user?.firstName || "Anonymous",
-        }),
-      });
-
-      if (response.ok) {
-        const newComment = await response.json();
-        setComments((prev) => ({
-          ...prev,
-          [discussionId]: [...(prev[discussionId] || []), newComment],
-        }));
-      }
-    } catch (error) {
-      console.error("Error adding comment:", error);
+  const handleCreatePost = async () => {
+    if (!newTitle.trim() || !newContent.trim() || !newCommodity.trim()) {
+      alert("Please fill all required fields (Title, Commodity, and Content)");
+      return;
     }
-  };
 
-  const handleLikeComment = async (discussionId: string, commentId: number) => {
-    try {
-      const response = await fetch(
-        `http://localhost:8000/api/v1/discussions/${discussionId}/comments/${commentId}/like`,
-        { method: "POST" }
-      );
-
-      if (response.ok) {
-        setComments((prev) => ({
-          ...prev,
-          [discussionId]: prev[discussionId].map((c) =>
-            c.id === commentId ? { ...c, likes: c.likes + 1 } : c
-          ),
-        }));
-      }
-    } catch (error) {
-      console.error("Error liking comment:", error);
-    }
-  };
-
-  const toggleComments = (discussionId: string) => {
-    setExpandedDiscussion((prev) => (prev === discussionId ? null : discussionId));
-  };
-
-  const handleCreatePost = async (postData: {
-    title: string;
-    content: string;
-    commodity: string;
-    market?: string;
-    tags: string[];
-    author: string;
-  }) => {
     try {
       setCreating(true);
+      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
       
       const response = await fetch("http://localhost:8000/api/v1/discussions/", {
         method: "POST",
@@ -189,12 +137,11 @@ export default function Community() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: postData.title,
-          content: postData.content,
-          commodity: postData.commodity,
-          market: postData.market || null,
-          author: postData.author,
-          tags: postData.tags,
+          title: newTitle,
+          content: newContent,
+          commodity: newCommodity,
+          author: authorName,
+          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
         }),
       });
 
