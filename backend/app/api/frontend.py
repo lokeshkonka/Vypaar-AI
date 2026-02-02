@@ -870,8 +870,10 @@ async def get_weather(
     status_code=status.HTTP_200_OK,
 )
 async def get_price_history(
-    commodity_name: str = Query(..., description="Commodity name"),
-    market_name: str = Query(..., description="Market name"),
+    commodity_name: Optional[str] = Query(None, alias="commodity_name", description="Commodity name"),
+    market_name: Optional[str] = Query(None, alias="market_name", description="Market name"),
+    commodity: Optional[str] = Query(None, description="Commodity name (alias)"),
+    market: Optional[str] = Query(None, description="Market name (alias)"),
     days: int = Query(default=30, ge=1, le=90, description="Number of days"),
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
@@ -879,21 +881,28 @@ async def get_price_history(
 ):
     """Get historical price data for charting."""
     try:
-        commodity = await commodity_repo.get_by_name(commodity_name)
-        market = await market_repo.get_by_name(market_name)
+        # Support both naming conventions
+        commodity_search = commodity_name or commodity
+        market_search = market_name or market
         
-        if not commodity or not market:
+        if not commodity_search or not market_search:
+            raise HTTPException(status_code=422, detail="Both commodity and market are required")
+        
+        commodity_obj = await commodity_repo.get_by_name(commodity_search)
+        market_obj = await market_repo.get_by_name(market_search)
+        
+        if not commodity_obj or not market_obj:
             raise HTTPException(status_code=404, detail="Commodity or market not found")
         
         history = await market_price_repo.get_price_history(
-            commodity_id=commodity.id,
-            market_id=market.id,
+            commodity_id=commodity_obj.id,
+            market_id=market_obj.id,
             days=days,
         )
         
         return {
-            "commodity": commodity.name,
-            "market": market.name,
+            "commodity": commodity_obj.name,
+            "market": market_obj.name,
             "days": days,
             "data": [
                 {
@@ -912,3 +921,63 @@ async def get_price_history(
     except Exception as exc:  # noqa: BLE001
         logger.exception(f"Price history fetch failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch price history")
+
+
+@router.get(
+    "/market-comparison",
+    status_code=status.HTTP_200_OK,
+)
+async def get_market_comparison(
+    commodity: str = Query(..., description="Commodity name to compare across markets"),
+    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
+    market_repo: MarketRepository = Depends(get_market_repo),
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
+):
+    """Get price comparison for a commodity across different markets."""
+    try:
+        commodity_obj = await commodity_repo.get_by_name(commodity)
+        if not commodity_obj:
+            raise HTTPException(status_code=404, detail=f"Commodity '{commodity}' not found")
+        
+        # Get all markets
+        markets = await market_repo.get_all(limit=50)
+        
+        comparison_data = []
+        for market in markets:
+            # Get latest price for this commodity in this market
+            history = await market_price_repo.get_price_history(
+                commodity_id=commodity_obj.id,
+                market_id=market.id,
+                days=7,
+            )
+            
+            if history:
+                latest = history[0]
+                prices = [p.price or p.modal_price for p in history if p.price or p.modal_price]
+                avg_price = float(np.mean(prices)) if prices else 0
+                
+                comparison_data.append({
+                    "market": market.name,
+                    "state": market.state or "",
+                    "currentPrice": float(latest.price or latest.modal_price or 0),
+                    "minPrice": float(latest.min_price or 0) if latest.min_price else None,
+                    "maxPrice": float(latest.max_price or 0) if latest.max_price else None,
+                    "avgPrice": avg_price,
+                    "lastUpdated": latest.date.isoformat(),
+                })
+        
+        # Sort by current price
+        comparison_data.sort(key=lambda x: x["currentPrice"])
+        
+        return {
+            "commodity": commodity_obj.name,
+            "markets": comparison_data,
+            "count": len(comparison_data),
+            "cheapestMarket": comparison_data[0]["market"] if comparison_data else None,
+            "mostExpensiveMarket": comparison_data[-1]["market"] if comparison_data else None,
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception(f"Market comparison fetch failed: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to fetch market comparison")
