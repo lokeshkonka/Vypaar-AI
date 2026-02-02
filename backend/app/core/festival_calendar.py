@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timedelta, date as date_type
+from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 from loguru import logger
 
@@ -83,7 +83,10 @@ class FestivalCalendar:
         month = date.month
         return month in [3, 4, 9, 10, 11]
 
-    def get_festival_proximity(self, date: datetime, days_before: int = 7, days_after: int = 3) -> int:
+    def get_festival_proximity(self, date: Union[datetime, date_type], days_before: int = 7, days_after: int = 3) -> int:
+        # Convert date to datetime if needed for consistent comparison
+        if isinstance(date, date_type) and not isinstance(date, datetime):
+            date = datetime.combine(date, datetime.min.time())
         
         check_start = date - timedelta(days=days_before)
         check_end = date + timedelta(days=days_after)
@@ -112,7 +115,10 @@ class FestivalCalendar:
         else:
             return 3
 
-    def get_market_event_flags(self, date: datetime) -> Dict[str, int]:
+    def get_market_event_flags(self, date: Union[datetime, date_type]) -> Dict[str, int]:
+        # Convert date to datetime if needed for consistent comparison
+        if isinstance(date, date_type) and not isinstance(date, datetime):
+            date = datetime.combine(date, datetime.min.time())
         
         month, day = date.month, date.day
         flags = {
@@ -150,7 +156,10 @@ class FestivalCalendar:
         
         return flags
 
-    def get_enhanced_features(self, date: datetime) -> Dict[str, any]:
+    def get_enhanced_features(self, date: Union[datetime, date_type]) -> Dict[str, any]:
+        # Convert date to datetime if needed for consistent comparison
+        if isinstance(date, date_type) and not isinstance(date, datetime):
+            date = datetime.combine(date, datetime.min.time())
         
         features = {
             "is_festival": 1 if self.is_festival_day(date) else 0,

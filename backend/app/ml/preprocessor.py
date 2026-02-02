@@ -414,23 +414,37 @@ class DataPreprocessor:
         # Add temporal/festival features
         features = pd.concat([features, temporal_features], axis=1)
         
-        # Define standard 15 features for model compatibility (excludes price which is the target)
+        # Define standard 29 features for model compatibility (must match trained model)
         standard_features = [
-            'commodity_id',      # 1 - can be one-hot encoded later
-            'market_id',         # 2 - can be one-hot encoded later
-            'arrival',           # 3
-            'day_of_week',       # 4 - from temporal
-            'month',             # 5 - from temporal
-            'season',            # 6 - from temporal
-            'is_festival',       # 7 - from festival calendar
-            'festival_effect',   # 8 - from festival calendar
-            'holiday_proximity', # 9 - from festival calendar
-            'monsoon_factor',    # 10 - from festival calendar
-            'harvest_season',    # 11 - from festival calendar
-            'week_of_year',      # 12 - from temporal
-            'quarter',           # 13 - from temporal
-            'month_sin',         # 14 - from temporal
-            'month_cos',         # 15 - from temporal
+            'commodity_id',
+            'market_id',
+            'arrival',
+            'min_price',
+            'max_price',
+            'modal_price',
+            'day_of_week',
+            'day_of_month',
+            'month',
+            'quarter',
+            'week_of_year',
+            'day_of_year',
+            'season',
+            'month_sin',
+            'month_cos',
+            'day_sin',
+            'day_cos',
+            'is_festival',
+            'festival_proximity',
+            'is_harvest_season',
+            'season_type',
+            'is_weekend',
+            'is_month_end',
+            'is_month_start',
+            'is_sowing_period',
+            'is_harvest_period',
+            'is_procurement_period',
+            'is_festival_week',
+            'is_major_festival',
         ]
         
         # Fill missing features with defaults
