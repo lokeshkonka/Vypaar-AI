@@ -56,10 +56,6 @@ export default function Community() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [newCommodity, setNewCommodity] = useState("");
-  const [newTags, setNewTags] = useState("");
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -122,15 +118,16 @@ export default function Community() {
     );
   };
 
-  const handleCreatePost = async () => {
-    if (!newTitle.trim() || !newContent.trim() || !newCommodity.trim()) {
-      alert("Please fill all required fields (Title, Commodity, and Content)");
-      return;
-    }
-
+  const handleCreatePost = async (postData: {
+    title: string;
+    content: string;
+    commodity: string;
+    market?: string;
+    tags: string[];
+    author: string;
+  }) => {
     try {
       setCreating(true);
-      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
       
       const response = await fetch("http://localhost:8000/api/v1/discussions/", {
         method: "POST",
@@ -138,11 +135,12 @@ export default function Community() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: newTitle,
-          content: newContent,
-          commodity: newCommodity,
-          author: authorName,
-          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
+          title: postData.title,
+          content: postData.content,
+          commodity: postData.commodity,
+          market: postData.market || null,
+          author: postData.author,
+          tags: postData.tags,
         }),
       });
 
