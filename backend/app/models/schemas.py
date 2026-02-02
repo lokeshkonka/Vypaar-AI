@@ -849,8 +849,8 @@ class ModelMetricsResponse(BaseSchema):
 class DiscussionCreate(BaseSchema):
     """Create discussion request."""
     
-    title: str = Field(..., min_length=5, max_length=255)
-    content: str = Field(..., min_length=10, max_length=5000)
+    title: str = Field(..., min_length=1, max_length=255)
+    content: str = Field(..., min_length=1, max_length=5000)
     commodity: str = Field(..., min_length=1, max_length=255)
     market: Optional[str] = Field(None, max_length=255)
     author: str = Field(..., min_length=1, max_length=255)
