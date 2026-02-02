@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, Loader, Plus, X, Send } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, Plus, X, Send, MessageSquare, TrendingUp, Users } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
 
