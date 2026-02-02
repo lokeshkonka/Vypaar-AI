@@ -43,12 +43,16 @@ export default function AIChatbot() {
         const matchedCommodity = commodities.find(c => lowerQuery.includes(c));
         
         if (matchedCommodity) {
-          const response = await fetch(`${BACKEND_URL}/api/price-history?commodity=${matchedCommodity}&market=Delhi&days=7`);
+          // Use Azadpur (Delhi's largest market) for price queries
+          const response = await fetch(`${BACKEND_URL}/api/price-history?commodity=${matchedCommodity.charAt(0).toUpperCase() + matchedCommodity.slice(1)}&market=Azadpur&days=7`);
           if (response.ok) {
             const data = await response.json();
             if (data.prices && data.prices.length > 0) {
               const latestPrice = data.prices[data.prices.length - 1].price;
-              return `📊 **${matchedCommodity.charAt(0).toUpperCase() + matchedCommodity.slice(1)} Price Update**\n\nCurrent price in Delhi: ₹${latestPrice.toFixed(2)}/quintal\n\nTrend: ${data.trend === 'up' ? '📈 Increasing' : data.trend === 'down' ? '📉 Decreasing' : '➡️ Stable'}\nChange: ${data.changePercent > 0 ? '+' : ''}${data.changePercent.toFixed(2)}% over last 7 days`;
+              const firstPrice = data.prices[0].price;
+              const changePercent = ((latestPrice - firstPrice) / firstPrice) * 100;
+              const trend = changePercent > 2 ? 'up' : changePercent < -2 ? 'down' : 'stable';
+              return `📊 **${matchedCommodity.charAt(0).toUpperCase() + matchedCommodity.slice(1)} Price Update**\n\nCurrent price in Azadpur (Delhi): ₹${latestPrice.toFixed(2)}/quintal\n\nTrend: ${trend === 'up' ? '📈 Increasing' : trend === 'down' ? '📉 Decreasing' : '➡️ Stable'}\nChange: ${changePercent > 0 ? '+' : ''}${changePercent.toFixed(2)}% over last 7 days\n\nData from ${data.count} records.`;
             }
           }
           return `I couldn't find current price data for ${matchedCommodity}. Please make sure the data has been scraped for this commodity.`;
