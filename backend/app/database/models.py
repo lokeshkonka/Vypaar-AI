@@ -354,3 +354,37 @@ class MarketTrendAnalysis(Base):
 
     def __repr__(self):
         return f"<MarketTrendAnalysis(id={self.id}, commodity_id={self.commodity_id}, market_id={self.market_id})>"
+
+
+class Recommendation(Base):
+    """AI-generated trading recommendations."""
+
+    __tablename__ = "recommendations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=False)
+    market_id = Column(Integer, ForeignKey("markets.id"), nullable=True)
+    recommendation_type = Column(String(20), nullable=False)  # BUY, SELL, HOLD
+    confidence_score = Column(Float, nullable=False)  # 0-1
+    predicted_price = Column(Float, nullable=True)
+    current_price = Column(Float, nullable=True)
+    price_change_percent = Column(Float, nullable=True)
+    reasoning = Column(Text, nullable=True)
+    factors = Column(JSON, nullable=True)  # List of factors influencing recommendation
+    valid_until = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    commodity = relationship("Commodity")
+    market = relationship("Market")
+
+    __table_args__ = (
+        Index("ix_recommendation_commodity", "commodity_id"),
+        Index("ix_recommendation_active", "is_active"),
+        Index("ix_recommendation_created", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<Recommendation(id={self.id}, commodity_id={self.commodity_id}, type={self.recommendation_type})>"
