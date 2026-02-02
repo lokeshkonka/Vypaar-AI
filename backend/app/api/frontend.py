@@ -567,7 +567,7 @@ async def add_inventory(
 async def get_product_analysis(
     commodity_name: Optional[str] = Query(None, description="Commodity name to analyze"),
     market_name: Optional[str] = Query(None, description="Market name to analyze"),
-    days: int = Query(default=7, ge=1, le=30, description="Number of days for analysis"),
+    days: int = Query(7, description="Number of days for analysis"),
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
     inventory_repo: InventoryRepository = Depends(get_inventory_repo),
