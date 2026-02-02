@@ -686,17 +686,17 @@ async def get_product_analysis(
         weather_impacts = []
         
         # Add festival impact if any
-        if festival_info.get('is_festival', 0) > 0:
+        if festival_info.get('is_festival', 0) > 0 or festival_info.get('is_festival_week', 0) > 0:
             festival_impacts.append(
                 ImpactItem(
                     title="Festival Season",
                     subtitle="Demand expected to increase",
-                    delta=f"+{int(festival_info.get('festival_effect', 0) * 100)}%",
+                    delta="+10%",
                     positive=True
                 )
             )
         
-        if festival_info.get('harvest_season', 0) > 0:
+        if festival_info.get('is_harvest_season', 0) > 0 or festival_info.get('is_harvest_period', 0) > 0:
             festival_impacts.append(
                 ImpactItem(
                     title="Harvest Season",
@@ -723,14 +723,13 @@ async def get_product_analysis(
                 )
         except Exception as weather_exc:
             logger.warning(f"Weather fetch failed for product analysis: {weather_exc}")
-            # Fallback to monsoon factor from festival calendar
-            monsoon = festival_info.get('monsoon_factor', 0)
-            if monsoon > 0:
+            # Fallback to season-based weather info
+            if festival_info.get('is_sowing_period', 0) > 0:
                 weather_impacts.append(
                     ImpactItem(
-                        title="Monsoon Effect",
+                        title="Sowing Season",
                         subtitle="Weather affecting supply",
-                        delta=f"+{int(monsoon * 10)}%",
+                        delta="+5%",
                         positive=False
                     )
                 )
