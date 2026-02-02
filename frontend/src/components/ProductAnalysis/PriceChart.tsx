@@ -143,8 +143,8 @@ export default function PriceChart() {
           Select a commodity and market to view price history
         </div>
       ) : (
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="h-80 min-h-[320px]">
+          <ResponsiveContainer width="100%" height="100%" minHeight={320}>
             <AreaChart
               data={priceData}
               margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
