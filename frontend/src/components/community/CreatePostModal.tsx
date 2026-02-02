@@ -27,7 +27,7 @@ interface Market {
   state?: string;
 }
 
-export default function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalProps) {
+export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalProps) {
   const [formData, setFormData] = useState<PostData>({
     title: '',
     content: '',
