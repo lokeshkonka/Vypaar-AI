@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     cors_allow_headers: list[str] = ["*"]
     
     # Database
-    database_url: str = "sqlite+aiosqlite:///./data/agritech.db"
+    database_url: str = "sqlite+aiosqlite:///../data/agritech.db"
     db_echo: bool = False
     db_pool_size: int = 5
     db_max_overflow: int = 10

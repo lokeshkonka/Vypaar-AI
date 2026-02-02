@@ -427,7 +427,10 @@ async def create_comment(
         discussion.replies_count = (discussion.replies_count or 0) + 1
         
         await db.flush()
+<<<<<<< Updated upstream
         await db.commit()
+=======
+>>>>>>> Stashed changes
         await db.refresh(comment)
         
         logger.info(f"Comment created on discussion {discussion_id} by {request.author}")
@@ -484,7 +487,10 @@ async def toggle_like(
             liked = True
         
         await db.flush()
+<<<<<<< Updated upstream
         await db.commit()
+=======
+>>>>>>> Stashed changes
         
         return {
             "liked": liked,
