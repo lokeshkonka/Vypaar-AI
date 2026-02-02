@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiTrendingUp, FiTrendingDown, FiPackage, FiAlertCircle, FiCheckCircle, FiClock } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface ActivityItem {
   id: string;
   type: "price_change" | "inventory" | "recommendation" | "alert";
@@ -22,7 +24,7 @@ export default function RecentActivity() {
     setIsLoading(true);
     try {
       // Fetch insights to create activity feed
-      const insightsRes = await fetch("/api/ai/insights");
+      const insightsRes = await fetch(`${BACKEND_URL}/api/ai/insights`);
       const insights = insightsRes.ok ? await insightsRes.json() : [];
 
       const activityItems: ActivityItem[] = [];

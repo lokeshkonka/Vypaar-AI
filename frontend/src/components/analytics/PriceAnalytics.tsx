@@ -16,6 +16,8 @@ import {
 } from "recharts";
 import { FiTrendingUp, FiBarChart2, FiPieChart, FiActivity } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface PriceData {
   date: string;
   price: number;
@@ -52,7 +54,7 @@ export default function PriceAnalytics({ commodity = "Potato", market = "Delhi" 
     setIsLoading(true);
     try {
       const response = await fetch(
-        `/api/price-history?commodity=${commodity}&market=${market}&days=${timeRange}`
+        `${BACKEND_URL}/api/price-history?commodity=${commodity}&market=${market}&days=${timeRange}`
       );
       
       if (response.ok) {

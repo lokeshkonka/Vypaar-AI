@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiRss, FiExternalLink, FiClock, FiRefreshCw, FiTrendingUp, FiAlertTriangle, FiCloud } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface NewsItem {
   id: string;
   title: string;
@@ -24,7 +26,7 @@ export default function MarketNewsCard() {
     setIsLoading(true);
     try {
       // Generate dynamic market news based on current data
-      const response = await fetch("/api/ai/insights");
+      const response = await fetch(`${BACKEND_URL}/api/ai/insights`);
       const insights = response.ok ? await response.json() : [];
 
       // Transform insights into news format + add generated news

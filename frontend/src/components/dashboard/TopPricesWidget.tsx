@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiTrendingUp, FiTrendingDown, FiMinus, FiRefreshCw } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface PriceItem {
   commodity: string;
   market: string;
@@ -22,8 +24,8 @@ export default function TopPricesWidget() {
     setIsLoading(true);
     try {
       const [commoditiesRes, marketsRes] = await Promise.all([
-        fetch("/api/commodities"),
-        fetch("/api/markets"),
+        fetch(`${BACKEND_URL}/api/commodities`),
+        fetch(`${BACKEND_URL}/api/markets`),
       ]);
 
       if (!commoditiesRes.ok || !marketsRes.ok) {
@@ -40,7 +42,7 @@ export default function TopPricesWidget() {
         for (const market of markets.slice(0, 2)) {
           try {
             const res = await fetch(
-              `/api/price-history?commodity=${commodity.name}&market=${market.name}&days=2`
+              `${BACKEND_URL}/api/price-history?commodity=${commodity.name}&market=${market.name}&days=2`
             );
             if (res.ok) {
               const data = await res.json();

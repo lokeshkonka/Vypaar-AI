@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { FiMessageSquare, FiSend, FiX, FiMinimize2, FiMaximize2, FiLoader } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -41,7 +43,7 @@ export default function AIChatbot() {
         const matchedCommodity = commodities.find(c => lowerQuery.includes(c));
         
         if (matchedCommodity) {
-          const response = await fetch(`/api/price-history?commodity=${matchedCommodity}&market=Delhi&days=7`);
+          const response = await fetch(`${BACKEND_URL}/api/price-history?commodity=${matchedCommodity}&market=Delhi&days=7`);
           if (response.ok) {
             const data = await response.json();
             if (data.prices && data.prices.length > 0) {
@@ -53,7 +55,7 @@ export default function AIChatbot() {
         }
         
         // General price query
-        const commoditiesRes = await fetch("/api/commodities");
+        const commoditiesRes = await fetch(`${BACKEND_URL}/api/commodities`);
         if (commoditiesRes.ok) {
           const commodities = await commoditiesRes.json();
           const names = commodities.slice(0, 5).map((c: any) => c.name).join(", ");
@@ -68,7 +70,7 @@ export default function AIChatbot() {
 
       // Recommendation queries
       if (lowerQuery.includes("recommend") || lowerQuery.includes("suggest") || lowerQuery.includes("should i buy") || lowerQuery.includes("should i sell")) {
-        const recRes = await fetch("/api/recommendations?limit=3");
+        const recRes = await fetch(`${BACKEND_URL}/api/recommendations?limit=3`);
         if (recRes.ok) {
           const recommendations = await recRes.json();
           if (recommendations.length > 0) {
@@ -89,7 +91,7 @@ export default function AIChatbot() {
 
       // Market queries
       if (lowerQuery.includes("market") || lowerQuery.includes("mandi")) {
-        const marketsRes = await fetch("/api/markets");
+        const marketsRes = await fetch(`${BACKEND_URL}/api/markets`);
         if (marketsRes.ok) {
           const markets = await marketsRes.json();
           const names = markets.slice(0, 5).map((m: any) => m.name).join(", ");

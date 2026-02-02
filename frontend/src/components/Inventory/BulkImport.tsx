@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
 import { FiUpload, FiFile, FiX, FiCheck, FiAlertCircle, FiDownload } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface ImportResult {
   success: number;
   failed: number;
@@ -79,8 +81,8 @@ export default function BulkImport() {
 
       // First get commodity and market mappings
       const [commoditiesRes, marketsRes] = await Promise.all([
-        fetch("/api/commodities"),
-        fetch("/api/markets"),
+        fetch(`${BACKEND_URL}/api/commodities`),
+        fetch(`${BACKEND_URL}/api/markets`),
       ]);
 
       const commodities = commoditiesRes.ok ? await commoditiesRes.json() : [];
@@ -119,7 +121,7 @@ export default function BulkImport() {
         }
 
         try {
-          const response = await fetch("/api/inventory", {
+          const response = await fetch(`${BACKEND_URL}/api/inventory`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({

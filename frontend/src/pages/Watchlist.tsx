@@ -6,6 +6,8 @@ import MarketNewsCard from "../components/MarketNews/MarketNewsCard";
 import PriceAnalytics from "../components/analytics/PriceAnalytics";
 import { useState, useEffect } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 export default function Watchlist() {
   const [commodities, setCommodities] = useState<{ id: number; name: string }[]>([]);
   const [markets, setMarkets] = useState<{ id: number; name: string }[]>([]);
@@ -19,8 +21,8 @@ export default function Watchlist() {
   const fetchData = async () => {
     try {
       const [commRes, marketRes] = await Promise.all([
-        fetch("/api/commodities"),
-        fetch("/api/markets"),
+        fetch(`${BACKEND_URL}/api/commodities`),
+        fetch(`${BACKEND_URL}/api/markets`),
       ]);
       if (commRes.ok) {
         const data = await commRes.json();

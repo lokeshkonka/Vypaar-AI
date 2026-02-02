@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiTrendingUp, FiTrendingDown, FiPackage, FiAlertTriangle, FiDollarSign, FiPercent } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface DashboardStats {
   totalCommodities: number;
   totalMarkets: number;
@@ -29,10 +31,10 @@ export default function DashboardOverview() {
     setIsLoading(true);
     try {
       const [commoditiesRes, marketsRes, inventoryRes, accuracyRes] = await Promise.all([
-        fetch("/api/commodities"),
-        fetch("/api/markets"),
-        fetch("/api/inventory/dashboard"),
-        fetch("/api/model/accuracy"),
+        fetch(`${BACKEND_URL}/api/commodities`),
+        fetch(`${BACKEND_URL}/api/markets`),
+        fetch(`${BACKEND_URL}/api/inventory/dashboard`),
+        fetch(`${BACKEND_URL}/api/model/accuracy`),
       ]);
 
       const commodities = commoditiesRes.ok ? await commoditiesRes.json() : [];

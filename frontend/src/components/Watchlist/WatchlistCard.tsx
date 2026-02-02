@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiStar, FiTrendingUp, FiTrendingDown, FiPlus, FiTrash2, FiRefreshCw } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface WatchlistItem {
   id: string;
   commodity: string;
@@ -28,8 +30,8 @@ export default function WatchlistCard() {
   const fetchCommoditiesAndMarkets = async () => {
     try {
       const [commRes, marketRes] = await Promise.all([
-        fetch("/api/commodities"),
-        fetch("/api/markets"),
+        fetch(`${BACKEND_URL}/api/commodities`),
+        fetch(`${BACKEND_URL}/api/markets`),
       ]);
       if (commRes.ok) setCommodities(await commRes.json());
       if (marketRes.ok) setMarkets(await marketRes.json());
@@ -50,7 +52,7 @@ export default function WatchlistCard() {
           items.map(async (item) => {
             try {
               const res = await fetch(
-                `/api/price-history?commodity=${item.commodity}&market=${item.market}&days=2`
+                `${BACKEND_URL}/api/price-history?commodity=${item.commodity}&market=${item.market}&days=2`
               );
               if (res.ok) {
                 const data = await res.json();
@@ -90,7 +92,7 @@ export default function WatchlistCard() {
 
     try {
       const res = await fetch(
-        `/api/price-history?commodity=${selectedCommodity}&market=${selectedMarket}&days=2`
+        `${BACKEND_URL}/api/price-history?commodity=${selectedCommodity}&market=${selectedMarket}&days=2`
       );
       
       let price = 0;

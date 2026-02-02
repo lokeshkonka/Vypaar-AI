@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { FiBell, FiX, FiCheck, FiAlertTriangle, FiInfo, FiTrendingUp, FiTrendingDown } from "react-icons/fi";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 interface Notification {
   id: string;
   type: "price_alert" | "inventory" | "recommendation" | "system";
@@ -82,7 +84,7 @@ export default function NotificationCenter() {
   const checkForNewNotifications = async () => {
     try {
       // Check for new insights that could be notifications
-      const response = await fetch("/api/ai/insights");
+      const response = await fetch(`${BACKEND_URL}/api/ai/insights`);
       if (response.ok) {
         const insights = await response.json();
         if (insights.length > 0) {
