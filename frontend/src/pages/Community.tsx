@@ -62,6 +62,8 @@ export default function Community() {
   const [newCommodity, setNewCommodity] = useState("");
   const [newMarket, setNewMarket] = useState("");
   const [newTags, setNewTags] = useState("");
+  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
+  const [comments, setComments] = useState<Record<string, Comment[]>>({});
 
   useEffect(() => {
     fetchDiscussions();
@@ -121,6 +123,53 @@ export default function Community() {
     setDiscussions((prev) =>
       prev.map((d) => (d.id === id ? { ...d, likes: d.likes + 1 } : d))
     );
+  };
+
+  const handleAddComment = async (discussionId: string, content: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/discussions/${discussionId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          author: user?.fullName || user?.firstName || "Anonymous",
+        }),
+      });
+
+      if (response.ok) {
+        const newComment = await response.json();
+        setComments((prev) => ({
+          ...prev,
+          [discussionId]: [...(prev[discussionId] || []), newComment],
+        }));
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
+  };
+
+  const handleLikeComment = async (discussionId: string, commentId: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/discussions/${discussionId}/comments/${commentId}/like`,
+        { method: "POST" }
+      );
+
+      if (response.ok) {
+        setComments((prev) => ({
+          ...prev,
+          [discussionId]: prev[discussionId].map((c) =>
+            c.id === commentId ? { ...c, likes: c.likes + 1 } : c
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error("Error liking comment:", error);
+    }
+  };
+
+  const toggleComments = (discussionId: string) => {
+    setExpandedDiscussion((prev) => (prev === discussionId ? null : discussionId));
   };
 
   const handleCreatePost = async (postData: {
