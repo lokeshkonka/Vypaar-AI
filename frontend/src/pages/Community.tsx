@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, Loader, MessageSquare, Users, TrendingUp } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, Plus } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
-import GraphBackgroundBottom from "../components/Background/graphBackgroundBottom";
+import CreatePostModal from "../components/community/CreatePostModal";
+import CommentsSection from "../components/community/CommentsSection";
 
 interface Discussion {
   id: string;
@@ -10,9 +11,30 @@ interface Discussion {
   title: string;
   content: string;
   commodity: string;
+  market?: string;
+  tags?: string[];
   timestamp: Date;
   likes: number;
   replies: number;
+}
+
+interface Comment {
+  id: number;
+  discussion_id: number;
+  author: string;
+  avatar_url: string;
+  content: string;
+  likes_count: number;
+  created_at: string;
+}
+
+interface PostData {
+  title: string;
+  content: string;
+  commodity: string;
+  market?: string;
+  tags: string[];
+  author: string;
 }
 
 function timeAgo(date: Date): string {
@@ -32,12 +54,18 @@ export default function Community() {
   const [selectedCommodity, setSelectedCommodity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+<<<<<<< Updated upstream
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newCommodity, setNewCommodity] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
+=======
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
+  const [comments, setComments] = useState<Record<string, Comment[]>>({});
+>>>>>>> Stashed changes
 
   useEffect(() => {
     fetchDiscussions();
@@ -95,6 +123,7 @@ export default function Community() {
   const handleLike = async (id: string) => {
     try {
       const response = await fetch(`http://localhost:8000/api/v1/discussions/${id}/like`, {
+<<<<<<< Updated upstream
         method: "POST",
       });
 
@@ -159,11 +188,110 @@ export default function Community() {
       setCreateError(err instanceof Error ? err.message : "Failed to create discussion");
     } finally {
       setCreateLoading(false);
+=======
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        setDiscussions((prev) =>
+          prev.map((d) => (d.id === id ? { ...d, likes: d.likes + 1 } : d))
+        );
+      }
+    } catch (error) {
+      console.error('Error liking discussion:', error);
+    }
+  };
+
+  const handleCreatePost = async (postData: PostData) => {
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/discussions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create post');
+      }
+
+      await fetchDiscussions();
+    } catch (error) {
+      console.error('Error creating post:', error);
+      throw error;
+    }
+  };
+
+  const fetchComments = async (discussionId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/discussions/${discussionId}/comments`);
+      if (response.ok) {
+        const data = await response.json();
+        setComments((prev) => ({ ...prev, [discussionId]: data.comments || [] }));
+      }
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const handleAddComment = async (discussionId: string, content: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/discussions/${discussionId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content,
+          author: 'Anonymous User', // TODO: Get from auth context
+        }),
+      });
+
+      if (response.ok) {
+        await fetchComments(discussionId);
+        setDiscussions((prev) =>
+          prev.map((d) => (d.id === discussionId ? { ...d, replies: d.replies + 1 } : d))
+        );
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  };
+
+  const handleLikeComment = async (discussionId: string, commentId: number) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/discussions/${discussionId}/comments/${commentId}/like`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (response.ok) {
+        await fetchComments(discussionId);
+      }
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
+  };
+
+  const toggleComments = async (discussionId: string) => {
+    if (expandedDiscussion === discussionId) {
+      setExpandedDiscussion(null);
+    } else {
+      setExpandedDiscussion(discussionId);
+      if (!comments[discussionId]) {
+        await fetchComments(discussionId);
+      }
+>>>>>>> Stashed changes
     }
   };
 
   return (
     <DashboardLayout>
+<<<<<<< Updated upstream
       <div className="relative min-h-screen overflow-hidden" style={{ background: "var(--bg-main)" }}>
         {/* Background Effect */}
         <div className="fixed inset-0 pointer-events-none opacity-30">
@@ -180,6 +308,26 @@ export default function Community() {
             <p className="text-sm sm:text-base lg:text-lg max-w-2xl mx-auto" style={{ color: "var(--text-soft)" }}>
               Connect with traders, share insights, and discuss commodity market trends.
             </p>
+=======
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          <div className="mb-6 sm:mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Discussion Board
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                Discuss commodity prices and trading strategies with the community.
+              </p>
+            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition flex items-center gap-2 shadow-lg"
+            >
+              <Plus size={20} />
+              <span className="hidden sm:inline">New Post</span>
+            </button>
+>>>>>>> Stashed changes
           </div>
 
           {/* Search & Filter Card */}
@@ -281,6 +429,11 @@ export default function Community() {
                           <span className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full font-medium">
                             {discussion.commodity}
                           </span>
+                          {discussion.market && (
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-0.5 rounded-full font-medium">
+                              {discussion.market}
+                            </span>
+                          )}
                         </div>
 
                         <h3 className="font-semibold text-gray-900 dark:text-white mb-1.5 text-sm sm:text-base">
@@ -291,6 +444,19 @@ export default function Community() {
                           {discussion.content}
                         </p>
 
+                        {discussion.tags && discussion.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {discussion.tags.map((tag, i) => (
+                              <span
+                                key={i}
+                                className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="flex items-center gap-4 sm:gap-6">
                           <button
                             onClick={() => handleLike(discussion.id)}
@@ -299,13 +465,28 @@ export default function Community() {
                             <Heart size={16} className="flex-shrink-0" />
                             <span>{discussion.likes}</span>
                           </button>
-                          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 text-sm font-medium">
+                          <button
+                            onClick={() => toggleComments(discussion.id)}
+                            className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition text-sm font-medium"
+                          >
                             <MessageCircle size={16} className="flex-shrink-0" />
                             <span>{discussion.replies}</span>
-                          </div>
+                          </button>
                         </div>
                       </div>
                     </div>
+
+                    {/* Comments Section */}
+                    {expandedDiscussion === discussion.id && (
+                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <CommentsSection
+                          discussionId={parseInt(discussion.id)}
+                          comments={comments[discussion.id] || []}
+                          onAddComment={(content) => handleAddComment(discussion.id, content)}
+                          onLikeComment={(commentId) => handleLikeComment(discussion.id, commentId)}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))
               ) : (
@@ -353,6 +534,7 @@ export default function Community() {
           )}
         </div>
       </div>
+<<<<<<< Updated upstream
           {isComposeOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl">
@@ -425,6 +607,15 @@ export default function Community() {
           </div>
         </div>
       )}
+=======
+
+      {/* Create Post Modal */}
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreatePost}
+      />
+>>>>>>> Stashed changes
     </DashboardLayout>
   );
 }

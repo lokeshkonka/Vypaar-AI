@@ -852,6 +852,7 @@ class DiscussionCreate(BaseSchema):
     title: str = Field(..., min_length=5, max_length=255)
     content: str = Field(..., min_length=10, max_length=5000)
     commodity: str = Field(..., min_length=1, max_length=255)
+    market: Optional[str] = Field(None, max_length=255)
     author: str = Field(..., min_length=1, max_length=255)
     avatar_url: Optional[str] = None
     tags: list[str] = Field(default_factory=list, max_length=10)
@@ -872,6 +873,7 @@ class DiscussionResponse(BaseSchema):
     title: str
     content: str
     commodity: str
+    market: Optional[str] = None
     author: str
     avatar_url: Optional[str] = None
     likes_count: int
@@ -888,6 +890,37 @@ class DiscussionListResponse(BaseSchema):
     """List of discussions."""
     
     discussions: list[DiscussionResponse]
+    total: int
+    page: int
+    page_size: int
+
+
+# Comment schemas
+class CommentCreate(BaseSchema):
+    """Create comment request."""
+    
+    content: str = Field(..., min_length=1, max_length=2000)
+    author: str = Field(..., min_length=1, max_length=255)
+    avatar_url: Optional[str] = None
+
+
+class CommentResponse(BaseSchema):
+    """Comment response."""
+    
+    id: int
+    discussion_id: int
+    author: str
+    avatar_url: str
+    content: str
+    likes_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class CommentListResponse(BaseSchema):
+    """List of comments."""
+    
+    comments: list[CommentResponse]
     total: int
     page: int
     page_size: int

@@ -528,6 +528,53 @@ class DiscussionRepository(BaseRepository):
             await self.db.flush()
         return discussion
 
+    async def increment_replies(self, discussion_id: int) -> Optional[Discussion]:
+        """Increment replies count."""
+        discussion = await self.get_by_id(discussion_id)
+        if discussion:
+            discussion.replies_count += 1
+            await self.db.flush()
+        return discussion
+
+    async def decrement_replies(self, discussion_id: int) -> Optional[Discussion]:
+        """Decrement replies count."""
+        discussion = await self.get_by_id(discussion_id)
+        if discussion:
+            discussion.replies_count = max(0, discussion.replies_count - 1)
+            await self.db.flush()
+        return discussion
+
+
+class CommentRepository(BaseRepository):
+    """Repository for Discussion Comment operations."""
+
+    def __init__(self, db: AsyncSession):
+        from app.database.models_discussion_comments import DiscussionComment
+        super().__init__(db, DiscussionComment)
+        self.model = DiscussionComment
+
+    async def get_by_discussion(
+        self, discussion_id: int, skip: int = 0, limit: int = 100
+    ) -> List:
+        """Get comments for a discussion."""
+        query = (
+            select(self.model)
+            .where(self.model.discussion_id == discussion_id)
+            .order_by(self.model.created_at)
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def increment_likes(self, comment_id: int):
+        """Increment comment likes count."""
+        comment = await self.get_by_id(comment_id)
+        if comment:
+            comment.likes_count += 1
+            await self.db.flush()
+        return comment
+
 
 class WatchlistRepository(BaseRepository):
     """Repository for Watchlist operations."""

@@ -414,6 +414,44 @@ class DataPreprocessor:
         # Add temporal/festival features
         features = pd.concat([features, temporal_features], axis=1)
         
+        # Define standard 15 features for model compatibility (excludes price which is the target)
+        standard_features = [
+            'commodity_id',      # 1 - can be one-hot encoded later
+            'market_id',         # 2 - can be one-hot encoded later
+            'arrival',           # 3
+            'day_of_week',       # 4 - from temporal
+            'month',             # 5 - from temporal
+            'season',            # 6 - from temporal
+            'is_festival',       # 7 - from festival calendar
+            'festival_effect',   # 8 - from festival calendar
+            'holiday_proximity', # 9 - from festival calendar
+            'monsoon_factor',    # 10 - from festival calendar
+            'harvest_season',    # 11 - from festival calendar
+            'week_of_year',      # 12 - from temporal
+            'quarter',           # 13 - from temporal
+            'month_sin',         # 14 - from temporal
+            'month_cos',         # 15 - from temporal
+        ]
+        
+        # Fill missing features with defaults
+        for col in standard_features:
+            if col not in features.columns:
+                features[col] = 0.0
+        
+        # Select only standard features in order
+        features = features[standard_features].copy()
+        
+        # Scale numeric features (use fitted scalers if available)
+        for col in ['arrival']:
+            if col in features.columns:
+                try:
+                    values = features[col].values
+                    scaled = self.scale_features(values, col, fit=False)
+                    if scaled is not None:
+                        features[col] = scaled
+                except Exception as e:
+                    logger.debug(f"Could not scale {col}: {e}, using raw values")
+
         # Handle missing values
         features = features.fillna(features.mean(numeric_only=True))
         features = features.fillna(0.0)

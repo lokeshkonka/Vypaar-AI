@@ -232,6 +232,7 @@ class Discussion(Base):
     title = Column(String(255), nullable=False, index=True)
     content = Column(Text, nullable=False)
     commodity = Column(String(255), nullable=False, index=True)
+    market = Column(String(255), nullable=True)
     author = Column(String(255), nullable=False)
     avatar_url = Column(String(500), nullable=True)
     likes_count = Column(Integer, default=0)
