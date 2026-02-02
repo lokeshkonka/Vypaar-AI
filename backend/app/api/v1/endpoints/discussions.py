@@ -427,6 +427,7 @@ async def create_comment(
         discussion.replies_count = (discussion.replies_count or 0) + 1
         
         await db.flush()
+        await db.commit()
         await db.refresh(comment)
         
         logger.info(f"Comment created on discussion {discussion_id} by {request.author}")
@@ -483,6 +484,7 @@ async def toggle_like(
             liked = True
         
         await db.flush()
+        await db.commit()
         
         return {
             "liked": liked,
