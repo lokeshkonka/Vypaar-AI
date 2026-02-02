@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, Loader, Plus, X, Send } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, Plus, X, Send, MessageSquare, TrendingUp, Users } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
 
@@ -298,6 +298,7 @@ export default function Community() {
               Create New Post
             </button>
           </div>
+          </div>
 
           {loading && (
             <div className="flex items-center justify-center py-16 sm:py-20">
@@ -463,18 +464,6 @@ export default function Community() {
                         )}
                       </div>
                     </div>
-
-                    {/* Comments Section */}
-                    {expandedDiscussion === discussion.id && (
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <CommentsSection
-                          discussionId={parseInt(discussion.id)}
-                          comments={comments[discussion.id] || []}
-                          onAddComment={(content) => handleAddComment(discussion.id, content)}
-                          onLikeComment={(commentId) => handleLikeComment(discussion.id, commentId)}
-                        />
-                      </div>
-                    )}
                   </div>
                 ))
               ) : (
