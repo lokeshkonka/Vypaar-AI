@@ -244,6 +244,9 @@ class Discussion(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Relationship for comments
+    comments = relationship("Comment", back_populates="discussion", cascade="all, delete-orphan")
+
     __table_args__ = (
         Index("ix_discussion_commodity_created", "commodity", "created_at"),
         Index("ix_discussion_status", "status"),
@@ -253,45 +256,45 @@ class Discussion(Base):
         return f"<Discussion(id={self.id}, title={self.title}, author={self.author})>"
 
 
-class Recommendation(Base):
-    """Recommendation model for personalized insights."""
+class Comment(Base):
+    """Comment model for discussion replies."""
 
-    __tablename__ = "recommendations"
+    __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(255), nullable=False, index=True)
-    commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=True)
-    commodity_name = Column(String(255), nullable=False, index=True)
-    market_id = Column(Integer, ForeignKey("markets.id"), nullable=True)
-    market_name = Column(String(255), nullable=True)
-    recommendation_type = Column(String(20), nullable=False, index=True)
-    confidence = Column(String(20), nullable=False)
-    reasoning = Column(Text, nullable=False)
-    current_price = Column(Float, nullable=True)
-    target_price = Column(Float, nullable=True)
-    expected_change_pct = Column(Float, nullable=True)
-    time_horizon = Column(String(20), nullable=False)
+    discussion_id = Column(Integer, ForeignKey("discussions.id"), nullable=False)
+    author = Column(String(255), nullable=False)
+    avatar_url = Column(String(500), nullable=True)
+    content = Column(Text, nullable=False)
+    likes_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    expires_at = Column(DateTime, nullable=True, index=True)
-    model_version = Column(String(50), nullable=True)
-    acknowledged = Column(Boolean, default=False, nullable=False)
-    acknowledgement_note = Column(Text, nullable=True)
-    last_evaluated_at = Column(DateTime, nullable=True)
-    outcome = Column(String(20), nullable=True, index=True)
-    actual_change_pct = Column(Float, nullable=True)
-    roi_pct = Column(Float, nullable=True)
-    note = Column(Text, nullable=True)
-    status = Column(String(20), default="ACTIVE", nullable=False, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    commodity = relationship("Commodity")
-    market = relationship("Market")
+    # Relationship
+    discussion = relationship("Discussion", back_populates="comments")
 
     __table_args__ = (
-        Index("ix_recommendation_user_status", "user_id", "status"),
+        Index("ix_comment_discussion", "discussion_id"),
     )
 
     def __repr__(self):
-        return f"<Recommendation(id={self.id}, user_id={self.user_id}, type={self.recommendation_type})>"
+        return f"<Comment(id={self.id}, discussion_id={self.discussion_id}, author={self.author})>"
+
+
+class DiscussionLike(Base):
+    """Track user likes on discussions to prevent duplicate likes."""
+
+    __tablename__ = "discussion_likes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    discussion_id = Column(Integer, ForeignKey("discussions.id"), nullable=False)
+    user_id = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("discussion_id", "user_id", name="uq_discussion_like"),
+        Index("ix_discussion_like_user", "user_id"),
+    )
 
 
 class Watchlist(Base):

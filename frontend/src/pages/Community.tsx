@@ -1,17 +1,16 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, Loader, Plus, MessageSquare, TrendingUp, Users } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, Plus, X, Send } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
-import { CreatePostModal } from "../components/community/CreatePostModal";
-import CommentsSection from "../components/community/CommentsSection";
 
-interface PostData {
-  title: string;
-  content: string;
-  commodity: string;
-  market?: string;
-  tags: string[];
+interface Comment {
+  id: number;
+  discussion_id: number;
   author: string;
+  avatar_url: string;
+  content: string;
+  likes_count: number;
+  created_at: string;
 }
 
 interface Discussion {
@@ -26,16 +25,7 @@ interface Discussion {
   timestamp: Date;
   likes: number;
   replies: number;
-}
-
-interface Comment {
-  id: number;
-  discussion_id: number;
-  author: string;
-  avatar_url: string;
-  content: string;
-  likes_count: number;
-  created_at: string;
+  liked?: boolean;
 }
 
 function timeAgo(date: Date): string {
@@ -56,9 +46,17 @@ export default function Community() {
   const [selectedCommodity, setSelectedCommodity] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
+  const [newComment, setNewComment] = useState("");
+  const [likedDiscussions, setLikedDiscussions] = useState<Set<string>>(new Set());
+  
+  // New post form state
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newCommodity, setNewCommodity] = useState("");
+  const [createLoading, setCreateLoading] = useState(false);
 
   useEffect(() => {
     fetchDiscussions();
@@ -81,15 +79,15 @@ export default function Community() {
         id: String(d.id || d._id || Math.random()),
         author: d.author || "Anonymous",
         avatar:
-          d.avatar_url ||
-          d.avatar ||
+          d.avatar_url || d.avatar ||
           `https://api.dicebear.com/7.x/avataaars/svg?seed=${d.author || "user"}`,
         title: d.title || d.subject || "Untitled",
         content: d.content || d.description || d.message || "",
         commodity: d.commodity || d.category || "General",
-        timestamp: new Date(d.created_at || d.createdAt || d.timestamp || Date.now()),
-        likes: d.likes_count ?? d.likes ?? 0,
-        replies: d.replies_count ?? d.replies ?? 0,
+        timestamp: new Date(d.created_at || d.timestamp || d.createdAt || Date.now()),
+        likes: d.likes_count || d.likes || 0,
+        replies: d.replies_count || d.replies || 0,
+        liked: false,
       }));
 
       setDiscussions(transformedDiscussions);
@@ -114,79 +112,83 @@ export default function Community() {
     return matchesSearch && matchesCommodity;
   });
 
-  const handleLike = (id: string) => {
-    setDiscussions((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, likes: d.likes + 1 } : d))
-    );
-  };
-
-  const handleCreatePost = async (postData: PostData) => {
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const handleLike = async (id: string) => {
+    if (!user) return;
     
-    const response = await fetch(`${API_BASE_URL}/api/v1/discussions/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: postData.title,
-        content: postData.content,
-        commodity: postData.commodity,
-        market: postData.market,
-        author: postData.author,
-        tags: postData.tags,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to create discussion");
-    }
-
-    const newDiscussion = await response.json();
+    const isLiked = likedDiscussions.has(id);
     
-    // Add to discussions list
-    setDiscussions((prev) => [
-      {
-        id: String(newDiscussion.id),
-        author: newDiscussion.author,
-        avatar: newDiscussion.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${newDiscussion.author}`,
-        title: newDiscussion.title,
-        content: newDiscussion.content,
-        commodity: newDiscussion.commodity,
-        market: newDiscussion.market,
-        tags: newDiscussion.tags,
-        timestamp: new Date(newDiscussion.created_at),
-        likes: 0,
-        replies: 0,
-      },
-      ...prev,
-    ]);
-    
-    setIsCreateModalOpen(false);
-  };
-
-  const handleAddComment = async (discussionId: string, content: string) => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
+      const response = await fetch(
+        `http://localhost:8000/api/v1/discussions/${id}/like/toggle?user_id=${user.id}`,
+        { method: "POST" }
+      );
       
-      const response = await fetch(`${API_BASE_URL}/api/v1/discussions/${discussionId}/comments`, {
+      if (response.ok) {
+        const data = await response.json();
+        
+        setDiscussions((prev) =>
+          prev.map((d) => (d.id === id ? { ...d, likes: data.likes_count, liked: data.liked } : d))
+        );
+        
+        if (data.liked) {
+          setLikedDiscussions((prev) => new Set([...prev, id]));
+        } else {
+          setLikedDiscussions((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(id);
+            return newSet;
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
+    }
+  };
+
+  const toggleComments = async (id: string) => {
+    if (expandedDiscussion === id) {
+      setExpandedDiscussion(null);
+      return;
+    }
+    
+    setExpandedDiscussion(id);
+    
+    // Fetch comments if not already loaded
+    if (!comments[id]) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/v1/discussions/${id}/comments`);
+        if (response.ok) {
+          const data = await response.json();
+          setComments((prev) => ({ ...prev, [id]: data.comments || [] }));
+        }
+      } catch (err) {
+        console.error("Error fetching comments:", err);
+      }
+    }
+  };
+
+  const handleAddComment = async (discussionId: string) => {
+    if (!newComment.trim() || !user) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/discussions/${discussionId}/comments`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          content,
-          author: authorName,
+          content: newComment,
+          author: user.fullName || user.firstName || "Anonymous",
+          avatar_url: user.imageUrl,
         }),
       });
-
+      
       if (response.ok) {
-        const newComment = await response.json();
+        const data = await response.json();
         setComments((prev) => ({
           ...prev,
-          [discussionId]: [...(prev[discussionId] || []), newComment],
+          [discussionId]: [data, ...(prev[discussionId] || [])],
         }));
+        setNewComment("");
+        
         // Update replies count
         setDiscussions((prev) =>
           prev.map((d) => (d.id === discussionId ? { ...d, replies: d.replies + 1 } : d))
@@ -197,53 +199,35 @@ export default function Community() {
     }
   };
 
-  const handleLikeComment = async (discussionId: string, commentId: number) => {
+  const handleCreatePost = async () => {
+    if (!newTitle.trim() || !newContent.trim() || !newCommodity.trim() || !user) return;
+    
+    setCreateLoading(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${API_BASE_URL}/api/v1/discussions/comments/${commentId}/like`, {
+      const response = await fetch("http://localhost:8000/api/v1/discussions/", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle,
+          content: newContent,
+          commodity: newCommodity,
+          author: user.fullName || user.firstName || "Anonymous",
+          avatar_url: user.imageUrl,
+          tags: [],
+        }),
       });
-
+      
       if (response.ok) {
-        setComments((prev) => ({
-          ...prev,
-          [discussionId]: (prev[discussionId] || []).map((c) =>
-            c.id === commentId ? { ...c, likes_count: c.likes_count + 1 } : c
-          ),
-        }));
+        setNewTitle("");
+        setNewContent("");
+        setNewCommodity("");
+        setIsCreateOpen(false);
+        fetchDiscussions();
       }
     } catch (err) {
-      console.error("Error liking comment:", err);
-    }
-  };
-
-  const toggleExpandDiscussion = async (discussionId: string) => {
-    if (expandedDiscussion === discussionId) {
-      setExpandedDiscussion(null);
-    } else {
-      setExpandedDiscussion(discussionId);
-      // Fetch comments if not already loaded
-      if (!comments[discussionId]) {
-        try {
-          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-          const response = await fetch(`${API_BASE_URL}/api/v1/discussions/${discussionId}/comments`);
-          if (response.ok) {
-            const data = await response.json();
-            // Handle both array and object with comments key
-            const commentsArray = Array.isArray(data) ? data : (data.comments || []);
-            setComments((prev) => ({
-              ...prev,
-              [discussionId]: commentsArray,
-            }));
-          }
-        } catch (err) {
-          console.error("Error fetching comments:", err);
-          setComments((prev) => ({
-            ...prev,
-            [discussionId]: [],
-          }));
-        }
-      }
+      console.error("Error creating post:", err);
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -293,25 +277,26 @@ export default function Community() {
                 />
               </div>
 
-              <select
-                value={selectedCommodity || ""}
-                onChange={(e) => setSelectedCommodity(e.target.value || null)}
-                className="sm:w-56 px-4 py-3 text-sm border focus:outline-none focus:ring-2 transition"
-                style={{ 
-                  borderColor: "var(--border)", 
-                  background: "var(--panel)", 
-                  color: "var(--text-main)",
-                  borderRadius: 0
-                }}
-              >
-                <option value="">All Commodities</option>
-                {commodities.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={selectedCommodity || ""}
+              onChange={(e) => setSelectedCommodity(e.target.value || null)}
+              className="w-full px-3 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-600 transition"
+            >
+              <option value="">All Commodities</option>
+              {commodities.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg transition"
+            >
+              <Plus size={18} />
+              Create New Post
+            </button>
           </div>
 
           {loading && (
@@ -399,19 +384,83 @@ export default function Community() {
                         <div className="flex items-center gap-4 sm:gap-6">
                           <button
                             onClick={() => handleLike(discussion.id)}
-                            className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition text-sm font-medium"
+                            className={`flex items-center gap-1.5 transition text-sm font-medium ${
+                              likedDiscussions.has(discussion.id) || discussion.liked
+                                ? "text-red-500 dark:text-red-400"
+                                : "text-gray-600 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                            }`}
                           >
-                            <Heart size={16} className="flex-shrink-0" />
+                            <Heart 
+                              size={16} 
+                              className="flex-shrink-0"
+                              fill={likedDiscussions.has(discussion.id) || discussion.liked ? "currentColor" : "none"}
+                            />
                             <span>{discussion.likes}</span>
                           </button>
                           <button
-                            onClick={() => toggleExpandDiscussion(discussion.id)}
-                            className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition text-sm font-medium"
+                            onClick={() => toggleComments(discussion.id)}
+                            className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition text-sm font-medium"
                           >
                             <MessageCircle size={16} className="flex-shrink-0" />
                             <span>{discussion.replies}</span>
                           </button>
                         </div>
+                        
+                        {/* Comments Section */}
+                        {expandedDiscussion === discussion.id && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            {/* Add Comment Input */}
+                            <div className="flex gap-2 mb-4">
+                              <input
+                                type="text"
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                placeholder="Write a comment..."
+                                className="flex-1 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                onKeyDown={(e) => e.key === "Enter" && handleAddComment(discussion.id)}
+                              />
+                              <button
+                                onClick={() => handleAddComment(discussion.id)}
+                                disabled={!newComment.trim()}
+                                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white rounded-lg transition"
+                              >
+                                <Send size={16} />
+                              </button>
+                            </div>
+                            
+                            {/* Comments List */}
+                            <div className="space-y-3 max-h-64 overflow-y-auto">
+                              {(comments[discussion.id] || []).length > 0 ? (
+                                (comments[discussion.id] || []).map((comment) => (
+                                  <div key={comment.id} className="flex gap-2">
+                                    <img
+                                      src={comment.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author}`}
+                                      alt={comment.author}
+                                      className="w-8 h-8 rounded-full flex-shrink-0"
+                                    />
+                                    <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-lg px-3 py-2">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-medium text-sm text-gray-900 dark:text-white">
+                                          {comment.author}
+                                        </span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                          {timeAgo(new Date(comment.created_at))}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        {comment.content}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                                  No comments yet. Be the first to comment!
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -474,13 +523,89 @@ export default function Community() {
         </div>
 
       </div>
-
+      
       {/* Create Post Modal */}
-      <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreatePost}
-      />
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Create New Post
+              </h2>
+              <button
+                onClick={() => setIsCreateOpen(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Title *
+                </label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Enter post title..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Commodity *
+                </label>
+                <input
+                  type="text"
+                  value={newCommodity}
+                  onChange={(e) => setNewCommodity(e.target.value)}
+                  placeholder="e.g., Wheat, Rice, Onion..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Content *
+                </label>
+                <textarea
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  placeholder="Share your thoughts..."
+                  rows={4}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setIsCreateOpen(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreatePost}
+                  disabled={createLoading || !newTitle.trim() || !newContent.trim() || !newCommodity.trim()}
+                  className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 text-white rounded-lg transition font-medium flex items-center justify-center gap-2"
+                >
+                  {createLoading ? (
+                    <Loader size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Post
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

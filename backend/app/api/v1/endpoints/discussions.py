@@ -16,8 +16,8 @@ from app.models.schemas import (
     CommentResponse,
     CommentListResponse,
 )
-from app.database.repositories import DiscussionRepository, CommentRepository
-from app.database.models import Discussion
+from app.database.repositories import DiscussionRepository
+from app.database.models import Discussion, Comment, DiscussionLike
 from app.core.utils import get_current_timestamp
 
 
@@ -367,19 +367,22 @@ async def get_discussions_by_commodity(
 async def get_comments(
     discussion_id: int,
     skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=200),
-    repo: CommentRepository = Depends(get_comment_repo),
+    limit: int = Query(50, ge=1, le=100),
+    db=Depends(get_db),
 ) -> CommentListResponse:
     """Get comments for a discussion."""
+    from sqlalchemy import select
     try:
-        comments = await repo.get_by_discussion(discussion_id, skip, limit)
-
+        stmt = select(Comment).where(Comment.discussion_id == discussion_id).order_by(Comment.created_at.desc()).offset(skip).limit(limit)
+        result = await db.execute(stmt)
+        comments = result.scalars().all()
+        
         responses = [
             CommentResponse(
                 id=c.id,
                 discussion_id=c.discussion_id,
                 author=c.author,
-                avatar_url=c.avatar_url or f"https://api.dicebear.com/7.x/avataaars/svg?seed={c.author}",
+                avatar_url=c.avatar_url,
                 content=c.content,
                 likes_count=c.likes_count,
                 created_at=c.created_at,
@@ -387,13 +390,8 @@ async def get_comments(
             )
             for c in comments
         ]
-
-        return CommentListResponse(
-            comments=responses,
-            total=len(responses),
-            page=skip // limit + 1,
-            page_size=limit,
-        )
+        
+        return CommentListResponse(comments=responses, total=len(responses))
     except Exception as e:
         logger.error(f"Error fetching comments for discussion {discussion_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch comments")
@@ -403,26 +401,36 @@ async def get_comments(
 async def create_comment(
     discussion_id: int,
     request: CommentCreate,
-    comment_repo: CommentRepository = Depends(get_comment_repo),
-    discussion_repo: DiscussionRepository = Depends(get_discussion_repo),
+    db=Depends(get_db),
+    repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> CommentResponse:
-    """Create a new comment on a discussion."""
+    """Create a comment on a discussion."""
     try:
+        # Verify discussion exists
+        discussion = await repo.get_by_id(discussion_id)
+        if not discussion:
+            raise HTTPException(status_code=404, detail="Discussion not found")
+        
         avatar_url = request.avatar_url or f"https://api.dicebear.com/7.x/avataaars/svg?seed={request.author}"
-
-        comment = await comment_repo.create(
+        
+        comment = Comment(
             discussion_id=discussion_id,
             author=request.author,
             avatar_url=avatar_url,
             content=request.content,
             likes_count=0,
         )
-
-        # Update discussion reply count
-        await discussion_repo.increment_replies(discussion_id)
-
+        
+        db.add(comment)
+        
+        # Increment replies count on discussion
+        discussion.replies_count = (discussion.replies_count or 0) + 1
+        
+        await db.flush()
+        await db.refresh(comment)
+        
         logger.info(f"Comment created on discussion {discussion_id} by {request.author}")
-
+        
         return CommentResponse(
             id=comment.id,
             discussion_id=comment.discussion_id,
@@ -433,61 +441,55 @@ async def create_comment(
             created_at=comment.created_at,
             updated_at=comment.updated_at,
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating comment: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create comment")
 
 
-@router.post("/{discussion_id}/comments/{comment_id}/like", response_model=CommentResponse)
-async def like_comment(
+@router.post("/{discussion_id}/like/toggle")
+async def toggle_like(
     discussion_id: int,
-    comment_id: int,
-    repo: CommentRepository = Depends(get_comment_repo),
-) -> CommentResponse:
-    """Like a comment."""
-    try:
-        comment = await repo.increment_likes(comment_id)
-        if not comment:
-            raise HTTPException(status_code=404, detail="Comment not found")
-
-        logger.info(f"Comment {comment_id} liked")
-
-        return CommentResponse(
-            id=comment.id,
-            discussion_id=comment.discussion_id,
-            author=comment.author,
-            avatar_url=comment.avatar_url,
-            content=comment.content,
-            likes_count=comment.likes_count,
-            created_at=comment.created_at,
-            updated_at=comment.updated_at,
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error liking comment {comment_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to like comment")
-
-
-@router.delete("/{discussion_id}/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_comment(
-    discussion_id: int,
-    comment_id: int,
-    comment_repo: CommentRepository = Depends(get_comment_repo),
-    discussion_repo: DiscussionRepository = Depends(get_discussion_repo),
+    user_id: str = Query(..., description="User ID for tracking likes"),
+    db=Depends(get_db),
+    repo: DiscussionRepository = Depends(get_discussion_repo),
 ):
-    """Delete a comment."""
+    """Toggle like on a discussion."""
+    from sqlalchemy import select
     try:
-        success = await comment_repo.delete(comment_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Comment not found")
-
-        # Update discussion reply count
-        await discussion_repo.decrement_replies(discussion_id)
-
-        logger.info(f"Comment {comment_id} deleted")
+        discussion = await repo.get_by_id(discussion_id)
+        if not discussion:
+            raise HTTPException(status_code=404, detail="Discussion not found")
+        
+        # Check if user already liked
+        stmt = select(DiscussionLike).where(
+            DiscussionLike.discussion_id == discussion_id,
+            DiscussionLike.user_id == user_id
+        )
+        result = await db.execute(stmt)
+        existing_like = result.scalar_one_or_none()
+        
+        if existing_like:
+            # Unlike
+            await db.delete(existing_like)
+            discussion.likes_count = max(0, (discussion.likes_count or 0) - 1)
+            liked = False
+        else:
+            # Like
+            new_like = DiscussionLike(discussion_id=discussion_id, user_id=user_id)
+            db.add(new_like)
+            discussion.likes_count = (discussion.likes_count or 0) + 1
+            liked = True
+        
+        await db.flush()
+        
+        return {
+            "liked": liked,
+            "likes_count": discussion.likes_count,
+        }
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting comment {comment_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to delete comment")
+        logger.error(f"Error toggling like: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to toggle like")

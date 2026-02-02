@@ -910,7 +910,7 @@ class CommentResponse(BaseSchema):
     id: int
     discussion_id: int
     author: str
-    avatar_url: str
+    avatar_url: Optional[str] = None
     content: str
     likes_count: int
     created_at: datetime
@@ -922,8 +922,6 @@ class CommentListResponse(BaseSchema):
     
     comments: list[CommentResponse]
     total: int
-    page: int
-    page_size: int
 
 
 # Watchlist schemas
