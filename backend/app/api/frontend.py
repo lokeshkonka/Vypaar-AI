@@ -648,7 +648,7 @@ async def get_product_analysis(
                     )
         else:
             # No price history - use commodity-based defaults
-            base_price = 2000 + (sum(ord(c) for c in commodity.name) % 1000)
+            base_price = 2000 + (sum(ord(c) for c in selected_commodity.name) % 1000)
             for i, day_name in enumerate(day_names):
                 variation = 0.95 + (i * 0.02)
                 actual = int(base_price * variation)
@@ -657,7 +657,7 @@ async def get_product_analysis(
                 )
         
         # Build stock metrics from real inventory data for this commodity
-        inventory = await inventory_repo.get_by_commodity_market(commodity.id, market.id)
+        inventory = await inventory_repo.get_by_commodity_market(selected_commodity.id, selected_market.id)
         if inventory:
             current = int(inventory.current_stock or 0)
             optimal = int(inventory.optimal_stock or current * 1.2)
@@ -720,6 +720,8 @@ async def get_product_analysis(
         
         # Build impact data - festival calendar and weather would need integration
         # For now, return empty arrays as we don't have this data in database
+        festival_impacts = []
+        weather_impacts = []
         impact_data = ImpactData(
             festival=festival_impacts,
             weather=weather_impacts
