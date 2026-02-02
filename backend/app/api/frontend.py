@@ -623,26 +623,26 @@ async def get_product_analysis(
             for i, day_name in enumerate(day_names):
                 prices = day_prices.get(i, [])
                 if prices:
-                    avg_price = float(np.mean(prices))
+                    avg_price = int(np.mean(prices))
                     # Use actual avg as "actual" and add 5% as "forecast"
                     demand_graph.append(
-                        DemandGraphPoint(day=day_name, actual=avg_price, forecast=avg_price * 1.05)
+                        DemandGraphPoint(day=day_name, actual=avg_price, forecast=int(avg_price * 1.05))
                     )
                 else:
                     # Use overall average if no data for this day
                     all_prices = [p.price or p.modal_price for p in price_history if p.price or p.modal_price]
-                    overall_avg = float(np.mean(all_prices)) if all_prices else 2000.0
+                    overall_avg = int(np.mean(all_prices)) if all_prices else 2000
                     demand_graph.append(
-                        DemandGraphPoint(day=day_name, actual=overall_avg, forecast=overall_avg * 1.05)
+                        DemandGraphPoint(day=day_name, actual=overall_avg, forecast=int(overall_avg * 1.05))
                     )
         else:
             # No price history - use commodity-based defaults
             base_price = 2000 + (sum(ord(c) for c in commodity.name) % 1000)
             for i, day_name in enumerate(day_names):
                 variation = 0.95 + (i * 0.02)
-                actual = base_price * variation
+                actual = int(base_price * variation)
                 demand_graph.append(
-                    DemandGraphPoint(day=day_name, actual=actual, forecast=actual * 1.05)
+                    DemandGraphPoint(day=day_name, actual=actual, forecast=int(actual * 1.05))
                 )
         
         # Build stock metrics from real inventory data for this commodity
