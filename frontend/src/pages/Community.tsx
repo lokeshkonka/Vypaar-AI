@@ -297,7 +297,6 @@ export default function Community() {
               <Plus size={18} />
               Create New Post
             </button>
-            </div>
           </div>
 
           {loading && (
