@@ -57,6 +57,11 @@ export default function Community() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newCommodity, setNewCommodity] = useState("");
+  const [newMarket, setNewMarket] = useState("");
+  const [newTags, setNewTags] = useState("");
 
   useEffect(() => {
     fetchDiscussions();

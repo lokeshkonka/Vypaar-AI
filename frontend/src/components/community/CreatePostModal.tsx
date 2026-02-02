@@ -93,18 +93,23 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
     setValidationError('');
 
     console.log('Form data on submit:', formData);
+    console.log('Title:', formData.title);
+    console.log('Content:', formData.content);
+    console.log('Commodity:', formData.commodity);
 
-    if (!formData.title.trim()) {
+    if (!formData.title?.trim()) {
+      console.log('Title validation failed');
       setValidationError('Please enter a title');
       return;
     }
-    if (!formData.content.trim()) {
+    if (!formData.content?.trim()) {
+      console.log('Content validation failed');
       setValidationError('Please enter content');
       return;
     }
     if (!formData.commodity?.trim()) {
-      setValidationError('Please select a commodity');
       console.log('Commodity validation failed:', formData.commodity);
+      setValidationError('Please select a commodity');
       return;
     }
 
