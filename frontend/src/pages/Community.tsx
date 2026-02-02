@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, MessageCircle, Loader, Plus, X, MessageSquare, TrendingUp, Users } from "lucide-react";
+import { Search, Heart, MessageCircle, Loader, Plus, MessageSquare, TrendingUp, Users } from "lucide-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
 import { CreatePostModal } from "../components/community/CreatePostModal";
 import CommentsSection from "../components/community/CommentsSection";
+
+interface PostData {
+  title: string;
+  content: string;
+  commodity: string;
+  market?: string;
+  tags: string[];
+  author: string;
+}
 
 interface Discussion {
   id: string;
@@ -29,15 +38,6 @@ interface Comment {
   created_at: string;
 }
 
-interface PostData {
-  title: string;
-  content: string;
-  commodity: string;
-  market?: string;
-  tags: string[];
-  author: string;
-}
-
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
   if (seconds < 60) return `${seconds}s ago`;
@@ -57,11 +57,6 @@ export default function Community() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newContent, setNewContent] = useState("");
-  const [newCommodity, setNewCommodity] = useState("");
-  const [newTags, setNewTags] = useState("");
-  const [creating, setCreating] = useState(false);
   const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
 
@@ -125,64 +120,49 @@ export default function Community() {
     );
   };
 
-  const handleCreatePost = async () => {
-    if (!newTitle.trim() || !newContent.trim() || !newCommodity.trim()) {
-      alert("Please fill all required fields (Title, Commodity, and Content)");
-      return;
+  const handleCreatePost = async (postData: PostData) => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    
+    const response = await fetch(`${API_BASE_URL}/api/v1/discussions/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        title: postData.title,
+        content: postData.content,
+        commodity: postData.commodity,
+        market: postData.market,
+        author: postData.author,
+        tags: postData.tags,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create discussion");
     }
 
-    try {
-      setCreating(true);
-      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
-      
-      const response = await fetch("http://localhost:8000/api/v1/discussions/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: newTitle,
-          content: newContent,
-          commodity: newCommodity,
-          author: authorName,
-          tags: newTags.split(",").map(t => t.trim()).filter(Boolean),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create discussion");
-      }
-
-      const newDiscussion = await response.json();
-      
-      // Add to discussions list
-      setDiscussions((prev) => [
-        {
-          id: newDiscussion.id,
-          author: newDiscussion.author,
-          avatar: newDiscussion.avatar_url,
-          title: newDiscussion.title,
-          content: newDiscussion.content,
-          commodity: newDiscussion.commodity,
-          timestamp: new Date(newDiscussion.created_at),
-          likes: 0,
-          replies: 0,
-        },
-        ...prev,
-      ]);
-
-      // Reset form
-      setNewTitle("");
-      setNewContent("");
-      setNewCommodity("");
-      setNewTags("");
-      setIsCreateModalOpen(false);
-    } catch (err) {
-      console.error("Error creating discussion:", err);
-      alert("Failed to create discussion. Please try again.");
-    } finally {
-      setCreating(false);
-    }
+    const newDiscussion = await response.json();
+    
+    // Add to discussions list
+    setDiscussions((prev) => [
+      {
+        id: String(newDiscussion.id),
+        author: newDiscussion.author,
+        avatar: newDiscussion.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${newDiscussion.author}`,
+        title: newDiscussion.title,
+        content: newDiscussion.content,
+        commodity: newDiscussion.commodity,
+        market: newDiscussion.market,
+        tags: newDiscussion.tags,
+        timestamp: new Date(newDiscussion.created_at),
+        likes: 0,
+        replies: 0,
+      },
+      ...prev,
+    ]);
+    
+    setIsCreateModalOpen(false);
   };
 
   const handleAddComment = async (discussionId: string, content: string) => {
@@ -249,13 +229,19 @@ export default function Community() {
           const response = await fetch(`${API_BASE_URL}/api/v1/discussions/${discussionId}/comments`);
           if (response.ok) {
             const data = await response.json();
+            // Handle both array and object with comments key
+            const commentsArray = Array.isArray(data) ? data : (data.comments || []);
             setComments((prev) => ({
               ...prev,
-              [discussionId]: data,
+              [discussionId]: commentsArray,
             }));
           }
         } catch (err) {
           console.error("Error fetching comments:", err);
+          setComments((prev) => ({
+            ...prev,
+            [discussionId]: [],
+          }));
         }
       }
     }
@@ -419,7 +405,7 @@ export default function Community() {
                             <span>{discussion.likes}</span>
                           </button>
                           <button
-                            onClick={() => toggleComments(discussion.id)}
+                            onClick={() => toggleExpandDiscussion(discussion.id)}
                             className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition text-sm font-medium"
                           >
                             <MessageCircle size={16} className="flex-shrink-0" />
@@ -487,94 +473,6 @@ export default function Community() {
           )}
         </div>
 
-        {/* Create Post Modal */}
-        {isCreateModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Create New Discussion
-                </h2>
-                <button
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
-                >
-                  <X size={24} className="text-gray-500 dark:text-gray-400" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Enter discussion title"
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Commodity <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={newCommodity}
-                    onChange={(e) => setNewCommodity(e.target.value)}
-                    placeholder="e.g., Tomato, Wheat, Potato"
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Content <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={newContent}
-                    onChange={(e) => setNewContent(e.target.value)}
-                    placeholder="Share your thoughts, questions, or insights..."
-                    rows={6}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Tags (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={newTags}
-                    onChange={(e) => setNewTags(e.target.value)}
-                    placeholder="e.g., prices, trading, advice"
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={handleCreatePost}
-                    disabled={creating}
-                    className="flex-1 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-300 text-white rounded-lg font-medium transition-colors"
-                  >
-                    {creating ? "Creating..." : "Create Discussion"}
-                  </button>
-                  <button
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Create Post Modal */}

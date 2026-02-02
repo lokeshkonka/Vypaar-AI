@@ -32,12 +32,15 @@ function timeAgo(dateString: string): string {
 
 export default function CommentsSection({
   discussionId,
-  comments,
+  comments = [],
   onAddComment,
   onLikeComment,
 }: CommentsSectionProps) {
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Ensure comments is always an array
+  const safeComments = Array.isArray(comments) ? comments : [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,13 +91,13 @@ export default function CommentsSection({
 
       {/* Comments List */}
       <div className="space-y-3">
-        {comments.length === 0 ? (
+        {safeComments.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <MessageCircle size={48} className="mx-auto mb-2 opacity-50" />
             <p>No comments yet. Be the first to comment!</p>
           </div>
         ) : (
-          comments.map((comment) => (
+          safeComments.map((comment) => (
             <div
               key={comment.id}
               className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
