@@ -11,9 +11,7 @@ interface Comment {
   created_at: string;
 }
 
-interface CommentsSection
-
-Props {
+interface CommentsSectionProps {
   discussionId: number;
   comments: Comment[];
   onAddComment: (content: string) => Promise<void>;

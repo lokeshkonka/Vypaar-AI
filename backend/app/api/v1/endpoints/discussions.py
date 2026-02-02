@@ -24,14 +24,14 @@ from app.core.utils import get_current_timestamp
 router = APIRouter(prefix="/discussions", tags=["Discussions"])
 
 
+def get_discussion_repo(db=Depends(get_db)) -> DiscussionRepository:
+    """Get discussion repository."""
+    return DiscussionRepository(db)
+
+
 def get_comment_repo(db=Depends(get_db)) -> CommentRepository:
     """Get comment repository."""
     return CommentRepository(db)
-
-
-def get_comment_repo(db=Depends(get_db)) -> CommentRepository:
-    """Get comment repository."""
-    return DiscussionRepository(db)
 
 
 @router.get("/", response_model=DiscussionListResponse)

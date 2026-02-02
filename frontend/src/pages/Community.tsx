@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, Heart, MessageCircle, Loader, Plus } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import CreatePostModal from "../components/community/CreatePostModal";
 import CommentsSection from "../components/community/CommentsSection";
@@ -49,6 +50,7 @@ function timeAgo(date: Date): string {
 }
 
 export default function Community() {
+  const { user } = useUser();
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCommodity, setSelectedCommodity] = useState<string | null>(null);
@@ -72,7 +74,8 @@ export default function Community() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:8000/api/v1/discussions");
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/v1/discussions`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch discussions: ${response.statusText}`);
