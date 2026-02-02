@@ -3,6 +3,7 @@ import { Search, Heart, MessageCircle, Loader, Plus, X, MessageSquare, TrendingU
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { useUser } from "@clerk/clerk-react";
 import { CreatePostModal } from "../components/community/CreatePostModal";
+import CommentsSection from "../components/community/CommentsSection";
 
 interface Discussion {
   id: string;
@@ -61,6 +62,8 @@ export default function Community() {
   const [newCommodity, setNewCommodity] = useState("");
   const [newTags, setNewTags] = useState("");
   const [creating, setCreating] = useState(false);
+  const [expandedDiscussion, setExpandedDiscussion] = useState<string | null>(null);
+  const [comments, setComments] = useState<Record<string, Comment[]>>({});
 
   useEffect(() => {
     fetchDiscussions();
@@ -179,6 +182,82 @@ export default function Community() {
       alert("Failed to create discussion. Please try again.");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleAddComment = async (discussionId: string, content: string) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const authorName = user?.fullName || user?.firstName || user?.username || "Anonymous";
+      
+      const response = await fetch(`${API_BASE_URL}/api/v1/discussions/${discussionId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content,
+          author: authorName,
+        }),
+      });
+
+      if (response.ok) {
+        const newComment = await response.json();
+        setComments((prev) => ({
+          ...prev,
+          [discussionId]: [...(prev[discussionId] || []), newComment],
+        }));
+        // Update replies count
+        setDiscussions((prev) =>
+          prev.map((d) => (d.id === discussionId ? { ...d, replies: d.replies + 1 } : d))
+        );
+      }
+    } catch (err) {
+      console.error("Error adding comment:", err);
+    }
+  };
+
+  const handleLikeComment = async (discussionId: string, commentId: number) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE_URL}/api/v1/discussions/comments/${commentId}/like`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        setComments((prev) => ({
+          ...prev,
+          [discussionId]: (prev[discussionId] || []).map((c) =>
+            c.id === commentId ? { ...c, likes_count: c.likes_count + 1 } : c
+          ),
+        }));
+      }
+    } catch (err) {
+      console.error("Error liking comment:", err);
+    }
+  };
+
+  const toggleExpandDiscussion = async (discussionId: string) => {
+    if (expandedDiscussion === discussionId) {
+      setExpandedDiscussion(null);
+    } else {
+      setExpandedDiscussion(discussionId);
+      // Fetch comments if not already loaded
+      if (!comments[discussionId]) {
+        try {
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+          const response = await fetch(`${API_BASE_URL}/api/v1/discussions/${discussionId}/comments`);
+          if (response.ok) {
+            const data = await response.json();
+            setComments((prev) => ({
+              ...prev,
+              [discussionId]: data,
+            }));
+          }
+        } catch (err) {
+          console.error("Error fetching comments:", err);
+        }
+      }
     }
   };
 
