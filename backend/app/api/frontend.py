@@ -567,14 +567,11 @@ async def add_inventory(
 async def get_product_analysis(
     commodity_name: Optional[str] = Query(None, description="Commodity name to analyze"),
     market_name: Optional[str] = Query(None, description="Market name to analyze"),
-    days: int = Query(7, description="Number of days for analysis"),
+    days: int = Query(default=7, ge=1, le=30, description="Number of days for analysis"),
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
     inventory_repo: InventoryRepository = Depends(get_inventory_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
-    commodity_name: Optional[str] = Query(None, description="Filter by commodity name"),
-    market_name: Optional[str] = Query(None, description="Filter by market name"),
-    days: int = Query(default=7, ge=1, le=30, description="Number of days for analysis"),
 ) -> ProductAnalysisResponse:
     """Provide product analysis data for the dashboard using real database data."""
     try:
@@ -582,7 +579,7 @@ async def get_product_analysis(
         commodities = await commodity_repo.get_all(limit=50)
         markets = await market_repo.get_all(limit=50)
         
-        if not commodity or not market:
+        if not commodities or not markets:
             raise HTTPException(status_code=404, detail="No data available. Please run data seeding first.")
         
         # Find specific commodity/market if provided
@@ -614,8 +611,8 @@ async def get_product_analysis(
         
         # Get real price history for the commodity/market pair
         price_history = await market_price_repo.get_price_history(
-            commodity_id=commodity.id,
-            market_id=market.id,
+            commodity_id=selected_commodity.id,
+            market_id=selected_market.id,
             days=30,
         )
         
