@@ -891,12 +891,12 @@ async def get_price_history(
             "commodity": commodity_obj.name,
             "market": market_obj.name,
             "days": days,
-            "data": [
+            "prices": [
                 {
                     "date": p.date.isoformat(),
-                    "price": p.price or p.modal_price,
-                    "min_price": p.min_price,
-                    "max_price": p.max_price,
+                    "price": float(p.price or p.modal_price or 0),
+                    "min_price": float(p.min_price) if p.min_price else None,
+                    "max_price": float(p.max_price) if p.max_price else None,
                     "arrival": p.arrival,
                 }
                 for p in history
@@ -942,14 +942,17 @@ async def get_market_comparison(
                 latest = history[0]
                 prices = [p.price or p.modal_price for p in history if p.price or p.modal_price]
                 avg_price = float(np.mean(prices)) if prices else 0
+                current_price = float(latest.price or latest.modal_price or 0)
                 
                 comparison_data.append({
                     "market": market.name,
                     "state": market.state or "",
-                    "currentPrice": float(latest.price or latest.modal_price or 0),
+                    "price": current_price,
+                    "currentPrice": current_price,
                     "minPrice": float(latest.min_price or 0) if latest.min_price else None,
                     "maxPrice": float(latest.max_price or 0) if latest.max_price else None,
                     "avgPrice": avg_price,
+                    "change": 0,
                     "lastUpdated": latest.date.isoformat(),
                 })
         
@@ -968,3 +971,63 @@ async def get_market_comparison(
     except Exception as exc:
         logger.exception(f"Market comparison fetch failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch market comparison")
+
+
+@router.get(
+    "/export/prices",
+    status_code=status.HTTP_200_OK,
+)
+async def export_prices(
+    days: int = Query(30, description="Number of days of price data to export"),
+    commodity_name: Optional[str] = Query(None, description="Filter by commodity"),
+    market_name: Optional[str] = Query(None, description="Filter by market"),
+    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
+    market_repo: MarketRepository = Depends(get_market_repo),
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
+):
+    """Export price history data for download."""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Get all commodities and markets
+        commodities = await commodity_repo.get_all(limit=100)
+        markets = await market_repo.get_all(limit=100)
+        
+        if not commodities or not markets:
+            return []
+        
+        export_data = []
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+        
+        # Filter commodities and markets if specified
+        commodity_filter = [c for c in commodities if not commodity_name or c.name.lower() == commodity_name.lower()]
+        market_filter = [m for m in markets if not market_name or m.name.lower() == market_name.lower()]
+        
+        # Limit to first few combinations to avoid timeout
+        for commodity in commodity_filter[:10]:
+            for market in market_filter[:5]:
+                prices = await market_price_repo.get_price_history(
+                    commodity_id=commodity.id,
+                    market_id=market.id,
+                    days=days,
+                )
+                
+                for price in prices:
+                    export_data.append({
+                        "date": price.arrival_date.isoformat() if price.arrival_date else str(price.created_at)[:10],
+                        "commodity": commodity.name,
+                        "market": market.name,
+                        "state": market.state,
+                        "min_price": float(price.min_price) if price.min_price else 0,
+                        "max_price": float(price.max_price) if price.max_price else 0,
+                        "modal_price": float(price.modal_price) if price.modal_price else 0,
+                    })
+        
+        # Sort by date
+        export_data.sort(key=lambda x: x["date"], reverse=True)
+        
+        return export_data
+    except Exception as exc:
+        logger.exception(f"Export prices failed: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to export price data")

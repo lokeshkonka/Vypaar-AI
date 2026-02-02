@@ -24,7 +24,8 @@ export default function ExportData() {
         case "prices": {
           const res = await fetch(`${BACKEND_URL}/api/export/prices?days=30`);
           if (res.ok) {
-            data = await res.json();
+            const result = await res.json();
+            data = Array.isArray(result) ? result : [];
             filename = `price_history_${new Date().toISOString().split("T")[0]}`;
           }
           break;
@@ -32,7 +33,8 @@ export default function ExportData() {
         case "inventory": {
           const res = await fetch(`${BACKEND_URL}/api/inventory`);
           if (res.ok) {
-            data = await res.json();
+            const result = await res.json();
+            data = Array.isArray(result) ? result : (result.items || []);
             filename = `inventory_${new Date().toISOString().split("T")[0]}`;
           }
           break;
@@ -59,7 +61,8 @@ export default function ExportData() {
       }
 
       if (data.length === 0) {
-        throw new Error("No data to export");
+        alert("No data available to export. Please ensure there is data in the database.");
+        return;
       }
 
       let content: string;
