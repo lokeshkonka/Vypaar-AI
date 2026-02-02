@@ -245,7 +245,7 @@ export default function Community() {
               </p>
             </div>
             <button
-              onClick={() => setIsCreateModalOpen(true)}
+              onClick={() => setIsCreateOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors shadow-sm"
             >
               <Plus size={20} />
