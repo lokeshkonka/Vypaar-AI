@@ -41,6 +41,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
   const [commodities, setCommodities] = useState<Commodity[]>([]);
   const [markets, setMarkets] = useState<Market[]>([]);
   const [loading, setLoading] = useState(true);
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -85,7 +86,22 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || !formData.content || !formData.commodity || !formData.author) {
+    setValidationError('');
+
+    if (!formData.title.trim()) {
+      setValidationError('Please enter a title');
+      return;
+    }
+    if (!formData.content.trim()) {
+      setValidationError('Please enter content');
+      return;
+    }
+    if (!formData.commodity) {
+      setValidationError('Please select a commodity');
+      return;
+    }
+    if (!formData.author.trim()) {
+      setValidationError('Please enter your name');
       return;
     }
 
@@ -100,9 +116,11 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
         tags: [],
         author: '',
       });
+      setValidationError('');
       onClose();
     } catch (error) {
       console.error('Error submitting post:', error);
+      setValidationError('Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -124,6 +142,12 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {validationError && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+              {validationError}
+            </div>
+          )}
+
           {/* Author */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
