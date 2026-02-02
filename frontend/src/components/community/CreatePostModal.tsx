@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Tag, MapPin, Package } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -28,13 +29,16 @@ interface Market {
 }
 
 export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalProps) {
+  const { user } = useUser();
+  const authorName = user?.fullName || user?.username || 'Anonymous';
+  
   const [formData, setFormData] = useState<PostData>({
     title: '',
     content: '',
     commodity: '',
     market: '',
     tags: [],
-    author: '',
+    author: authorName,
   });
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,21 +104,17 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
       setValidationError('Please select a commodity');
       return;
     }
-    if (!formData.author.trim()) {
-      setValidationError('Please enter your name');
-      return;
-    }
 
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      await onSubmit({ ...formData, author: authorName });
       setFormData({
         title: '',
         content: '',
         commodity: '',
         market: '',
         tags: [],
-        author: '',
+        author: authorName,
       });
       setValidationError('');
       onClose();
@@ -151,15 +151,13 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
           {/* Author */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Your Name *
+              Your Name
             </label>
             <input
               type="text"
-              value={formData.author}
-              onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-              placeholder="Enter your name"
-              required
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              value={authorName}
+              readOnly
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 cursor-not-allowed"
             />
           </div>
 
@@ -291,7 +289,7 @@ export function CreatePostModal({ isOpen, onClose, onSubmit }: CreatePostModalPr
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !formData.title || !formData.content || !formData.commodity || !formData.author}
+              disabled={isSubmitting || !formData.title || !formData.content || !formData.commodity}
               className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition"
             >
               {isSubmitting ? 'Posting...' : 'Post Discussion'}
