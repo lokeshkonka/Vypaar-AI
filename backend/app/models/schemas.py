@@ -724,6 +724,7 @@ class CommentCreate(BaseSchema):
     content: str
     author: Optional[str] = None
     author_id: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class CommentResponse(BaseSchema):
     id: int
@@ -731,6 +732,8 @@ class CommentResponse(BaseSchema):
     content: str
     author: Optional[str] = None
     author_id: Optional[str] = None
+    avatar_url: Optional[str] = None
+    likes_count: int = 0
     created_at: datetime
     updated_at: Optional[datetime] = None
 
