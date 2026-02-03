@@ -612,6 +612,31 @@ async def get_product_analysis(
         logger.exception(f"Product analysis failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch product analysis data")
 
+CATEGORY_MAPPING = {
+    "Wheat": "Cereals", "Rice": "Cereals", "Maize": "Cereals", "Bajra": "Cereals",
+    "Jowar": "Cereals", "Barley": "Cereals", "Ragi": "Cereals",
+    "Potato": "Vegetables", "Onion": "Vegetables", "Tomato": "Vegetables",
+    "Cabbage": "Vegetables", "Cauliflower": "Vegetables", "Carrot": "Vegetables",
+    "Peas": "Vegetables", "Brinjal": "Vegetables", "Okra": "Vegetables",
+    "Capsicum": "Vegetables", "Cucumber": "Vegetables", "Bitter Gourd": "Vegetables",
+    "Bottle Gourd": "Vegetables", "Green Chilli": "Vegetables", "Ginger": "Vegetables",
+    "Garlic": "Vegetables", "Spinach": "Vegetables", "Coriander": "Vegetables",
+    "Tur (Arhar)": "Pulses", "Moong": "Pulses", "Urad": "Pulses", "Chana": "Pulses",
+    "Masoor": "Pulses", "Lentil": "Pulses",
+    "Groundnut": "Oilseeds", "Soybean": "Oilseeds", "Mustard": "Oilseeds",
+    "Sunflower": "Oilseeds", "Sesame": "Oilseeds",
+    "Cotton": "Cash Crops", "Sugarcane": "Cash Crops", "Jute": "Cash Crops",
+    "Apple": "Fruits", "Banana": "Fruits", "Mango": "Fruits", "Orange": "Fruits",
+    "Grapes": "Fruits", "Papaya": "Fruits", "Guava": "Fruits", "Pomegranate": "Fruits",
+    "Turmeric": "Spices", "Red Chilli": "Spices", "Chilli (Dry)": "Spices",
+    "Cumin": "Spices", "Coriander Seeds": "Spices",
+}
+
+def get_commodity_category(name: str, existing_category: str = None) -> str:
+    if existing_category and existing_category not in ("", "Other", None):
+        return existing_category
+    return CATEGORY_MAPPING.get(name, "Other")
+
 @router.get(
     "/commodities",
     response_model=List[dict],
@@ -621,7 +646,14 @@ async def get_commodities(commodity_repo: CommodityRepository = Depends(get_comm
 
     try:
         commodities = await commodity_repo.get_all()
-        return [{"id": c.id, "name": c.name} for c in commodities]
+        return [
+            {
+                "id": c.id,
+                "name": c.name,
+                "category": get_commodity_category(c.name, c.category)
+            }
+            for c in commodities
+        ]
     except Exception as exc:
         logger.exception(f"Failed to fetch commodities: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch commodities")
