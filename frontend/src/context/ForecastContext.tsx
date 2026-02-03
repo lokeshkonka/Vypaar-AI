@@ -100,17 +100,6 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     fetchData();
   }, []);
 
-<<<<<<< Updated upstream
-  // Use categories from backend API commodities
-=======
-  const COMMODITY_CATEGORIES: { [key: string]: string } = {
-    "Tomato": "Vegetables",
-    "Potato": "Vegetables",
-    "Wheat": "Grains",
-    "Rice": "Grains",
-  };
-
->>>>>>> Stashed changes
   const categories = useMemo(() => {
     return Array.from(
       new Set(
