@@ -239,6 +239,8 @@ class Comment(Base):
     content = Column(Text, nullable=False)
     author = Column(String(255), nullable=True)
     author_id = Column(String(255), nullable=True)
+    avatar_url = Column(String(512), nullable=True)
+    likes_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
