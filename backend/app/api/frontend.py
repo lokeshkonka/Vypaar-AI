@@ -886,10 +886,46 @@ async def export_prices(
                         logger.warning(f"Error processing price record: {e}")
                         continue
         
-        # Sort by date
         export_data.sort(key=lambda x: x["date"], reverse=True)
         
         return export_data
     except Exception as exc:
         logger.exception(f"Export prices failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to export price data")
+
+
+@router.post("/refresh-data")
+async def refresh_market_data():
+    try:
+        from app.services.scheduler import get_scheduler
+        scheduler = get_scheduler()
+        await scheduler.daily_data_collection()
+        return {"status": "success", "message": "Market data refresh initiated"}
+    except Exception as exc:
+        logger.exception(f"Data refresh failed: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to refresh market data")
+
+
+@router.get("/data-status")
+async def get_data_status(
+    market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
+):
+    try:
+        recent_prices = await market_price_repo.get_recent_prices(days=1)
+        all_prices = await market_price_repo.get_recent_prices(days=30)
+        
+        last_update = None
+        if recent_prices:
+            dates = [p.date for p in recent_prices if p.date]
+            if dates:
+                last_update = max(dates).isoformat()
+        
+        return {
+            "last_update": last_update,
+            "records_today": len(recent_prices),
+            "records_30_days": len(all_prices),
+            "status": "healthy" if len(recent_prices) > 0 else "stale"
+        }
+    except Exception as exc:
+        logger.exception(f"Data status check failed: {exc}")
+        raise HTTPException(status_code=500, detail="Unable to check data status")

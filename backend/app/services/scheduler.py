@@ -183,7 +183,7 @@ class DataScheduler:
         except Exception as e:
             logger.error(f"Failed to store scraped data: {str(e)}")
 
-    def start(self):
+    def start(self, run_initial_scrape: bool = True):
         
         if self.is_running:
             logger.warning("Scheduler already running")
@@ -198,6 +198,22 @@ class DataScheduler:
         )
         
         self.scheduler.add_job(
+            self.daily_data_collection,
+            CronTrigger(hour=8, minute=0),
+            id="morning_scrape",
+            name="Morning market data refresh",
+            replace_existing=True
+        )
+        
+        self.scheduler.add_job(
+            self.daily_data_collection,
+            CronTrigger(hour=14, minute=0),
+            id="afternoon_scrape",
+            name="Afternoon market data refresh",
+            replace_existing=True
+        )
+        
+        self.scheduler.add_job(
             self.weekly_model_retraining,
             CronTrigger(day_of_week="sun", hour=3, minute=0),
             id="weekly_retrain",
@@ -208,7 +224,11 @@ class DataScheduler:
         self.scheduler.start()
         self.is_running = True
         
-        logger.info("Scheduler started - Daily scraping at 2:30 AM, Weekly retraining on Sundays at 3:00 AM")
+        logger.info("Scheduler started - Scraping at 2:30 AM, 8:00 AM, 2:00 PM daily. Weekly retraining on Sundays at 3:00 AM")
+        
+        if run_initial_scrape:
+            import asyncio
+            asyncio.create_task(self._run_initial_scrape())
 
     def stop(self):
         
@@ -218,6 +238,14 @@ class DataScheduler:
         self.scheduler.shutdown()
         self.is_running = False
         logger.info("Scheduler stopped successfully")
+
+    async def _run_initial_scrape(self):
+        try:
+            logger.info("Running initial data collection on startup")
+            await self.daily_data_collection()
+            logger.info("Initial data collection completed")
+        except Exception as e:
+            logger.error(f"Initial data collection failed: {str(e)}")
 
     def get_job_status(self):
         
