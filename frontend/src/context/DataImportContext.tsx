@@ -201,7 +201,6 @@ export const DataImportProvider: React.FC<DataImportProviderProps> = ({
       const job: ImportJob = await response.json();
       setCurrentJob(job);
 
-      // Start polling for status updates
       const statusCheckInterval = setInterval(async () => {
         try {
           const statusResponse = await fetch(
@@ -226,7 +225,7 @@ export const DataImportProvider: React.FC<DataImportProviderProps> = ({
         } catch (err) {
           console.error("Error polling status:", err);
         }
-      }, 2000); // Poll every 2 seconds
+      }, 2000);
 
       return job;
     } catch (err) {

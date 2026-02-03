@@ -15,7 +15,7 @@ export default function WelcomeCard() {
         hover:shadow-[0_16px_40px_rgba(16,185,129,0.14)]
       "
     >
-      {/* Header */}
+      {}
       <div className="flex items-start gap-3 sm:gap-4 mb-5">
         <div className="mt-1">
           <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
@@ -31,7 +31,7 @@ export default function WelcomeCard() {
         </div>
       </div>
 
-      {/* Guidance bullets */}
+      {}
       <ul className="space-y-3 sm:space-y-4 text-sm sm:text-[0.95rem] ">
         <li className="flex items-start gap-3">
           <MapPin className="w-4 h-4 sm:w-4.5 sm:h-4.5 mt-0.5 text-emerald-600 shrink-0" />

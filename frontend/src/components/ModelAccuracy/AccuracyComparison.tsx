@@ -1,4 +1,3 @@
-// src/components/ModelAccuracy/AccuracyComparison.tsx
 import { useModelAccuracy } from "../../context/ModelContext";
 
 export default function AccuracyComparison() {
@@ -10,7 +9,7 @@ export default function AccuracyComparison() {
         AI vs Traditional Forecasting
       </h3>
 
-      {/* AI */}
+      {}
       <div>
         <div className="flex justify-between text-sm mb-1">
           <span>AI Model Accuracy</span>
@@ -26,7 +25,7 @@ export default function AccuracyComparison() {
         </div>
       </div>
 
-      {/* Traditional */}
+      {}
       <div>
         <div className="flex justify-between text-sm mb-1">
           <span>Traditional (Simple Avg)</span>

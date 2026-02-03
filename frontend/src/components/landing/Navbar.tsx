@@ -20,9 +20,9 @@ export default function Navbar() {
       transition={{ type: "spring", stiffness: 200, damping: 25 }}
       className="w-full z-50"
     >
-      {/* OUTER WRAPPER */}
+      {}
       <div className="w-full flex justify-center">
-        {/* INNER CONTAINER (PX CONTROLLED) */}
+        {}
         <div
           className="
             w-300
@@ -34,7 +34,7 @@ export default function Navbar() {
             z-50
           "
         >
-          {/* LOGO */}
+          {}
           <Link to="/" className="flex items-center gap-3">
             <img
               src="/icon.png"
@@ -46,7 +46,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* NAV LINKS */}
+          {}
           <div className="ml-auto flex gap-6">
             {navlinks.map((link) => (
               <Link

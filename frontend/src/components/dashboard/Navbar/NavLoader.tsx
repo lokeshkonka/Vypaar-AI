@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-// src/components/NavLoader.tsx
+
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -49,7 +48,7 @@ export default function NavLoader({ open, children }: NavLoaderProps) {
     <AnimatePresence>
       {open && (
         <>
-          {/* BACKDROP (subtle, non-glassy) */}
+          {}
           <motion.div
             className="fixed inset-0 z-[60] bg-black/30"
             initial={{ opacity: 0 }}
@@ -57,7 +56,7 @@ export default function NavLoader({ open, children }: NavLoaderProps) {
             exit={{ opacity: 0 }}
           />
 
-          {/* DRAWER */}
+          {}
           <motion.aside
             className="
               fixed left-0 top-0 z-[70] h-full w-72

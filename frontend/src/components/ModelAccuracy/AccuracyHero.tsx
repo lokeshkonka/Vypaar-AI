@@ -1,4 +1,3 @@
-// src/components/ModelAccuracy/AccuracyHero.tsx
 import { useModelAccuracy } from "../../context/ModelContext";
 import { FiTarget } from "react-icons/fi";
 

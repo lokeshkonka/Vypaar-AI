@@ -29,10 +29,10 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-        {/* AUTH */}
+        {}
         <Route path="/auth" element={<AuthComponent />} />
 
-        {/* ROOT (protected dashboard) */}
+        {}
         <Route
           path="/dashboard/selector"
           element={

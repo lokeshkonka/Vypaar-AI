@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useContext, useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
@@ -20,7 +20,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
 
-    // 🔒 explicit reset
     root.classList.remove("light", "dark");
     root.classList.add(theme);
 

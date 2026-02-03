@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import {
   createContext,
   useContext,
@@ -18,10 +18,6 @@ export interface InventoryRow {
   suggested: number;
   risk: string;
 }
-
-/* =========================
-   TYPES
-   ========================= */
 
 type InventoryFilters = {
   market?: string;
@@ -45,10 +41,6 @@ type InventoryContextType = {
 const InventoryContext =
   createContext<InventoryContextType | null>(null);
 
-/* =========================
-   PROVIDER
-   ========================= */
-
 export function InventoryProvider({
   children,
 }: {
@@ -58,7 +50,6 @@ export function InventoryProvider({
   const [filters, setFiltersState] = useState<InventoryFilters>({});
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Transform recommendation table to inventory rows format
   const allInventory: InventoryRow[] = useMemo(() => {
     return recommendationTable.map((rec, idx) => ({
       id: idx + 1,
@@ -71,26 +62,19 @@ export function InventoryProvider({
     }));
   }, [recommendationTable, selectorData]);
 
-  const isLoading = false; // Use ContextAnalysis loading instead
+  const isLoading = false;
 
-  /* ---------------------------
-     Filter updater
-     --------------------------- */
+  
   const setFilters = (f: Partial<InventoryFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...f }));
   };
 
-  /* ---------------------------
-     Update individual item stock
-     --------------------------- */
+  
   const updateItem = (id: number, current: number) => {
-    // This is handled via the recommendation table from ContextAnalysis
     console.log("Update item:", id, current);
   };
 
-  /* ---------------------------
-     Derived filtered inventory
-     --------------------------- */
+  
   const inventory = useMemo(() => {
     return allInventory.filter((row) => {
       return (
@@ -101,14 +85,11 @@ export function InventoryProvider({
     });
   }, [filters, allInventory]);
 
-  /* ---------------------------
-     Update stock (backend)
-     --------------------------- */
+  
   const updateStock = async () => {
     try {
       setIsUpdating(true);
 
-      // Send only the fields the backend expects
       const items = inventory.map(item => ({
         id: item.id,
         current: item.current,
@@ -151,10 +132,6 @@ export function InventoryProvider({
     </InventoryContext.Provider>
   );
 }
-
-/* =========================
-   HOOK
-   ========================= */
 
 export function useInventory() {
   const ctx = useContext(InventoryContext);

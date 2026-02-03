@@ -1,4 +1,3 @@
-"""Logging configuration with structured logging and rotation."""
 
 import logging
 import sys
@@ -9,31 +8,26 @@ from loguru import logger
 
 from app.config import settings
 
-
 class InterceptHandler(logging.Handler):
-    """Intercept standard logging and redirect to loguru."""
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record to loguru."""
-        # Get corresponding Loguru level if it exists
+
         try:
             level = logger.level(record.levelname).name
         except ValueError:
             level = record.levelno
 
-        # Find caller from where originated the logged message
         frame, depth = logging.currentframe(), 2
         while frame.f_code.co_filename == logging.__file__:
-            frame = frame.f_back  # type: ignore
+            frame = frame.f_back
             depth += 1
 
         logger.opt(depth=depth, exception=record.exc_info).log(
             level, record.getMessage()
         )
 
-
 def serialize_record(record: dict[str, Any]) -> str:
-    """Serialize log record to JSON format."""
+
     import json
     from datetime import datetime
 
@@ -54,13 +48,11 @@ def serialize_record(record: dict[str, Any]) -> str:
 
     return json.dumps(subset)
 
-
 def format_record(record: dict[str, Any]) -> str:
-    """Format log record based on configuration."""
+
     if settings.log_format == "json":
         return serialize_record(record) + "\n"
     else:
-        # Text format
         format_string = (
             "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | "
             "<level>{level: <8}</level> | "
@@ -71,17 +63,13 @@ def format_record(record: dict[str, Any]) -> str:
             format_string += "{exception}\n"
         return format_string
 
-
 def setup_logging() -> None:
-    """Configure logging for the application."""
-    # Remove default handler
+
     logger.remove()
 
-    # Ensure log directory exists
     log_path = Path(settings.log_file)
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Console handler with colors (text format for better readability)
     logger.add(
         sys.stdout,
         format=(
@@ -96,7 +84,6 @@ def setup_logging() -> None:
         diagnose=True,
     )
 
-    # File handler with rotation and retention
     if settings.log_format == "json":
         logger.add(
             settings.log_file,
@@ -107,8 +94,8 @@ def setup_logging() -> None:
             compression=settings.log_compression,
             backtrace=True,
             diagnose=True,
-            enqueue=True,  # Async logging
-            serialize=True,  # JSON serialization
+            enqueue=True,
+            serialize=True,
         )
     else:
         logger.add(
@@ -128,7 +115,6 @@ def setup_logging() -> None:
             enqueue=True,
         )
 
-    # Error log file (only ERROR and above)
     error_log_path = log_path.parent / "error.log"
     if settings.log_format == "json":
         logger.add(
@@ -141,7 +127,7 @@ def setup_logging() -> None:
             backtrace=True,
             diagnose=True,
             enqueue=True,
-            serialize=True,  # JSON serialization
+            serialize=True,
         )
     else:
         logger.add(
@@ -161,10 +147,8 @@ def setup_logging() -> None:
             enqueue=True,
         )
 
-    # Intercept standard logging
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
-    # Silence noisy loggers
     for logger_name in [
         "uvicorn",
         "uvicorn.access",
@@ -176,11 +160,8 @@ def setup_logging() -> None:
 
     logger.info(f"Logging configured: level={settings.log_level}, format={settings.log_format}")
 
-
 def get_logger(name: str) -> Any:
-    """Get a logger instance with the given name."""
+
     return logger.bind(logger_name=name)
 
-
-# Initialize logging on module import
 setup_logging()

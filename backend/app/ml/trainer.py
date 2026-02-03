@@ -22,7 +22,6 @@ except ImportError:
 from app.config import settings
 from app.ml.preprocessor import DataPreprocessor
 
-
 class ModelTrainer:
 
     def __init__(self, preprocessor: DataPreprocessor = None):
@@ -40,7 +39,6 @@ class ModelTrainer:
         
         logger.info("Building XGBoost model with gradient boosting")
 
-        # Base model
         xgb_model = xgb.XGBRegressor(
             n_estimators=400,
             max_depth=8,
@@ -54,7 +52,6 @@ class ModelTrainer:
             tree_method='hist',
         )
 
-        # Hyperparameter grid (simplified for training speed)
         param_grid = {
             'max_depth': [6, 8, 10],
             'learning_rate': [0.03, 0.05, 0.08],
@@ -63,7 +60,6 @@ class ModelTrainer:
             'colsample_bytree': [0.8, 1.0],
         }
 
-        # GridSearchCV with TimeSeriesSplit
         tscv = TimeSeriesSplit(n_splits=cv_splits)
         grid_search = GridSearchCV(
             xgb_model,
@@ -243,23 +239,13 @@ class ModelTrainer:
         return metrics
 
     def get_feature_importance(self, model: Any, model_name: str) -> Dict[str, float]:
-        """
-        Get feature importance from model.
 
-        Args:
-            model: Trained model
-            model_name: Name of the model
-
-        Returns:
-            Dictionary of feature importance scores
-        """
         if hasattr(model, 'feature_importances_'):
             importances = model.feature_importances_
         else:
             logger.warning(f"Model {model_name} doesn't support feature importance")
             return {}
 
-        # Normalize importances
         importance_dict = {}
         total_importance = np.sum(importances)
 
@@ -267,7 +253,6 @@ class ModelTrainer:
             for feature, importance in zip(self.preprocessor.feature_names, importances):
                 importance_dict[feature] = float(importance / total_importance)
         else:
-            # Fallback to equal importance
             equal_importance = 1.0 / len(self.preprocessor.feature_names)
             importance_dict = {
                 feature: equal_importance
@@ -365,12 +350,7 @@ class ModelTrainer:
         return model
 
     def get_model_summary(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Get summary of all trained models.
 
-        Returns:
-            Dictionary with model metrics and feature importance
-        """
         summary = {}
 
         for model_name in self.models.keys():

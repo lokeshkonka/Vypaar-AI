@@ -1,4 +1,3 @@
-"""Model performance metrics endpoints."""
 
 from typing import List, Optional
 
@@ -14,9 +13,7 @@ from app.database.repositories import PredictionMetricsRepository
 from app.ml.predictor import AgriculturalPredictor
 from app.core.utils import get_current_timestamp
 
-
 router = APIRouter(prefix="/model", tags=["model-metrics"])
-
 
 @router.get("/metrics", response_model=dict | List[ModelMetricsResponse])
 async def get_model_metrics(
@@ -27,31 +24,16 @@ async def get_model_metrics(
     metrics_repo: PredictionMetricsRepository = Depends(get_prediction_metrics_repo),
     predictor: AgriculturalPredictor = Depends(get_predictor),
 ):
-    """
-    Get model performance metrics.
-    
-    Returns accuracy, RMSE, MAE, R², MAPE for individual models and ensemble.
-    If no specific model requested, returns ensemble metrics summary as dict.
-    
-    Args:
-        model_name: Filter by model name (xgboost, lightgbm, random_forest, ensemble)
-        latest_only: Return only latest metrics per model
-        skip: Pagination offset
-        limit: Maximum results
-    """
+
     try:
         if model_name and latest_only:
-            # Get latest metrics for specific model
             metrics = await metrics_repo.get_latest_metrics(model_name=model_name)
             metrics = [metrics] if metrics else []
         elif model_name:
-            # Get all metrics for specific model
             metrics = await metrics_repo.get_by_model(model_name=model_name)
         else:
-            # Get all metrics
             metrics = await metrics_repo.get_all(skip=skip, limit=limit)
 
-        # If latest_only and no specific model, get latest for each model
         if latest_only and not model_name:
             model_names = set(m.model_name for m in metrics) if metrics else set()
             latest_metrics = []
@@ -61,7 +43,6 @@ async def get_model_metrics(
                     latest_metrics.append(latest)
             metrics = latest_metrics
 
-        # If no metrics in DB, return ensemble status from loaded predictor
         if not metrics and not model_name:
             ensemble_status = predictor.get_ensemble_status()
             artifact = getattr(predictor.ensemble, 'artifact_info', {}) or {}
@@ -111,13 +92,12 @@ async def get_model_metrics(
             detail=str(e)
         )
 
-
 @router.get("/metrics/{model_name}/latest", response_model=ModelMetricsResponse)
 async def get_latest_model_metrics(
     model_name: str,
     metrics_repo: PredictionMetricsRepository = Depends(get_prediction_metrics_repo),
 ) -> ModelMetricsResponse:
-    """Get latest metrics for a specific model."""
+
     try:
         metrics = await metrics_repo.get_latest_metrics(model_name=model_name)
         
@@ -157,20 +137,11 @@ async def get_latest_model_metrics(
             detail=str(e)
         )
 
-
 @router.get("/status", status_code=status.HTTP_200_OK)
 async def get_model_status(
     predictor: AgriculturalPredictor = Depends(get_predictor),
 ):
-    """
-    Get current status of loaded ML models.
-    
-    Returns information about:
-    - Loaded models
-    - Model weights
-    - Ensemble configuration
-    - Prediction statistics
-    """
+
     try:
         ensemble_status = predictor.get_ensemble_status()
         prediction_stats = predictor.get_prediction_statistics()

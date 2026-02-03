@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Seed the database with sample commodities, markets, prices, and inventory."""
 
 import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 
-# Add project root
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
@@ -39,7 +37,6 @@ async def seed():
         price_repo = MarketPriceRepository(session)
         inventory_repo = InventoryRepository(session)
 
-        # Upsert commodities
         commodity_ids = {}
         for c in COMMODITIES:
             existing = await commodity_repo.get_by_name(c["name"])
@@ -50,7 +47,6 @@ async def seed():
             commodity_ids[c["name"]] = created.id
         logger.info(f"Commodities seeded: {commodity_ids}")
 
-        # Upsert markets
         market_ids = {}
         for m in MARKETS:
             existing = await market_repo.get_by_name(m["name"])
@@ -61,7 +57,6 @@ async def seed():
             market_ids[m["name"]] = created.id
         logger.info(f"Markets seeded: {market_ids}")
 
-        # Seed 14 days of prices for Wheat in Azadpur and Mumbai
         start_date = datetime.utcnow().date() - timedelta(days=14)
         prices = []
         for day in range(14):
@@ -70,7 +65,6 @@ async def seed():
                 market_id = market_ids[market_name]
                 commodity_id = commodity_ids["Wheat"]
                 base_price = 2500.0
-                # simple sinusoidal variation
                 modal = base_price * (1 + (0.05 * ((day % 7) - 3) / 3))
                 prices.append({
                     "commodity_id": commodity_id,
@@ -85,7 +79,6 @@ async def seed():
         await price_repo.bulk_create(prices)
         logger.info(f"Seeded {len(prices)} market price records")
 
-        # Seed inventory for Wheat in Azadpur
         wheat_id = commodity_ids["Wheat"]
         azadpur_id = market_ids["Azadpur"]
         existing_inv = await inventory_repo.get_by_commodity_market(wheat_id, azadpur_id)
@@ -103,9 +96,8 @@ async def seed():
         else:
             logger.info("Inventory already exists for Wheat@Azadpur")
 
-        # Commit
         await session.commit()
-        logger.success("✅ Seeding completed")
+        logger.success(" Seeding completed")
 
 if __name__ == "__main__":
     try:

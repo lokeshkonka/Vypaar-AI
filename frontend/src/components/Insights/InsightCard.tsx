@@ -1,4 +1,3 @@
-// src/components/Insights/InsightCard.tsx
 import { FiAlertTriangle, FiCloudRain, FiInfo } from "react-icons/fi";
 import InsightComponent from "../ui/InsightComponent";
 import { useInsights } from "../../context/InsightContext";

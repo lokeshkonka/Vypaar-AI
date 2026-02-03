@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { initUser } from "../../../libs/api";
 
-
 export default function UserSync() {
   const { isLoaded, isSignedIn, getToken } = useAuth();
   const hasSynced = useRef(false);

@@ -10,7 +10,6 @@ export default function AlertsList() {
     fetchAlerts().catch((err) => {
       console.error("Failed to fetch alerts:", err);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   console.log("AlertsList render - isLoading:", isLoading, "alerts:", alerts, "error:", error);
@@ -28,9 +27,15 @@ export default function AlertsList() {
 
   if (error) {
     return (
+<<<<<<< Updated upstream
       <div className="glass-card p-6" style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}>
         <p className="font-semibold mb-2" style={{ color: "var(--text-main)" }}>⚠️ Error Loading Alerts</p>
         <p className="text-sm" style={{ color: "var(--text-soft)" }}>{error}</p>
+=======
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-6">
+        <p className="font-semibold text-red-800 dark:text-red-200 mb-2"> Error Loading Alerts</p>
+        <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+>>>>>>> Stashed changes
         <button
           onClick={() => fetchAlerts()}
           className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition"

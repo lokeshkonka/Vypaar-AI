@@ -31,7 +31,7 @@ export default function ForecastRangeAndGenerate() {
 
   return (
     <div className="glass-card p-5 sm:p-6 space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center gap-2">
         <Calendar className="w-5 h-5 text-emerald-600" />
         <h3 className="text-sm sm:text-base font-medium">
@@ -39,7 +39,7 @@ export default function ForecastRangeAndGenerate() {
         </h3>
       </div>
 
-      {/* Forecast Ranges */}
+      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {forecastRanges.map((range) => {
           const active = selection.forecastRange === range.value;
@@ -74,7 +74,7 @@ export default function ForecastRangeAndGenerate() {
         })}
       </div>
 
-      {/* Generate CTA */}
+      {}
       <button
         onClick={handleGenerate}
         disabled={!isSelectionComplete || isLoading}

@@ -1,4 +1,3 @@
-"""Price prediction endpoints."""
 
 from typing import Any, List, Optional
 from datetime import datetime, timedelta
@@ -35,9 +34,7 @@ from app.database.repositories import (
 from app.database.models import Prediction
 from app.core.utils import get_current_timestamp
 
-
 router = APIRouter(prefix="/predict", tags=["predictions"])
-
 
 @router.post("/", response_model=PredictionResponse, status_code=status.HTTP_200_OK)
 async def predict_price(
@@ -48,23 +45,13 @@ async def predict_price(
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
     prediction_repo: PredictionRepository = Depends(get_prediction_repo),
 ) -> PredictionResponse:
-    """
-    Predict agricultural commodity price with ensemble model metrics.
-    
-    Returns prediction with:
-    - Ensemble prediction from multiple models
-    - Individual model predictions (XGBoost, LightGBM, Random Forest)
-    - Model accuracy metrics (R², RMSE, MAE, MAPE)
-    - Confidence interval bounds
-    - Feature importance
-    """
+
     try:
         logger.info(
             f"Prediction request: commodity_id={request.commodity_id}, "
             f"market_id={request.market_id}, date={request.prediction_date}"
         )
 
-        # Validate commodity and market exist
         commodity = await commodity_repo.get_by_id(request.commodity_id)
         if not commodity:
             raise HTTPException(
@@ -81,11 +68,10 @@ async def predict_price(
 
         request_label = f"{commodity.name} @ {market.name} on {request.prediction_date}"
 
-        # Get historical data for feature engineering
         historical_prices = await market_price_repo.get_price_history(
             commodity_id=request.commodity_id,
             market_id=request.market_id,
-            days=90  # Last 90 days for context
+            days=90
         )
 
         if not historical_prices:
@@ -94,15 +80,12 @@ async def predict_price(
                 detail=f"No price history for {request_label}. Seed data or pick a different commodity/market pair."
             )
 
-        # Prepare features from historical data and request
         latest_price = historical_prices[-1]
         
-        # Build model-ready features using the fitted preprocessor for consistency
         from datetime import datetime as dt
         pred_date = dt.fromisoformat(request.prediction_date)
 
         preprocessor = predictor.preprocessor
-        # If feature metadata is missing (e.g., fresh environment), seed with sensible defaults
         if not preprocessor.feature_names:
             preprocessor.feature_names = ["price", "arrival", "commodity_id", "market_id"]
             preprocessor.numeric_features = ["price", "arrival", "commodity_id", "market_id"]
@@ -116,7 +99,6 @@ async def predict_price(
             "arrival": getattr(latest_price, "arrival", 0.0),
         }
 
-        # Populate any known numeric features from latest price data
         for feature_name in preprocessor.numeric_features:
             if feature_name in payload:
                 continue
@@ -130,7 +112,6 @@ async def predict_price(
             categorical_cols=preprocessor.categorical_features or None,
         )
 
-        # Make prediction
         try:
             prediction_result = predictor.predict(
                 features,
@@ -139,7 +120,6 @@ async def predict_price(
             )
         except ZeroDivisionError as zdiv_e:
             logger.error(f"Division by zero in prediction: {zdiv_e}", exc_info=True)
-            # Return default prediction instead of crashing
             prediction_result = {
                 'prediction': float(getattr(latest_price, "price", 1000)),
                 'confidence': 0.5,
@@ -150,17 +130,14 @@ async def predict_price(
                 'processing_time_seconds': 0.0
             }
 
-        # Get ensemble status for model metrics
         ensemble_status = predictor.get_ensemble_status()
         
-        # Derive metrics from loaded ensemble artifact if available
         artifact = getattr(predictor.ensemble, 'artifact_info', {}) or {}
         metrics = artifact.get('metrics', {}) if isinstance(artifact, dict) else {}
         ens_metrics = metrics.get('ensemble', {}) if isinstance(metrics, dict) else {}
         rf_metrics = metrics.get('random_forest', {}) if isinstance(metrics, dict) else {}
         gb_metrics = metrics.get('gradient_boosting', {}) if isinstance(metrics, dict) else {}
 
-        # Build individual model metrics list with accuracy and weights
         individual_models_list = []
         for name in prediction_result.get('individual_predictions', {}).keys():
             acc = 0.85
@@ -176,11 +153,9 @@ async def predict_price(
                 )
             )
 
-        # Feature importance from prediction result (top_features)
         top_feats = prediction_result.get('top_features', {})
         feature_importance = {str(k): float(v) for k, v in top_feats.items()} if isinstance(top_feats, dict) else {}
 
-        # Build model metadata matching ModelMetadata schema
         model_metadata = ModelMetadata(
             ensemble_accuracy=float(ens_metrics.get('accuracy', 0.85)),
             rmse=float(ens_metrics.get('rmse', 150.0)),
@@ -193,14 +168,12 @@ async def predict_price(
             training_samples=int(artifact.get('training_samples', 0) or 0)
         )
         
-        # Build prediction metadata matching PredictionMetadata schema
         prediction_metadata = PredictionMetadata(
             timestamp=get_current_timestamp().isoformat(),
             processing_time_ms=int(prediction_result.get('processing_time_seconds', 0.0) * 1000),
             data_freshness=f"{len(historical_prices)} days historical data"
         )
         
-        # Build response using PredictionResponse schema
         response = PredictionResponse(
             predicted_price=float(prediction_result['prediction']),
             confidence_interval=(
@@ -214,9 +187,7 @@ async def predict_price(
             prediction_metadata=prediction_metadata
         )
         
-        # Store prediction in database for tracking (if successful)
         try:
-            # Parse prediction_date if it's a string
             pred_date = request.prediction_date
             if isinstance(pred_date, str):
                 from datetime import date as date_type
@@ -250,7 +221,6 @@ async def predict_price(
             detail=f"Prediction failed: {str(e)}"
         )
 
-
 @router.post("/batch", response_model=BatchPredictionResponse, status_code=status.HTTP_200_OK)
 async def batch_predict_prices(
     request: BatchPredictionRequest,
@@ -260,11 +230,7 @@ async def batch_predict_prices(
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
     prediction_repo: PredictionRepository = Depends(get_prediction_repo),
 ) -> BatchPredictionResponse:
-    """
-    Batch predict prices for multiple commodity-market pairs.
-    
-    Returns predictions with model metrics for each pair.
-    """
+
     try:
         logger.info(f"Batch prediction request: {len(request.predictions)} items")
 
@@ -272,7 +238,6 @@ async def batch_predict_prices(
         
         for pred_request in request.predictions:
             try:
-                # Reuse single prediction logic
                 result = await predict_price(
                     request=pred_request,
                     predictor=predictor,
@@ -305,7 +270,6 @@ async def batch_predict_prices(
             detail=f"Batch prediction failed: {str(e)}"
         )
 
-
 @router.get("/history/{commodity_id}/{market_id}", status_code=status.HTTP_200_OK)
 async def get_prediction_history(
     commodity_id: int,
@@ -313,11 +277,7 @@ async def get_prediction_history(
     days: int = 30,
     prediction_repo: PredictionRepository = Depends(get_prediction_repo),
 ):
-    """
-    Get historical predictions for a commodity-market pair.
-    
-    Returns a list to satisfy endpoint tests.
-    """
+
     try:
         start_date = (get_current_timestamp() - timedelta(days=days)).date()
         end_date = get_current_timestamp().date()

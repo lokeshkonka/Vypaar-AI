@@ -25,14 +25,14 @@ export default function MetricCard({
         dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.35)]
       "
     >
-      {/* Left content */}
+      {}
       <div className="space-y-2">
-        {/* Title */}
+        {}
         <p className="text-sm font-medium text-soft">
           {title}
         </p>
 
-        {/* Value */}
+        {}
         <div className="flex items-end gap-1">
           <span className="text-3xl font-semibold text-[rgb(var(--emerald-main))]">
             {value}
@@ -44,7 +44,7 @@ export default function MetricCard({
           )}
         </div>
 
-        {/* Subtitle */}
+        {}
         {subtitle && (
           <p className="text-sm text-soft">
             {subtitle}
@@ -52,7 +52,7 @@ export default function MetricCard({
         )}
       </div>
 
-      {/* Right icon */}
+      {}
       {icon && (
         <div className="text-[rgb(var(--emerald-main))]">
           {icon}

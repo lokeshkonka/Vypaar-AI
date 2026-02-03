@@ -1,6 +1,4 @@
-/* =========================
-   DOMAIN TYPES
-   ========================= */
+
 
 export type MarketType = "Wholesale" | "Retail" | "Local Mandi";
 
@@ -31,10 +29,6 @@ export type ForecastRange = {
   value: ForecastRangeValue;
   description: string;
 };
-
-/* =========================
-   TEMP FORECAST DATA
-   ========================= */
 
 export const forecastDummy = {
   markets: [

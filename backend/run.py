@@ -1,4 +1,3 @@
-"""Backend entry point."""
 
 import uvicorn
 

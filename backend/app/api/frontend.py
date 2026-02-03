@@ -1,4 +1,3 @@
-"""Frontend-aligned helper endpoints to serve the new dashboard."""
 
 from datetime import timedelta
 from pathlib import Path
@@ -47,13 +46,12 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-
 async def _get_or_create_entities(
     request: ForecastRequest,
     commodity_repo: CommodityRepository,
     market_repo: MarketRepository,
 ) -> tuple:
-    """Resolve or seed commodity/market records for incoming requests."""
+
     created = False
 
     commodity = await commodity_repo.get_by_name(request.product)
@@ -79,7 +77,6 @@ async def _get_or_create_entities(
 
     return commodity, market
 
-
 @router.post(
     "/forecast",
     response_model=ForecastResponse,
@@ -93,7 +90,7 @@ async def generate_forecast(
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
     metrics_repo: PredictionMetricsRepository = Depends(get_prediction_metrics_repo),
 ) -> ForecastResponse:
-    """Produce a short-term forecast for the selected product/market pair."""
+
     try:
         commodity, market = await _get_or_create_entities(request, commodity_repo, market_repo)
 
@@ -104,6 +101,7 @@ async def generate_forecast(
         )
 
         if not history:
+<<<<<<< Updated upstream
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"No historical price data available for {commodity.name} in {market.name}. Please scrape data first using: python scripts/scrape_data.py"
@@ -117,6 +115,17 @@ async def generate_forecast(
             )
         base_price = float(price_series[-1])
         base_arrival = float(history[-1].arrival or 0.0)
+=======
+            logger.warning("No historical prices found; using conservative fallback")
+            commodity_hash = sum(ord(c) for c in commodity.name)
+            base_price = 1500 + (commodity_hash % 1500)
+            base_arrival = 800.0
+            price_series = [base_price]
+        else:
+            price_series = [p.price or p.modal_price or 0 for p in history if (p.price or p.modal_price)]
+            base_price = float(price_series[-1]) if price_series else 2400.0
+            base_arrival = float(history[-1].arrival or 900.0)
+>>>>>>> Stashed changes
 
         avg_price = float(np.mean(price_series)) if price_series else base_price
         slope = 0.0
@@ -149,6 +158,7 @@ async def generate_forecast(
                 "arrival": base_arrival,
             }
 
+<<<<<<< Updated upstream
             # Make prediction using trained models
             df = pd.DataFrame([payload])
             features = predictor.preprocessor.prepare_prediction_data(
@@ -161,6 +171,32 @@ async def generate_forecast(
             lower = float(result.get("lower_bound", price_pred * 0.96))
             upper = float(result.get("upper_bound", price_pred * 1.05))
             confidence = float(result.get("confidence", 0.85) or 0.85)
+=======
+            daily_variations = [1.02, 1.08, 0.98, 1.12, 1.05, 0.96, 0.92]
+            variation_idx = (offset - 1) % 7
+            daily_multiplier = daily_variations[variation_idx]
+            
+            price_pred = base_price * daily_multiplier
+            lower = price_pred * 0.96
+            upper = price_pred * 1.05
+            confidence = 0.82
+
+            try:
+                df = pd.DataFrame([payload])
+                features = predictor.preprocessor.prepare_prediction_data(
+                    df,
+                    date_col="date",
+                    categorical_cols=predictor.preprocessor.categorical_features or None,
+                )
+                result = predictor.predict(features, include_individual=False, include_confidence=True)
+                if "prediction" in result:
+                    price_pred = float(result.get("prediction", price_pred))
+                    lower = float(result.get("lower_bound", lower))
+                    upper = float(result.get("upper_bound", upper))
+                    confidence = float(result.get("confidence", confidence) or confidence)
+            except Exception as exc:
+                logger.warning(f"Prediction fallback for {commodity.name}: {exc}")
+>>>>>>> Stashed changes
 
             forecasts.append(
                 ForecastPoint(
@@ -196,10 +232,9 @@ async def generate_forecast(
         )
     except HTTPException:
         raise
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Forecast generation failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to generate forecast")
-
 
 @router.get(
     "/ai/insights",
@@ -210,7 +245,7 @@ async def generate_ai_insights(
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
 ) -> List[InsightItemResponse]:
-    """Provide data-driven insights for the Insights dashboard."""
+
     try:
         recent_prices = await market_price_repo.get_recent_prices(days=30)
 
@@ -225,7 +260,6 @@ async def generate_ai_insights(
 
         insights: List[InsightItemResponse] = []
 
-        # Group by commodity to build insights
         by_commodity: dict[int, list[float]] = {}
         for price in recent_prices:
             price_val = price.price or price.modal_price
@@ -262,10 +296,9 @@ async def generate_ai_insights(
             )
 
         return insights[:8] if insights else []
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Insight generation failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to build insights")
-
 
 @router.get(
     "/model/accuracy",
@@ -276,7 +309,7 @@ async def model_accuracy_summary(
     metrics_repo: PredictionMetricsRepository = Depends(get_prediction_metrics_repo),
     predictor: AgriculturalPredictor = Depends(get_predictor),
 ) -> ModelAccuracySummary:
-    """Return concise model accuracy numbers for UI cards."""
+
     try:
         latest = await metrics_repo.get_latest_metrics(model_name="ensemble")
         if latest:
@@ -306,10 +339,9 @@ async def model_accuracy_summary(
             aiAccuracy=ai_accuracy,
             traditionalAccuracy=traditional_accuracy,
         )
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Model accuracy summary failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch model accuracy")
-
 
 @router.get(
     "/inventory/dashboard",
@@ -323,7 +355,7 @@ async def inventory_dashboard(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> List[InventoryDashboardItem]:
-    """Provide dashboard-friendly inventory rows."""
+
     try:
         inventory_items = await inventory_repo.get_all(skip=skip, limit=limit)
 
@@ -358,10 +390,9 @@ async def inventory_dashboard(
             )
 
         return response
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Inventory dashboard failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch inventory data")
-
 
 @router.get(
     "/inventory/filter",
@@ -379,9 +410,8 @@ async def filter_inventory(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=500),
 ) -> List[InventoryDashboardItem]:
-    """Filter inventory items by market, category, product, or risk level."""
+
     try:
-        # Get all inventory items
         inventory_items = await inventory_repo.get_all(skip=skip, limit=limit)
 
         if not inventory_items:
@@ -393,7 +423,6 @@ async def filter_inventory(
             commodity = await commodity_repo.get_by_id(item.commodity_id)
             market_obj = await market_repo.get_by_id(item.market_id)
 
-            # Calculate risk
             suggested = item.optimal_stock or (item.current_stock * 1.1)
             risk_ratio = item.current_stock / suggested if suggested else 1
             if risk_ratio < 0.7:
@@ -403,7 +432,6 @@ async def filter_inventory(
             else:
                 item_risk = "Low"
 
-            # Apply filters
             if market and market_obj and market.lower() not in market_obj.name.lower():
                 continue
             if category and commodity and category.lower() not in (commodity.category or "").lower():
@@ -426,10 +454,9 @@ async def filter_inventory(
             )
 
         return response
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Inventory filter failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to filter inventory data")
-
 
 @router.post(
     "/inventory/update",
@@ -439,7 +466,7 @@ async def update_inventory(
     update_data: dict,
     inventory_repo: InventoryRepository = Depends(get_inventory_repo),
 ):
-    """Update inventory items in database."""
+
     try:
         items = update_data.get("items", [])
         
@@ -457,13 +484,11 @@ async def update_inventory(
                 logger.warning(f"Skipping item without id or current stock: {item_data}")
                 continue
             
-            # Get existing inventory item
             inventory_item = await inventory_repo.get_by_id(item_id)
             if not inventory_item:
                 logger.warning(f"Inventory item {item_id} not found")
                 continue
             
-            # Update current stock
             await inventory_repo.update(item_id, current_stock=float(new_current))
             updated_count += 1
             logger.info(f"Updated inventory {item_id}: current_stock = {new_current}")
@@ -478,11 +503,12 @@ async def update_inventory(
         }
     except HTTPException:
         raise
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Inventory update failed: {exc}")
         await inventory_repo.db.rollback()
         raise HTTPException(status_code=500, detail="Unable to update inventory")
 
+<<<<<<< Updated upstream
 
 class AddInventoryRequest(BaseModel):
     commodity_id: int
@@ -559,6 +585,8 @@ async def add_inventory(
         raise HTTPException(status_code=500, detail="Unable to add inventory")
 
 
+=======
+>>>>>>> Stashed changes
 @router.get(
     "/product-analysis",
     response_model=ProductAnalysisResponse,
@@ -573,15 +601,23 @@ async def get_product_analysis(
     inventory_repo: InventoryRepository = Depends(get_inventory_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> ProductAnalysisResponse:
+<<<<<<< Updated upstream
     """Provide product analysis data for the dashboard using real database data."""
     try:
         # Get commodities and markets
         commodities = await commodity_repo.get_all(limit=50)
         markets = await market_repo.get_all(limit=50)
+=======
+
+    try:
+        commodities = await commodity_repo.get_all(limit=5)
+        markets = await market_repo.get_all(limit=3)
+>>>>>>> Stashed changes
         
         if not commodities or not markets:
             raise HTTPException(status_code=404, detail="No data available. Please run data seeding first.")
         
+<<<<<<< Updated upstream
         # Find specific commodity/market if provided
         selected_commodity = None
         selected_market = None
@@ -603,12 +639,15 @@ async def get_product_analysis(
             selected_market = markets[0]
         
         # Build selector data
+=======
+>>>>>>> Stashed changes
         selector_data = SelectorData(
             market=selected_market.name,
             product=selected_commodity.name,
             forecastRange=f"Next {days} Days"
         )
         
+<<<<<<< Updated upstream
         # Get real price history for the commodity/market pair
         price_history = await market_price_repo.get_price_history(
             commodity_id=selected_commodity.id,
@@ -661,6 +700,13 @@ async def get_product_analysis(
         if inventory:
             current = int(inventory.current_stock or 0)
             optimal = int(inventory.optimal_stock or current * 1.2)
+=======
+        inventories = await inventory_repo.get_all(limit=1)
+        if inventories:
+            inv = inventories[0]
+            current = int(inv.current_stock or 0)
+            optimal = int(inv.optimal_stock or current * 1.2)
+>>>>>>> Stashed changes
             stock_metrics = StockMetrics(
                 predictedDemand=int(current * 1.1),
                 stockNeeded=optimal,
@@ -685,16 +731,32 @@ async def get_product_analysis(
                     understockRisk=0
                 )
         
+<<<<<<< Updated upstream
         # Build demand graph data from real price history
+=======
+>>>>>>> Stashed changes
         demand_graph = []
         day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         
+<<<<<<< Updated upstream
         # Fetch real price history for the selected commodity and market
         price_history = await market_price_repo.get_price_history(
             commodity_id=selected_commodity.id,
             market_id=selected_market.id,
             days=min(days, 30)
         )
+=======
+        base_demand = 2000
+        daily_variations = [
+            (2200, 2310),
+            (2350, 2468),
+            (2100, 2205),
+            (2450, 2573),
+            (2300, 2415),
+            (2150, 2258),
+            (2050, 2153),
+        ]
+>>>>>>> Stashed changes
         
         if price_history and len(price_history) > 0:
             # Use real price data
@@ -718,16 +780,22 @@ async def get_product_analysis(
                     DemandGraphPoint(day=day_names[i % 7], actual=actual, forecast=forecast)
                 )
         
+<<<<<<< Updated upstream
         # Build impact data - festival calendar and weather would need integration
         # For now, return empty arrays as we don't have this data in database
         festival_impacts = []
         weather_impacts = []
+=======
+>>>>>>> Stashed changes
         impact_data = ImpactData(
             festival=festival_impacts,
             weather=weather_impacts
         )
         
+<<<<<<< Updated upstream
         # Build recommendation table from inventory for this market
+=======
+>>>>>>> Stashed changes
         all_inventory_items = await inventory_repo.get_all(limit=10)
         recommendations = []
         
@@ -761,12 +829,15 @@ async def get_product_analysis(
             impactData=impact_data,
             recommendationTable=recommendations
         )
+<<<<<<< Updated upstream
     except HTTPException:
         raise
     except Exception as exc:  # noqa: BLE001
+=======
+    except Exception as exc:
+>>>>>>> Stashed changes
         logger.exception(f"Product analysis failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch product analysis data")
-
 
 @router.get(
     "/commodities",
@@ -774,23 +845,26 @@ async def get_product_analysis(
     status_code=status.HTTP_200_OK,
 )
 async def get_commodities(commodity_repo: CommodityRepository = Depends(get_commodity_repo)):
-    """Get all commodities for frontend selectors."""
+
     try:
         commodities = await commodity_repo.get_all()
+<<<<<<< Updated upstream
         return [{"id": c.id, "name": c.name, "category": c.category or "Other"} for c in commodities]
     except Exception as exc:  # noqa: BLE001
+=======
+        return [{"id": c.id, "name": c.name} for c in commodities]
+    except Exception as exc:
+>>>>>>> Stashed changes
         logger.exception(f"Failed to fetch commodities: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch commodities")
-
 
 @router.post(
     "/users/init",
     status_code=status.HTTP_200_OK,
 )
 async def init_user(request: "Request"):
-    """Initialize or sync user with backend (Clerk integration point)."""
+
     try:
-        # Extract Bearer token from Authorization header
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "") if auth_header else None
         
@@ -804,10 +878,9 @@ async def init_user(request: "Request"):
                 "initialized": True,
             }
         }
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"User initialization failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to initialize user")
-
 
 @router.get(
     "/markets",
@@ -815,11 +888,11 @@ async def init_user(request: "Request"):
     status_code=status.HTTP_200_OK,
 )
 async def get_markets(market_repo: MarketRepository = Depends(get_market_repo)):
-    """Get all markets for frontend selectors."""
+
     try:
         markets = await market_repo.get_all()
         return [{"id": m.id, "name": m.name, "state": m.state, "city": m.district} for m in markets]
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.exception(f"Failed to fetch markets: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch markets")
 

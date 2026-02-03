@@ -1,4 +1,3 @@
-// src/data/model-dummy.ts
 
 export interface ModelAccuracyMetrics {
   forecastAccuracy: number;

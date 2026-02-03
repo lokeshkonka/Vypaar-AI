@@ -76,7 +76,7 @@ export default function AboutOurApps() {
                 damping: 70,
               }}
             >
-              {/* Icon */}
+              {}
               <div
                 className="
                   size-10
@@ -89,7 +89,7 @@ export default function AboutOurApps() {
                 <Icon className="size-5 text-gray-400" />
               </div>
 
-              {/* Text */}
+              {}
               <div className="mt-5 space-y-2">
                 <h3 className="text-base font-medium text-white">
                   {data.title}

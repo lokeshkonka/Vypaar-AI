@@ -1,4 +1,3 @@
-// src/components/ModelAccuracy/ErrorMetricCard.tsx
 interface Props {
   title: string;
   value: string;

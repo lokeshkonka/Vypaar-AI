@@ -3,7 +3,6 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 from loguru import logger
 
-
 class FestivalCalendar:
     
     def __init__(self):

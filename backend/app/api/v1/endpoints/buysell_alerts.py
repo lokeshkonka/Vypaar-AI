@@ -1,4 +1,3 @@
-"""Buy/Sell alert management endpoints."""
 
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -32,37 +31,32 @@ from app.database.repositories import (
 from app.database.models import Alert
 from app.core.utils import get_current_timestamp
 
-
 router = APIRouter(prefix="/buysell-alerts", tags=["buy-sell-alerts"])
-
 
 def calculate_signal_strength(
     current_price: float,
     buy_threshold: float,
     sell_threshold: float,
 ) -> SignalStrength:
-    """Calculate signal strength based on distance from threshold."""
+
     if current_price < buy_threshold:
         distance = buy_threshold - current_price
-        threshold_range = buy_threshold * 0.1  # 10% of threshold
+        threshold_range = buy_threshold * 0.1
     else:
         distance = current_price - sell_threshold
-        threshold_range = sell_threshold * 0.1  # 10% of threshold
+        threshold_range = sell_threshold * 0.1
     
-    # Strong: within 2% of threshold
     if distance <= threshold_range * 0.2:
         return SignalStrength.STRONG
-    # Moderate: within 5% of threshold
     elif distance <= threshold_range * 0.5:
         return SignalStrength.MODERATE
     else:
         return SignalStrength.WEAK
 
-
 def determine_price_trend(
     historical_prices: list[dict],
 ) -> TrendDirection:
-    """Determine price trend from historical prices."""
+
     if len(historical_prices) < 2:
         return TrendDirection.STABLE
     
@@ -80,7 +74,6 @@ def determine_price_trend(
     else:
         return TrendDirection.STABLE
 
-
 @router.post("/", response_model=BuySellAlertResponse, status_code=status.HTTP_201_CREATED)
 async def create_buysell_alert(
     request: BuySellAlertRequest,
@@ -88,14 +81,8 @@ async def create_buysell_alert(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> BuySellAlertResponse:
-    """
-    Create a new buy/sell alert configuration.
-    
-    Buy signal: triggers when price <= buy_threshold
-    Sell signal: triggers when price >= sell_threshold
-    """
+
     try:
-        # Validate commodity exists
         commodity = await commodity_repo.get_by_id(request.commodity_id)
         if not commodity:
             raise HTTPException(
@@ -103,7 +90,6 @@ async def create_buysell_alert(
                 detail=f"Commodity {request.commodity_id} not found"
             )
 
-        # Validate market exists
         market = await market_repo.get_by_id(request.market_id)
         if not market:
             raise HTTPException(
@@ -111,14 +97,12 @@ async def create_buysell_alert(
                 detail=f"Market {request.market_id} not found"
             )
 
-        # Validate thresholds
         if request.buy_threshold >= request.sell_threshold:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Buy threshold must be less than sell threshold"
             )
 
-        # Create alert with buy/sell conditions
         conditions = {
             "buy_threshold": request.buy_threshold,
             "sell_threshold": request.sell_threshold,
@@ -169,7 +153,6 @@ async def create_buysell_alert(
             detail=f"Failed to create alert: {str(e)}"
         )
 
-
 @router.get("/{alert_id}", response_model=BuySellAlertResponse)
 async def get_buysell_alert(
     alert_id: int,
@@ -178,7 +161,7 @@ async def get_buysell_alert(
     market_repo: MarketRepository = Depends(get_market_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> BuySellAlertResponse:
-    """Get a specific buy/sell alert with current price and signal."""
+
     try:
         alert = await alert_repo.get_by_id(alert_id)
         if not alert or alert.alert_type != "BUY_SELL":
@@ -190,14 +173,12 @@ async def get_buysell_alert(
         commodity = await commodity_repo.get_by_id(alert.commodity_id)
         market = await market_repo.get_by_id(alert.market_id)
 
-        # Get current price
         current_price_record = await market_price_repo.get_latest_price(
             commodity_id=alert.commodity_id,
             market_id=alert.market_id,
         )
         current_price = current_price_record.price if current_price_record else None
 
-        # Determine signal
         buy_threshold = alert.conditions.get("buy_threshold")
         sell_threshold = alert.conditions.get("sell_threshold")
         signal = None
@@ -242,7 +223,6 @@ async def get_buysell_alert(
             detail=f"Failed to fetch alert: {str(e)}"
         )
 
-
 @router.get("/", response_model=BuySellAlertListResponse)
 async def list_buysell_alerts(
     skip: int = Query(0, ge=0),
@@ -253,16 +233,14 @@ async def list_buysell_alerts(
     market_repo: MarketRepository = Depends(get_market_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> BuySellAlertListResponse:
-    """List all buy/sell alerts with current status."""
+
     try:
-        # Fetch all BUY_SELL type alerts
         alerts = await alert_repo.get_all()
         buysell_alerts = [
             a for a in alerts 
             if a.alert_type == "BUY_SELL" and (not enabled_only or a.status == "ACTIVE")
         ]
 
-        # Paginate
         paginated = buysell_alerts[skip : skip + limit]
 
         alert_responses = []
@@ -273,14 +251,12 @@ async def list_buysell_alerts(
             commodity = await commodity_repo.get_by_id(alert.commodity_id)
             market = await market_repo.get_by_id(alert.market_id)
 
-            # Get current price
             current_price_record = await market_price_repo.get_latest_price(
                 commodity_id=alert.commodity_id,
                 market_id=alert.market_id,
             )
             current_price = current_price_record.price if current_price_record else None
 
-            # Determine signal
             buy_threshold = alert.conditions.get("buy_threshold")
             sell_threshold = alert.conditions.get("sell_threshold")
             signal = None
@@ -337,7 +313,6 @@ async def list_buysell_alerts(
             detail=f"Failed to list alerts: {str(e)}"
         )
 
-
 @router.patch("/{alert_id}", response_model=BuySellAlertResponse)
 async def update_buysell_alert(
     alert_id: int,
@@ -347,7 +322,7 @@ async def update_buysell_alert(
     market_repo: MarketRepository = Depends(get_market_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> BuySellAlertResponse:
-    """Update a buy/sell alert configuration."""
+
     try:
         alert = await alert_repo.get_by_id(alert_id)
         if not alert or alert.alert_type != "BUY_SELL":
@@ -356,7 +331,6 @@ async def update_buysell_alert(
                 detail=f"Buy/Sell alert {alert_id} not found"
             )
 
-        # Update conditions if provided
         if request.buy_threshold is not None or request.sell_threshold is not None:
             buy_threshold = request.buy_threshold or alert.conditions.get("buy_threshold")
             sell_threshold = request.sell_threshold or alert.conditions.get("sell_threshold")
@@ -370,7 +344,6 @@ async def update_buysell_alert(
             alert.conditions["buy_threshold"] = buy_threshold
             alert.conditions["sell_threshold"] = sell_threshold
 
-        # Update other fields
         if request.priority is not None:
             alert.priority = request.priority.value
         if request.enabled is not None:
@@ -384,6 +357,7 @@ async def update_buysell_alert(
         await alert_repo.db.flush()
         await alert_repo.db.commit()
 
+<<<<<<< Updated upstream
         # Fetch related data
         commodity = await commodity_repo.get_by_id(alert.commodity_id)
         market = await market_repo.get_by_id(alert.market_id)
@@ -392,6 +366,14 @@ async def update_buysell_alert(
         current_price_record = await market_price_repo.get_latest_price(
             commodity_id=alert.commodity_id,
             market_id=alert.market_id,
+=======
+        commodity = await commodity_repo.get_by_id(updated.commodity_id)
+        market = await market_repo.get_by_id(updated.market_id)
+
+        current_price_record = await market_price_repo.get_latest(
+            commodity_id=updated.commodity_id,
+            market_id=updated.market_id,
+>>>>>>> Stashed changes
         )
         current_price = current_price_record.price if current_price_record else None
 
@@ -422,13 +404,12 @@ async def update_buysell_alert(
             detail=f"Failed to update alert: {str(e)}"
         )
 
-
 @router.delete("/{alert_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_buysell_alert(
     alert_id: int,
     alert_repo: AlertRepository = Depends(get_alert_repo),
 ) -> None:
-    """Delete a buy/sell alert."""
+
     try:
         alert = await alert_repo.get_by_id(alert_id)
         if not alert or alert.alert_type != "BUY_SELL":

@@ -15,7 +15,7 @@ export default function InventoryFilters() {
   return (
     <CardComponent title="Filter Inventory">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {/* Market */}
+        {}
         <select
           className="border px-3 py-2 text-sm bg-transparent"
           value={filters.market ?? ""}
@@ -33,7 +33,7 @@ export default function InventoryFilters() {
           ))}
         </select>
 
-        {/* Category */}
+        {}
         <select
           className="border px-3 py-2 text-sm bg-transparent"
           value={filters.category ?? ""}
@@ -54,7 +54,7 @@ export default function InventoryFilters() {
           ))}
         </select>
 
-        {/* Product */}
+        {}
         <select
           className="border px-3 py-2 text-sm bg-transparent"
           value={filters.product ?? ""}
@@ -80,7 +80,7 @@ export default function InventoryFilters() {
         </select>
       </div>
 
-      {/* Update Button */}
+      {}
       <button
         onClick={updateStock}
         disabled={!canUpdate}

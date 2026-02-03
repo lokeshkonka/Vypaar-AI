@@ -1,4 +1,3 @@
-"""SQLAlchemy ORM models for agricultural market data."""
 
 from datetime import datetime
 from typing import Optional
@@ -22,9 +21,7 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
-
 class Commodity(Base):
-    """Commodity model."""
 
     __tablename__ = "commodities"
 
@@ -36,7 +33,6 @@ class Commodity(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     market_prices = relationship("MarketPrice", back_populates="commodity", cascade="all, delete-orphan")
     alerts = relationship("Alert", back_populates="commodity", cascade="all, delete-orphan")
     inventory = relationship("Inventory", back_populates="commodity", cascade="all, delete-orphan")
@@ -44,9 +40,7 @@ class Commodity(Base):
     def __repr__(self):
         return f"<Commodity(id={self.id}, name={self.name})>"
 
-
 class Market(Base):
-    """Market model."""
 
     __tablename__ = "markets"
 
@@ -60,7 +54,6 @@ class Market(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     market_prices = relationship("MarketPrice", back_populates="market", cascade="all, delete-orphan")
     alerts = relationship("Alert", back_populates="market", cascade="all, delete-orphan")
     inventory = relationship("Inventory", back_populates="market", cascade="all, delete-orphan")
@@ -72,9 +65,7 @@ class Market(Base):
     def __repr__(self):
         return f"<Market(id={self.id}, name={self.name}, state={self.state})>"
 
-
 class MarketPrice(Base):
-    """Market price history model."""
 
     __tablename__ = "market_prices"
 
@@ -84,13 +75,12 @@ class MarketPrice(Base):
     date = Column(Date, nullable=False, index=True)
     min_price = Column(Float, nullable=True)
     max_price = Column(Float, nullable=True)
-    modal_price = Column(Float, nullable=True)  # Most common/average price
-    price = Column(Float, nullable=False)  # Current/average price
-    arrival = Column(Float, nullable=True)  # Quantity arrived
+    modal_price = Column(Float, nullable=True)
+    price = Column(Float, nullable=False)
+    arrival = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     commodity = relationship("Commodity", back_populates="market_prices")
     market = relationship("Market", back_populates="market_prices")
 
@@ -103,27 +93,24 @@ class MarketPrice(Base):
     def __repr__(self):
         return f"<MarketPrice(id={self.id}, commodity_id={self.commodity_id}, market_id={self.market_id}, date={self.date})>"
 
-
 class Alert(Base):
-    """Alert model for price and inventory alerts."""
 
     __tablename__ = "alerts"
 
     id = Column(Integer, primary_key=True, index=True)
     commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=True)
     market_id = Column(Integer, ForeignKey("markets.id"), nullable=True)
-    alert_type = Column(String(50), nullable=False, index=True)  # PRICE_THRESHOLD, INVENTORY_LOW, etc.
-    priority = Column(String(20), default="MEDIUM", index=True)  # CRITICAL, HIGH, MEDIUM, LOW
-    status = Column(String(20), default="ACTIVE", index=True)  # ACTIVE, RESOLVED, DISMISSED
-    conditions = Column(JSON, nullable=True)  # Store conditions as JSON
-    notification_channels = Column(JSON, default=lambda: ["in_app"], nullable=False)  # Store as JSON array
+    alert_type = Column(String(50), nullable=False, index=True)
+    priority = Column(String(20), default="MEDIUM", index=True)
+    status = Column(String(20), default="ACTIVE", index=True)
+    conditions = Column(JSON, nullable=True)
+    notification_channels = Column(JSON, default=lambda: ["in_app"], nullable=False)
     message = Column(Text, nullable=True)
     triggered_at = Column(DateTime, nullable=True, index=True)
     resolved_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     commodity = relationship("Commodity", back_populates="alerts")
     market = relationship("Market", back_populates="alerts")
 
@@ -134,9 +121,7 @@ class Alert(Base):
     def __repr__(self):
         return f"<Alert(id={self.id}, alert_type={self.alert_type}, status={self.status})>"
 
-
 class Inventory(Base):
-    """Inventory model for commodity stock levels."""
 
     __tablename__ = "inventory"
 
@@ -153,7 +138,6 @@ class Inventory(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     commodity = relationship("Commodity", back_populates="inventory")
     market = relationship("Market", back_populates="inventory")
 
@@ -164,9 +148,7 @@ class Inventory(Base):
     def __repr__(self):
         return f"<Inventory(id={self.id}, commodity_id={self.commodity_id}, market_id={self.market_id})>"
 
-
 class PredictionMetrics(Base):
-    """Model for storing prediction metrics and model performance."""
 
     __tablename__ = "prediction_metrics"
 
@@ -197,9 +179,7 @@ class PredictionMetrics(Base):
     def __repr__(self):
         return f"<PredictionMetrics(id={self.id}, model_name={self.model_name}, version={self.model_version})>"
 
-
 class Prediction(Base):
-    """Model for storing historical predictions and their accuracy."""
 
     __tablename__ = "predictions"
 
@@ -222,9 +202,7 @@ class Prediction(Base):
     def __repr__(self):
         return f"<Prediction(id={self.id}, commodity_id={self.commodity_id}, market_id={self.market_id})>"
 
-
 class Discussion(Base):
-    """Community discussion model."""
 
     __tablename__ = "discussions"
 
@@ -239,8 +217,8 @@ class Discussion(Base):
     replies_count = Column(Integer, default=0)
     views_count = Column(Integer, default=0)
     is_pinned = Column(Boolean, default=False, index=True)
-    tags = Column(JSON, default=list, nullable=False)  # Store tags as JSON array
-    status = Column(String(20), default="PUBLISHED", index=True)  # PUBLISHED, DRAFT, ARCHIVED
+    tags = Column(JSON, default=list, nullable=False)
+    status = Column(String(20), default="PUBLISHED", index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -255,6 +233,7 @@ class Discussion(Base):
     def __repr__(self):
         return f"<Discussion(id={self.id}, title={self.title}, author={self.author})>"
 
+<<<<<<< Updated upstream
 
 class Comment(Base):
     """Comment model for discussion replies."""
@@ -297,22 +276,22 @@ class DiscussionLike(Base):
     )
 
 
+=======
+>>>>>>> Stashed changes
 class Watchlist(Base):
-    """User watchlist for favorite commodities and markets."""
 
     __tablename__ = "watchlists"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(255), nullable=False, index=True)  # External user ID
+    user_id = Column(String(255), nullable=False, index=True)
     commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=False)
     market_id = Column(Integer, ForeignKey("markets.id"), nullable=True)
     notes = Column(Text, nullable=True)
     alert_on_price_change = Column(Boolean, default=False)
-    price_change_threshold = Column(Float, nullable=True)  # Percentage
+    price_change_threshold = Column(Float, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     commodity = relationship("Commodity")
     market = relationship("Market")
 
@@ -324,9 +303,7 @@ class Watchlist(Base):
     def __repr__(self):
         return f"<Watchlist(id={self.id}, user_id={self.user_id}, commodity_id={self.commodity_id})>"
 
-
 class MarketTrendAnalysis(Base):
-    """Pre-calculated market trend analysis for performance."""
 
     __tablename__ = "market_trend_analysis"
 
@@ -334,17 +311,17 @@ class MarketTrendAnalysis(Base):
     commodity_id = Column(Integer, ForeignKey("commodities.id"), nullable=False)
     market_id = Column(Integer, ForeignKey("markets.id"), nullable=False)
     analysis_date = Column(Date, nullable=False, index=True)
-    period_days = Column(Integer, nullable=False)  # 7, 14, 30, 90
+    period_days = Column(Integer, nullable=False)
     avg_price = Column(Float, nullable=False)
     min_price = Column(Float, nullable=False)
     max_price = Column(Float, nullable=False)
-    price_volatility = Column(Float, nullable=False)  # Coefficient of variation
-    trend_direction = Column(String(20), nullable=False)  # INCREASING, DECREASING, STABLE
-    trend_strength = Column(Float, nullable=False)  # 0-1 score
-    momentum = Column(Float, nullable=False)  # Rate of change
+    price_volatility = Column(Float, nullable=False)
+    trend_direction = Column(String(20), nullable=False)
+    trend_strength = Column(Float, nullable=False)
+    momentum = Column(Float, nullable=False)
     total_volume = Column(Float, nullable=True)
     avg_daily_volume = Column(Float, nullable=True)
-    analysis_data = Column(JSON, nullable=True)  # Store additional analysis metrics
+    analysis_data = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     __table_args__ = (

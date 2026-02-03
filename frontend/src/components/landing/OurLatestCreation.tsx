@@ -2,20 +2,12 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import SectionTitle from "./TitleSection";
 
-/* ----------------------------------------
-   Types
------------------------------------------ */
-
 interface SectionItem {
   title: string;
   description: string;
   image: string;
   align: string;
 }
-
-/* ----------------------------------------
-   Main Section
------------------------------------------ */
 
 const OurLatestCreation: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);

@@ -1,4 +1,3 @@
-"""Recommendation endpoints."""
 
 from datetime import datetime
 
@@ -18,7 +17,6 @@ from app.services.recommendation_service import RecommendationService
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
-
 def _require_user_id(current_user: dict) -> str:
     user_id = current_user.get("user_id")
     if not user_id:
@@ -28,13 +26,12 @@ def _require_user_id(current_user: dict) -> str:
         )
     return user_id
 
-
 @router.get("/", response_model=RecommendationListResponse)
 async def list_recommendations(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """List active recommendations for the current user."""
+
     user_id = _require_user_id(current_user)
     recommendations = await RecommendationService.get_active_recommendations(
         session,
@@ -46,7 +43,6 @@ async def list_recommendations(
         generated_at=recommendations[0].created_at if recommendations else datetime.utcnow(),
     )
 
-
 @router.get("/history", response_model=RecommendationHistoryResponse)
 async def list_recommendation_history(
     limit: int = Query(50, ge=1, le=200),
@@ -54,23 +50,21 @@ async def list_recommendation_history(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """List historical recommendations for the current user."""
+
     user_id = _require_user_id(current_user)
     history = await RecommendationService.get_recommendation_history(
         session, user_id, limit=limit, offset=offset
     )
     return RecommendationHistoryResponse(history=history, total=len(history))
 
-
 @router.get("/metrics", response_model=RecommendationMetricsResponse)
 async def get_recommendation_metrics(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Get recommendation accuracy metrics."""
+
     user_id = _require_user_id(current_user)
     return await RecommendationService.get_accuracy_metrics(session, user_id)
-
 
 @router.get("/{recommendation_id}", response_model=RecommendationResponse)
 async def get_recommendation(
@@ -78,7 +72,7 @@ async def get_recommendation(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Get a specific recommendation."""
+
     user_id = _require_user_id(current_user)
     recommendation = await RecommendationService.get_recommendation_by_id(
         session, user_id, recommendation_id
@@ -87,7 +81,6 @@ async def get_recommendation(
         raise HTTPException(status_code=404, detail="Recommendation not found")
     return recommendation
 
-
 @router.post("/{recommendation_id}/acknowledge", status_code=status.HTTP_200_OK)
 async def acknowledge_recommendation(
     recommendation_id: int,
@@ -95,7 +88,7 @@ async def acknowledge_recommendation(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Acknowledge a recommendation."""
+
     user_id = _require_user_id(current_user)
     success = await RecommendationService.acknowledge_recommendation(
         session,
@@ -107,7 +100,6 @@ async def acknowledge_recommendation(
         raise HTTPException(status_code=400, detail="Unable to acknowledge")
     return {"status": "acknowledged", "recommendation_id": recommendation_id}
 
-
 @router.post("/{recommendation_id}/accuracy", status_code=status.HTTP_200_OK)
 async def record_accuracy(
     recommendation_id: int,
@@ -115,7 +107,7 @@ async def record_accuracy(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Record accuracy for a recommendation."""
+
     user_id = _require_user_id(current_user)
     success = await RecommendationService.record_recommendation_accuracy(
         session,

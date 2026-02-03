@@ -10,8 +10,9 @@ export default function YourStock() {
 
   return (
     <div className="space-y-4">
-      {/* TOP ROW: Actions */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+<<<<<<< Updated upstream
         {/* Add Stock Button */}
         <AddStockButton />
         
@@ -23,6 +24,27 @@ export default function YourStock() {
           <p className="text-sm text-soft leading-relaxed mb-2">
             Modify your forecast configuration such as time horizon (7 or 14 days),
           </p>
+=======
+        {}
+        <div className="lg:col-span-2"></div>
+        {}
+<CardComponent title="Forecast Actions">
+  <p className="text-sm text-soft leading-relaxed mb-2">
+    Modify your forecast configuration such as time horizon (7 or 14 days),
+  </p>
+
+  <button
+    onClick={() => navigate("/dashboard/selector")}
+    className="
+      w-full py-3 text-sm font-semibold
+      bg-emerald-600 dark:text-white text-black hover:bg-emerald-700 hover:shadow-[0_12px_30px_rgba(16,185,129,0.35)] active:scale-[0.98]
+      transition
+    "
+  >
+    Change Forecast
+  </button>
+</CardComponent>
+>>>>>>> Stashed changes
 
           <button
             onClick={() => navigate("/dashboard/selector")}
@@ -37,7 +59,7 @@ export default function YourStock() {
         </CardComponent>
       </div>
 
-      {/* BOTTOM ROW: Table */}
+      {}
       <TableComponent
         title="Your Stocks"
         loading={isLoading || isUpdating}

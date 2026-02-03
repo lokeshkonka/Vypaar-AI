@@ -1,4 +1,3 @@
-// src/components/product-analysis/RecommendTable.tsx
 import { FiTrendingUp } from "react-icons/fi";
 import { useContextAnalysis } from "../../context/ContextAnalysis";
 import TableComponent from "../ui/TableComponent";

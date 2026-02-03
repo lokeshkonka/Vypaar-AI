@@ -29,7 +29,7 @@ const SubscribeNewsletter: React.FC = () => {
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 320, damping: 70 }}
       >
-        {/* Input */}
+        {}
         <input
           type="email"
           placeholder="Enter your email address"
@@ -45,7 +45,7 @@ const SubscribeNewsletter: React.FC = () => {
           "
         />
 
-        {/* Button */}
+        {}
         <button
           className="
             h-11

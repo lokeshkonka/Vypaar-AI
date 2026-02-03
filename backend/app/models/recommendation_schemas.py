@@ -1,4 +1,3 @@
-"""Pydantic models for recommendations feature."""
 
 from __future__ import annotations
 
@@ -8,9 +7,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-
 class RecommendationType(str, Enum):
-    """Type of recommendation."""
 
     BUY = "BUY"
     SELL = "SELL"
@@ -18,34 +15,26 @@ class RecommendationType(str, Enum):
     STOCK_UP = "STOCK_UP"
     STOCK_DOWN = "STOCK_DOWN"
 
-
 class ConfidenceLevel(str, Enum):
-    """Confidence level for recommendation."""
 
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
 
-
 class TimeHorizon(str, Enum):
-    """Expected time horizon for recommendation impact."""
 
     SHORT_TERM = "SHORT_TERM"
     MID_TERM = "MID_TERM"
     LONG_TERM = "LONG_TERM"
 
-
 class AccuracyRating(str, Enum):
-    """Accuracy rating for a past recommendation."""
 
     CORRECT = "CORRECT"
     INCORRECT = "INCORRECT"
     PARTIAL = "PARTIAL"
     PENDING = "PENDING"
 
-
 class RecommendationBase(BaseModel):
-    """Base recommendation data."""
 
     commodity_id: Optional[int] = Field(default=None, description="Commodity identifier")
     commodity_name: str = Field(..., description="Commodity name")
@@ -88,9 +77,7 @@ class RecommendationBase(BaseModel):
         }
     }
 
-
 class RecommendationResponse(RecommendationBase):
-    """Recommendation response model."""
 
     id: int = Field(..., description="Recommendation id")
     acknowledged: bool = Field(default=False, description="Whether user acknowledged")
@@ -101,17 +88,13 @@ class RecommendationResponse(RecommendationBase):
         default=None, description="Last evaluation timestamp"
     )
 
-
 class RecommendationListResponse(BaseModel):
-    """List response for active recommendations."""
 
     recommendations: List[RecommendationResponse]
     total: int
     generated_at: datetime
 
-
 class RecommendationHistoryItem(BaseModel):
-    """Historical recommendation data."""
 
     id: int
     commodity_name: str
@@ -123,31 +106,23 @@ class RecommendationHistoryItem(BaseModel):
     roi_pct: Optional[float] = Field(default=None, ge=-100, le=500)
     note: Optional[str] = Field(default=None, max_length=280)
 
-
 class RecommendationHistoryResponse(BaseModel):
-    """List response for historical recommendations."""
 
     history: List[RecommendationHistoryItem]
     total: int
 
-
 class AcknowledgeRecommendationRequest(BaseModel):
-    """Request to acknowledge a recommendation."""
 
     note: Optional[str] = Field(default=None, max_length=280)
 
-
 class RecordRecommendationAccuracyRequest(BaseModel):
-    """Request to record recommendation accuracy."""
 
     outcome: AccuracyRating
     actual_change_pct: Optional[float] = Field(default=None, ge=-100, le=100)
     roi_pct: Optional[float] = Field(default=None, ge=-100, le=500)
     note: Optional[str] = Field(default=None, max_length=280)
 
-
 class RecommendationMetricsResponse(BaseModel):
-    """Metrics response for recommendations."""
 
     total_recommendations: int
     correct_count: int

@@ -3,13 +3,11 @@ import { ArrowRight } from "lucide-react";
 import { motion,  useSpring } from "framer-motion";
 import { Link } from "react-router-dom";
 
-
-
 const HeroSection: React.FC = () => {
   return (
     <section className="relative flex flex-col items-center -mt-18 text-white">
  
-      {/* Background Radial */}
+      {}
       <motion.svg
         className="absolute -z-10 -mt-40 md:mt-0"
         width="1680"
@@ -45,7 +43,7 @@ const HeroSection: React.FC = () => {
         </defs>
       </motion.svg>
 
-      {/* Badge */}
+      {}
       <motion.a
         className="
           flex items-center mt-48 gap-2
@@ -63,7 +61,7 @@ const HeroSection: React.FC = () => {
         <span className="text-sm">Book a live demo today</span>
       </motion.a>
 
-      {/* Heading */}
+      {}
       <motion.h1
         className="
           text-center mt-4
@@ -79,7 +77,7 @@ const HeroSection: React.FC = () => {
         Let’s build AI agents together
       </motion.h1>
 
-      {/* Description */}
+      {}
       <motion.p
         className="text-center text-base text-white max-w-lg mt-3"
         initial={{ y: 50, opacity: 0 }}
@@ -91,7 +89,7 @@ const HeroSection: React.FC = () => {
         on what matters.
       </motion.p>
 
-      {/* CTAs */}
+      {}
       <motion.div
         className="flex items-center gap-4 mt-8"
         initial={{ y: 50, opacity: 0 }}
@@ -127,14 +125,13 @@ const HeroSection: React.FC = () => {
         </button>
       </motion.div>
 
-      {/* Tilt Image */}
+      {}
       <TiltedImage />
     </section>
   );
 };
 
 export default HeroSection;
-
 
 interface TiltedImageProps {
   rotateAmplitude?: number;

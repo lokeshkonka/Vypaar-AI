@@ -23,7 +23,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   return (
     <div className={uiClasses.pageWrapper}>
       <main className={uiClasses.mainContent}>
-        {/* Header Section */}
+        {}
         {(title || subtitle || breadcrumbs || actions) && (
           <div className="mb-8">
             {breadcrumbs && breadcrumbs.length > 0 && (
@@ -50,7 +50,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           </div>
         )}
 
-        {/* Content Section */}
+        {}
         {children}
       </main>
     </div>

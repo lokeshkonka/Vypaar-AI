@@ -1,4 +1,3 @@
-// src/components/product-analysis/SelectorComponent.tsx
 
 import { FiMapPin, FiBox, FiCalendar } from "react-icons/fi";
 import { useContextAnalysis } from "../../context/ContextAnalysis";

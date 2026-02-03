@@ -44,7 +44,6 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
       } else if (format === "json" && data) {
         exportJSON(data, filename);
       } else if (format === "xlsx") {
-        // XLSX would require additional library
         alert("XLSX export requires installation of xlsx library");
       }
 
@@ -105,7 +104,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 shadow-xl max-w-md w-full mx-4">
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <FiDownload className="w-5 h-5 text-emerald-600" />
@@ -121,9 +120,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           </button>
         </div>
 
-        {/* Content */}
+        {}
         <div className="p-6 space-y-6">
-          {/* Format Selection */}
+          {}
           <div>
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Export Format
@@ -159,7 +158,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             </div>
           </div>
 
-          {/* Options */}
+          {}
           <div>
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Options
@@ -190,16 +189,16 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             </div>
           </div>
 
-          {/* Info */}
+          {}
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              ℹ️ Exporting {data?.length || 0} records in {format.toUpperCase()}
+              ℹ Exporting {data?.length || 0} records in {format.toUpperCase()}
               format
             </p>
           </div>
         </div>
 
-        {/* Footer */}
+        {}
         <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={onClose}

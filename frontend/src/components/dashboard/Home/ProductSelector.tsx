@@ -23,13 +23,13 @@ export default function ProductSelector() {
 
   return (
     <div className="glass-card p-6 space-y-5">
-      {/* Header */}
+      {}
       <div className="flex items-center gap-2">
         <Package className="w-5 h-5 text-emerald-600" />
         <h3 className="font-medium">Product Configuration</h3>
       </div>
 
-      {/* Category */}
+      {}
       <select
         className={inputBase}
         value={selection.category ?? ""}
@@ -48,7 +48,7 @@ export default function ProductSelector() {
         ))}
       </select>
 
-      {/* Product */}
+      {}
       <select
         className={inputBase}
         disabled={!selection.category}

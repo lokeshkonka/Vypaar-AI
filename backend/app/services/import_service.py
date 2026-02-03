@@ -1,4 +1,3 @@
-"""Data import service for handling CSV imports."""
 
 import asyncio
 import csv
@@ -22,12 +21,10 @@ from app.models.import_schemas import (
     InventoryRow,
 )
 
-
 class ImportJob:
-    """In-memory import job tracker."""
 
     def __init__(self, job_id: str, import_type: ImportType, filename: str):
-        """Initialize import job."""
+
         self.job_id = job_id
         self.import_type = import_type
         self.filename = filename
@@ -50,37 +47,34 @@ class ImportJob:
         self.valid_data: List[Dict[str, Any]] = []
 
     def update_progress(self, percentage: int) -> None:
-        """Update progress percentage."""
+
         self.progress_percentage = min(100, max(0, percentage))
 
     def mark_completed(self) -> None:
-        """Mark job as completed."""
+
         self.status = ImportStatus.COMPLETED
         self.completed_at = datetime.utcnow()
 
     def mark_failed(self, error_message: str) -> None:
-        """Mark job as failed."""
+
         self.status = ImportStatus.FAILED
         self.error_message = error_message
         self.completed_at = datetime.utcnow()
 
     def mark_partial(self) -> None:
-        """Mark job as partially completed."""
+
         self.status = ImportStatus.PARTIAL
         self.completed_at = datetime.utcnow()
 
-
 class DataImportService:
-    """Service for handling data imports from CSV files."""
 
-    # In-memory job storage (use Redis in production)
     _jobs: Dict[str, ImportJob] = {}
 
     @classmethod
     def create_job(
         cls, import_type: ImportType, filename: str
     ) -> str:
-        """Create a new import job."""
+
         job_id = f"import_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{str(uuid4())[:8]}"
         job = ImportJob(job_id, import_type, filename)
         cls._jobs[job_id] = job
@@ -89,25 +83,20 @@ class DataImportService:
 
     @classmethod
     def get_job(cls, job_id: str) -> Optional[ImportJob]:
-        """Get import job by ID."""
+
         return cls._jobs.get(job_id)
 
     @classmethod
     def get_all_jobs(cls) -> List[ImportJob]:
-        """Get all import jobs."""
+
         return list(cls._jobs.values())
 
     @classmethod
     async def parse_csv(
         cls, file_content: bytes, import_type: ImportType
     ) -> Tuple[List[Dict[str, Any]], List[str]]:
-        """
-        Parse CSV file content.
 
-        Returns: (parsed_data, errors)
-        """
         try:
-            # Decode file
             content_str = file_content.decode("utf-8")
             reader = csv.DictReader(io.StringIO(content_str))
 
@@ -117,11 +106,10 @@ class DataImportService:
             data = []
             errors = []
 
-            for row_num, row in enumerate(reader, start=2):  # Start from 2 (header is 1)
-                # Remove empty values
+            for row_num, row in enumerate(reader, start=2):
                 row = {k: v for k, v in row.items() if k and v}
 
-                if not row:  # Skip empty rows
+                if not row:
                     continue
 
                 data.append(row)
@@ -139,13 +127,12 @@ class DataImportService:
     async def validate_sales_data(
         cls, raw_data: List[Dict[str, Any]]
     ) -> Tuple[List[SalesDataRow], List[ValidationErrorDetail]]:
-        """Validate sales data rows."""
+
         valid_rows = []
         errors = []
 
         for row_num, row in enumerate(raw_data, start=2):
             try:
-                # Map CSV columns to schema
                 validated_row = SalesDataRow(
                     date=row.get("date", "").strip(),
                     market_name=row.get("market_name", "").strip(),
@@ -175,7 +162,7 @@ class DataImportService:
     async def validate_market_price_data(
         cls, raw_data: List[Dict[str, Any]]
     ) -> Tuple[List[MarketPriceRow], List[ValidationErrorDetail]]:
-        """Validate market price data rows."""
+
         valid_rows = []
         errors = []
 
@@ -210,7 +197,7 @@ class DataImportService:
     async def validate_inventory_data(
         cls, raw_data: List[Dict[str, Any]]
     ) -> Tuple[List[InventoryRow], List[ValidationErrorDetail]]:
-        """Validate inventory data rows."""
+
         valid_rows = []
         errors = []
 
@@ -250,7 +237,7 @@ class DataImportService:
         db_session: AsyncSession,
         skip_duplicates: bool = True,
     ) -> ImportStats:
-        """Import validated sales data to database."""
+
         stats = ImportStats(
             total_records=len(valid_rows),
             valid_records=len(valid_rows),
@@ -267,7 +254,6 @@ class DataImportService:
         try:
             for idx, row in enumerate(valid_rows):
                 try:
-                    # Get or create market
                     market_result = await db_session.execute(
                         select(Market).where(Market.name == row.market_name)
                     )
@@ -283,7 +269,6 @@ class DataImportService:
                         db_session.add(market)
                         await db_session.flush()
 
-                    # Get or create commodity
                     commodity_result = await db_session.execute(
                         select(Commodity).where(Commodity.name == row.commodity_name)
                     )
@@ -298,7 +283,6 @@ class DataImportService:
                         db_session.add(commodity)
                         await db_session.flush()
 
-                    # Check for duplicates
                     existing = await db_session.execute(
                         select(SalesHistory).where(
                             and_(
@@ -316,13 +300,11 @@ class DataImportService:
                             duplicates += 1
                             continue
                         else:
-                            # Update existing record
                             record = existing.scalars().first()
                             record.price = row.price
                             record.quantity = row.quantity
                             record.grade = row.grade
                     else:
-                        # Create new record
                         sales_record = SalesHistory(
                             market_id=market.id,
                             commodity_id=commodity.id,
@@ -335,7 +317,6 @@ class DataImportService:
 
                     inserted += 1
 
-                    # Update progress
                     progress = int((idx / len(valid_rows)) * 100)
                     job.update_progress(progress)
 
@@ -343,7 +324,6 @@ class DataImportService:
                     logger.error(f"Error importing row {idx}: {e}")
                     stats.skipped_records += 1
 
-            # Commit all changes
             await db_session.commit()
 
             stats.inserted_records = inserted

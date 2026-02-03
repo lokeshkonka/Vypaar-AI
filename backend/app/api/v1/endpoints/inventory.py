@@ -1,4 +1,3 @@
-"""Inventory management and suggestion endpoints."""
 
 from typing import List, Optional
 from datetime import timedelta
@@ -31,9 +30,7 @@ from app.database.models import Inventory
 from app.core.utils import get_current_timestamp
 from app.config import settings
 
-
 router = APIRouter(prefix="/inventory", tags=["inventory"])
-
 
 @router.get("/", response_model=List[InventoryResponse])
 async def list_inventory(
@@ -46,16 +43,7 @@ async def list_inventory(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> List[InventoryResponse]:
-    """
-    List inventory items with optional filtering.
-    
-    Args:
-        commodity_id: Filter by commodity
-        market_id: Filter by market
-        low_stock_only: Show only low stock items
-        skip: Pagination offset
-        limit: Maximum results
-    """
+
     try:
         if low_stock_only:
             threshold = settings.inventory_reorder_threshold
@@ -68,7 +56,6 @@ async def list_inventory(
         else:
             items = await inventory_repo.get_all(skip=skip, limit=limit)
 
-        # Get commodity and market names
         responses = []
         for item in items:
             commodity = await commodity_repo.get_by_id(item.commodity_id)
@@ -102,7 +89,6 @@ async def list_inventory(
             detail=str(e)
         )
 
-
 @router.post("/suggestions", response_model=InventorySuggestionResponse)
 async def get_inventory_suggestions(
     request: InventorySuggestionRequest,
@@ -112,24 +98,13 @@ async def get_inventory_suggestions(
     market_repo: MarketRepository = Depends(get_market_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> InventorySuggestionResponse:
-    """
-    Get AI-powered inventory suggestions based on price predictions.
-    
-    Analyzes:
-    - Historical demand patterns
-    - Price predictions for forecast period
-    - Current stock levels
-    - Safety stock requirements
-    
-    Returns optimal stock levels and reorder recommendations.
-    """
+
     try:
         logger.info(
             f"Inventory suggestion request: commodity={request.commodity_id}, "
             f"market={request.market_id}"
         )
 
-        # Validate inputs
         commodity = await commodity_repo.get_by_id(request.commodity_id)
         if not commodity:
             raise HTTPException(
@@ -144,14 +119,12 @@ async def get_inventory_suggestions(
                 detail=f"Market {request.market_id} not found"
             )
 
-        # Get current inventory
         inventory = await inventory_repo.get_by_commodity_market(
             request.commodity_id, request.market_id
         )
 
         current_stock = inventory.current_stock if inventory else 0
 
-        # Get historical prices for demand estimation
         historical_prices = await market_price_repo.get_price_history(
             commodity_id=request.commodity_id,
             market_id=request.market_id,
@@ -164,42 +137,33 @@ async def get_inventory_suggestions(
                 detail="Insufficient historical data for prediction"
             )
 
-        # Estimate demand from historical arrivals
         arrivals = [p.arrival for p in historical_prices if p.arrival and p.arrival > 0]
         if arrivals:
             avg_daily_demand = np.mean(arrivals)
             std_daily_demand = np.std(arrivals)
         else:
-            # Fallback to price-based estimation
-            avg_daily_demand = 100  # Default
+            avg_daily_demand = 100
             std_daily_demand = 20
 
-        # Calculate forecast demand for the period
         forecast_days = request.forecast_days or settings.inventory_forecast_days
         forecast_demand = avg_daily_demand * forecast_days
 
-        # Calculate safety stock (to cover demand variability)
         safety_multiplier = settings.inventory_safety_stock_multiplier
         safety_stock = std_daily_demand * np.sqrt(forecast_days) * safety_multiplier
 
-        # Calculate optimal stock level
         optimal_stock = forecast_demand + safety_stock
 
-        # Calculate reorder point (when to reorder)
-        lead_time_days = 7  # Assume 7 days lead time
+        lead_time_days = 7
         reorder_point = (avg_daily_demand * lead_time_days) + safety_stock
 
-        # Determine if reorder is needed
         needs_reorder = current_stock < reorder_point
         reorder_quantity = max(0, optimal_stock - current_stock) if needs_reorder else 0
 
-        # Calculate days until stockout
         if current_stock > 0 and avg_daily_demand > 0:
             days_until_stockout = int(current_stock / avg_daily_demand)
         else:
             days_until_stockout = 0
 
-        # Priority based on urgency
         if days_until_stockout < 3:
             priority = "CRITICAL"
         elif days_until_stockout < 7:
@@ -209,7 +173,6 @@ async def get_inventory_suggestions(
         else:
             priority = "LOW"
 
-        # Build suggestion
         suggestion = InventorySuggestionResponse(
             commodity_id=request.commodity_id,
             commodity_name=commodity.name,
@@ -225,7 +188,7 @@ async def get_inventory_suggestions(
             forecast_days=forecast_days,
             days_until_stockout=days_until_stockout,
             priority=priority,
-            confidence=0.85,  # Based on data quality
+            confidence=0.85,
             reasoning=[
                 f"Average daily demand: {avg_daily_demand:.2f} units",
                 f"Forecast period: {forecast_days} days",
@@ -251,7 +214,6 @@ async def get_inventory_suggestions(
             detail=str(e)
         )
 
-
 @router.put("/{inventory_id}", response_model=InventoryResponse)
 async def update_inventory(
     inventory_id: int,
@@ -260,7 +222,7 @@ async def update_inventory(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> InventoryResponse:
-    """Update inventory stock levels."""
+
     try:
         inventory = await inventory_repo.get_by_id(inventory_id)
         
@@ -270,7 +232,6 @@ async def update_inventory(
                 detail=f"Inventory {inventory_id} not found"
             )
 
-        # Update fields
         update_data = {}
         if request.current_stock is not None:
             update_data['current_stock'] = request.current_stock
@@ -281,7 +242,6 @@ async def update_inventory(
 
         updated = await inventory_repo.update(inventory_id, update_data)
 
-        # Get names
         commodity = await commodity_repo.get_by_id(updated.commodity_id)
         market = await market_repo.get_by_id(updated.market_id)
 

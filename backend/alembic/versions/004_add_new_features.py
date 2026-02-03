@@ -1,26 +1,15 @@
-"""Add new tables for Discussions, Watchlist, and Market Trends
 
-Revision ID: 004_add_new_features
-Revises: 003_previous_migration
-Create Date: 2026-01-30 10:00:00.000000
-
-"""
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-
-# revision identifiers, used by Alembic.
 revision = '004_add_new_features'
 down_revision = None
 branch_labels = None
 depends_on = None
 
-
 def upgrade():
-    """Create new tables."""
-    
-    # Create Discussions table
+
     op.create_table(
         'discussions',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -44,7 +33,6 @@ def upgrade():
     op.create_index('ix_discussions_id', 'discussions', ['id'])
     op.create_index('ix_discussions_commodity', 'discussions', ['commodity'])
     
-    # Create Watchlists table
     op.create_table(
         'watchlists',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -64,7 +52,6 @@ def upgrade():
     op.create_index('ix_watchlist_user', 'watchlists', ['user_id'])
     op.create_index('ix_watchlists_id', 'watchlists', ['id'])
     
-    # Create Market Trend Analysis table
     op.create_table(
         'market_trend_analysis',
         sa.Column('id', sa.Integer(), nullable=False),
@@ -91,9 +78,8 @@ def upgrade():
     op.create_index('ix_trend_analysis_date_period', 'market_trend_analysis', ['analysis_date', 'period_days'])
     op.create_index('ix_market_trend_analysis_id', 'market_trend_analysis', ['id'])
 
-
 def downgrade():
-    """Drop new tables."""
+
     op.drop_index('ix_market_trend_analysis_id', table_name='market_trend_analysis')
     op.drop_index('ix_trend_analysis_date_period', table_name='market_trend_analysis')
     op.drop_table('market_trend_analysis')

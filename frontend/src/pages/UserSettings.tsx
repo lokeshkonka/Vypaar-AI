@@ -93,14 +93,14 @@ export default function UserSettings() {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto pt-20 pb-12 px-4">
-        {/* Header */}
+        {}
         <div className="mb-8">
           <Breadcrumbs items={breadcrumbs} />
           <h1 className="text-4xl font-bold mt-4" style={{ color: "var(--text-main)" }}>Settings</h1>
           <p className="mt-2" style={{ color: "var(--text-soft)" }}>Manage your profile, preferences, and security settings</p>
         </div>
 
-        {/* Success Message */}
+        {}
         {successMessage && (
           <div className="mb-6 p-4 border flex items-center gap-3" style={{ borderColor: "rgba(16, 185, 129, 0.3)", background: "rgba(16, 185, 129, 0.1)" }}>
             <FiCheck className="text-emerald-600 dark:text-emerald-400" />
@@ -108,7 +108,7 @@ export default function UserSettings() {
           </div>
         )}
 
-        {/* Error Message */}
+        {}
         {error && (
           <div className="mb-6 p-4 border flex items-center gap-3" style={{ borderColor: "rgba(239, 68, 68, 0.3)", background: "rgba(239, 68, 68, 0.1)" }}>
             <FiX className="text-red-600 dark:text-red-400" />
@@ -116,8 +116,13 @@ export default function UserSettings() {
           </div>
         )}
 
+<<<<<<< Updated upstream
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b" style={{ borderColor: "var(--border)" }}>
+=======
+        {}
+        <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-gray-700">
+>>>>>>> Stashed changes
           {[
             { id: "profile", label: "Profile", icon: FiUser },
             { id: "security", label: "Security", icon: FiLock },
@@ -138,8 +143,13 @@ export default function UserSettings() {
           ))}
         </div>
 
+<<<<<<< Updated upstream
         {/* Content */}
         <div className="glass-card p-6 sm:p-8">
+=======
+        {}
+        <div className="bg-white dark:bg-[#1a2f2f] rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+>>>>>>> Stashed changes
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin h-8 w-8 border-b-2 border-[rgb(var(--emerald-main))]"></div>

@@ -7,8 +7,6 @@ import { dark } from '@clerk/themes'
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import NotifyDummy from './data/NotifyDummy.tsx'
 
-
-// Import your Publishable Key
   const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
   if (!PUBLISHABLE_KEY) {

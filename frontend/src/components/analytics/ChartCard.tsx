@@ -59,11 +59,11 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
   const dataKeys = Array.isArray(dataKey) ? dataKey : [dataKey];
   const colors = [
-    "#10b981", // emerald
-    "#3b82f6", // blue
-    "#f59e0b", // amber
-    "#ef4444", // red
-    "#8b5cf6", // purple
+    "#10b981",
+    "#3b82f6",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
   ];
 
   const CustomTooltip: React.FC<TooltipProps<number, string>> = ({
@@ -98,7 +98,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-6">
-      {/* Header */}
+      {}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           {title}
@@ -110,7 +110,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
         )}
       </div>
 
-      {/* Chart */}
+      {}
       <ResponsiveContainer width="100%" height={height}>
         {type === "line" && (
           <LineChart data={data}>

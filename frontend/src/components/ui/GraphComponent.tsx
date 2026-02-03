@@ -25,12 +25,10 @@ export default function GraphComponent({
   title,
   data,
 }: GraphComponentProps) {
-  // Calculate dynamic Y-axis domain for better visibility of price variations
   const allValues = data.flatMap((d) => [d.forecast, d.actual]).filter((v): v is number => v !== undefined && v !== null);
   const minValue = allValues.length > 0 ? Math.min(...allValues) : 0;
   const maxValue = allValues.length > 0 ? Math.max(...allValues) : 100;
   
-  // Use 5% padding to keep the graph tight and show variations clearly
   const range = maxValue - minValue;
   const padding = range > 0 ? range * 0.05 : 5;
   const yAxisMin = Math.floor(minValue - padding);
@@ -44,13 +42,13 @@ export default function GraphComponent({
             data={data}
             margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
           >
-            {/* Grid */}
+            {}
             <CartesianGrid
               stroke="var(--border)"
               strokeDasharray="3 3"
             />
 
-            {/* X Axis */}
+            {}
             <XAxis
               dataKey="day"
               tick={{
@@ -61,7 +59,7 @@ export default function GraphComponent({
               tickLine={false}
             />
 
-            {/* Y Axis */}
+            {}
             <YAxis
               domain={[yAxisMin, yAxisMax]}
               tick={{
@@ -72,7 +70,7 @@ export default function GraphComponent({
               tickLine={false}
             />
 
-            {/* Tooltip */}
+            {}
             <Tooltip
               contentStyle={{
                 background: "var(--panel)",
@@ -87,7 +85,7 @@ export default function GraphComponent({
               }}
             />
 
-            {/* Legend */}
+            {}
             <Legend
               wrapperStyle={{
                 fontSize: 12,
@@ -95,7 +93,7 @@ export default function GraphComponent({
               }}
             />
 
-            {/* Past Sales (DOTTED) */}
+            {}
             <Line
               type="monotone"
               dataKey="actual"
@@ -107,7 +105,7 @@ export default function GraphComponent({
               animationDuration={600}
             />
 
-            {/* Forecast (SOLID) */}
+            {}
             <Line
               type="monotone"
               dataKey="forecast"

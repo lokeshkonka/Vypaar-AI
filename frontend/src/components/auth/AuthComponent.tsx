@@ -5,7 +5,6 @@ import Footer from "../dashboard/Footer";
 
 import GraphBackgroundCorner from "../Background/GraphBackgroundCorner";
 
-/* ---------------- Skeleton Loader ---------------- */
 function AuthSkeleton() {
   return (
     <div className="w-90 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-6 animate-pulse">
@@ -27,15 +26,15 @@ export default function AuthComponent() {
   return (
     <div>
       <div className="relative min-h-screen bg-[#050807] overflow-hidden">
-        {/* Soft emerald glow */}
+        {}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_55%)] pointer-events-none" />
 
         <GraphBackgroundCorner />
 
-        {/* Centered Auth Container */}
+        {}
         <div className="relative z-10 flex min-h-screen items-center justify-center">
           <AnimatePresence mode="wait">
-            {/* LOADER */}
+            {}
             {!isLoaded && (
               <motion.div
                 key="loader"
@@ -47,7 +46,7 @@ export default function AuthComponent() {
               </motion.div>
             )}
 
-            {/* AUTH CONTENT */}
+            {}
             {isLoaded && (
               <motion.div
                 key="auth"
@@ -56,12 +55,12 @@ export default function AuthComponent() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                {/* If already signed in → dashboard */}
+                {}
                 <SignedIn>
                   <Navigate to="/dashboard" replace />
                 </SignedIn>
 
-                {/* If signed out → SignIn */}
+                {}
                 <SignedOut>
                   <SignIn
                     appearance={{

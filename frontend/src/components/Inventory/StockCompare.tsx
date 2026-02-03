@@ -15,7 +15,7 @@ export default function StockCompare() {
   return (
     <CardComponent title="Stock Comparison">
       <div className="space-y-4">
-        {/* Current */}
+        {}
         <div>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-soft">Current Stock</span>
@@ -29,7 +29,7 @@ export default function StockCompare() {
           </div>
         </div>
 
-        {/* Suggested */}
+        {}
         <div>
           <div className="flex justify-between text-sm mb-1">
             <span className="text-soft">Suggested Stock</span>

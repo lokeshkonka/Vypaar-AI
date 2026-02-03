@@ -8,7 +8,7 @@ export default function GraphBackgroundBottom() {
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      {/* === PRIMARY VERTICAL FLOW (BOTTOM → TOP) === */}
+      {}
       <path
         d="
           M210 1200
@@ -19,7 +19,7 @@ export default function GraphBackgroundBottom() {
         className="market-line-bottom line-strong-bottom"
       />
 
-      {/* === SECONDARY FLOW === */}
+      {}
       <path
         d="
           M150 1200
@@ -29,7 +29,7 @@ export default function GraphBackgroundBottom() {
         className="market-line-bottom line-medium-bottom"
       />
 
-      {/* === SUPPORTING FLOW === */}
+      {}
       <path
         d="
           M270 1200
@@ -39,7 +39,7 @@ export default function GraphBackgroundBottom() {
         className="market-line-bottom line-soft-bottom"
       />
 
-      {/* === FAINT DEPTH LINES === */}
+      {}
       <path
         d="
           M90 1200

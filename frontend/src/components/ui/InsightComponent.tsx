@@ -1,4 +1,3 @@
-// src/components/Insights/InsightComponent.tsx
 import { useState } from "react";
 import { FiChevronDown } from "react-icons/fi";
 
@@ -38,7 +37,7 @@ export default function InsightComponent({
         transition
       "
     >
-      {/* Header */}
+      {}
       <button
         onClick={() => setOpen((v) => !v)}
         className="w-full px-5 py-5 flex items-center justify-between text-left"
@@ -75,7 +74,7 @@ export default function InsightComponent({
         />
       </button>
 
-      {/* Body */}
+      {}
       {open && reason && (
         <div className="px-5 pb-5 pt-4 border-t border-(--border)">
           <p className="text-sm uppercase tracking-wide text-soft mb-1">

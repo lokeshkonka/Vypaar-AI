@@ -5,7 +5,6 @@ from app.services.scheduler import get_scheduler
 
 router = APIRouter()
 
-
 @router.get("/status")
 async def get_scheduler_status():
     
@@ -23,7 +22,6 @@ async def get_scheduler_status():
         logger.error(f"Unable to retrieve scheduler status: {str(e)}")
         raise HTTPException(status_code=500, detail="Scheduler status unavailable")
 
-
 @router.post("/trigger/scrape")
 async def trigger_manual_scrape():
     
@@ -38,7 +36,6 @@ async def trigger_manual_scrape():
     except Exception as e:
         logger.error(f"Manual scrape trigger failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @router.post("/trigger/retrain")
 async def trigger_manual_retrain():

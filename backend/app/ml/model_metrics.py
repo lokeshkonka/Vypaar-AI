@@ -1,4 +1,3 @@
-"""Model metrics calculation and tracking."""
 
 from typing import Dict, Optional, Tuple
 import numpy as np
@@ -12,42 +11,26 @@ from sklearn.metrics import (
     mean_absolute_percentage_error,
 )
 
-
 class ModelMetricsCalculator:
-    """Calculate and track model performance metrics."""
 
     @staticmethod
     def calculate_metrics(
         y_true: np.ndarray, y_pred: np.ndarray, model_name: str = "ensemble"
     ) -> Dict[str, float]:
-        """
-        Calculate comprehensive regression metrics.
 
-        Args:
-            y_true: True values
-            y_pred: Predicted values
-            model_name: Name of the model
-
-        Returns:
-            Dictionary of metrics
-        """
-        # Ensure arrays
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
 
-        # Basic metrics
         mse = mean_squared_error(y_true, y_pred)
         rmse = np.sqrt(mse)
         mae = mean_absolute_error(y_true, y_pred)
         r2 = r2_score(y_true, y_pred)
         mape = mean_absolute_percentage_error(y_true, y_pred)
 
-        # Additional metrics
         mean_y = np.mean(y_true)
         rmse_pct = (rmse / (abs(mean_y) + 1e-6)) * 100
         accuracy = max(0, 1 - mape)
 
-        # Directional accuracy (how often sign of change is predicted correctly)
         if len(y_true) > 1:
             y_true_diff = np.diff(y_true)
             y_pred_diff = np.diff(y_pred)
@@ -56,10 +39,8 @@ class ModelMetricsCalculator:
         else:
             directional_accuracy = 0.0
 
-        # Median absolute error
         median_ae = np.median(np.abs(y_true - y_pred))
 
-        # Mean absolute percentage error (per sample)
         ape = np.abs((y_true - y_pred) / (np.abs(y_true) + 1e-6))
         median_ape = np.median(ape)
 
@@ -90,30 +71,17 @@ class ModelMetricsCalculator:
         y_pred: np.ndarray,
         confidence_intervals: np.ndarray,
     ) -> Dict[str, float]:
-        """
-        Calculate metrics for prediction confidence intervals.
 
-        Args:
-            y_true: True values
-            y_pred: Predicted values
-            confidence_intervals: Array of (lower, upper) bounds
-
-        Returns:
-            Dictionary of confidence metrics
-        """
-        # Check if true values are within confidence intervals
         within_ci = np.sum(
             (y_true >= confidence_intervals[:, 0])
             & (y_true <= confidence_intervals[:, 1])
         )
         coverage = within_ci / len(y_true)
 
-        # Average interval width
         interval_widths = confidence_intervals[:, 1] - confidence_intervals[:, 0]
         mean_interval_width = np.mean(interval_widths)
         median_interval_width = np.median(interval_widths)
 
-        # Sharpness (smaller intervals are sharper)
         sharpness = 1 / (mean_interval_width + 1e-6)
 
         metrics = {
@@ -131,17 +99,7 @@ class ModelMetricsCalculator:
     def calculate_seasonal_metrics(
         y_true: np.ndarray, y_pred: np.ndarray, seasonal_periods: int = 12
     ) -> Dict[str, Dict[str, float]]:
-        """
-        Calculate metrics for each seasonal period.
 
-        Args:
-            y_true: True values
-            y_pred: Predicted values
-            seasonal_periods: Number of seasons (default 12 for months)
-
-        Returns:
-            Dictionary with metrics for each season
-        """
         seasonal_metrics = {}
 
         for season in range(seasonal_periods):
@@ -161,17 +119,7 @@ class ModelMetricsCalculator:
     def calculate_percentile_metrics(
         y_true: np.ndarray, y_pred: np.ndarray, percentiles: list = None
     ) -> Dict[str, Dict[str, float]]:
-        """
-        Calculate metrics for different percentile ranges.
 
-        Args:
-            y_true: True values
-            y_pred: Predicted values
-            percentiles: List of percentile boundaries (default: [25, 50, 75])
-
-        Returns:
-            Dictionary with metrics for each percentile range
-        """
         if percentiles is None:
             percentiles = [25, 50, 75]
 
@@ -198,23 +146,13 @@ class ModelMetricsCalculator:
     def compare_models(
         model_metrics: Dict[str, Dict[str, float]], metric_name: str = 'r2_score'
     ) -> Tuple[str, float]:
-        """
-        Compare models and identify best performing.
 
-        Args:
-            model_metrics: Dictionary mapping model names to metrics
-            metric_name: Metric to compare on
-
-        Returns:
-            Tuple of (best_model_name, best_metric_value)
-        """
         best_model = None
         best_value = -float('inf') if metric_name != 'mape' else float('inf')
 
         for model_name, metrics in model_metrics.items():
             value = metrics.get(metric_name, 0)
 
-            # For error metrics, lower is better
             if metric_name in ['rmse', 'mae', 'mse', 'mape', 'rmse_pct']:
                 is_better = value < best_value
             else:
@@ -230,16 +168,7 @@ class ModelMetricsCalculator:
     def calculate_prediction_error_distribution(
         y_true: np.ndarray, y_pred: np.ndarray
     ) -> Dict[str, float]:
-        """
-        Analyze distribution of prediction errors.
 
-        Args:
-            y_true: True values
-            y_pred: Predicted values
-
-        Returns:
-            Dictionary with error distribution statistics
-        """
         errors = y_true - y_pred
         abs_errors = np.abs(errors)
         pct_errors = 100 * (abs_errors / (np.abs(y_true) + 1e-6))
@@ -264,18 +193,9 @@ class ModelMetricsCalculator:
     def calculate_ensemble_diversity(
         individual_predictions: list,
     ) -> Dict[str, float]:
-        """
-        Calculate diversity metrics for ensemble predictions.
 
-        Args:
-            individual_predictions: List of individual model predictions
-
-        Returns:
-            Dictionary with diversity metrics
-        """
         predictions_array = np.array(individual_predictions)
         
-        # Standard metrics for diversity
         diversity = {
             'mean_disagreement': float(np.mean(np.std(predictions_array, axis=0))),
             'max_disagreement': float(np.max(np.std(predictions_array, axis=0))),

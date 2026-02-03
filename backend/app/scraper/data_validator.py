@@ -1,4 +1,3 @@
-"""Data validator for scraped agricultural market data."""
 
 from datetime import datetime
 from typing import Any, Optional
@@ -8,27 +7,13 @@ from loguru import logger
 from app.core.exceptions import ValidationError
 from app.core.utils import parse_timestamp
 
-
 class DataValidator:
-    """Validator for scraped market data."""
 
     @staticmethod
     def validate_market_price(data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Validate market price data.
-        
-        Args:
-            data: Raw market price data
-            
-        Returns:
-            Validated and cleaned data
-            
-        Raises:
-            ValidationError: If validation fails
-        """
+
         required_fields = ["commodity", "market", "price"]
         
-        # Check required fields
         missing_fields = [field for field in required_fields if not data.get(field)]
         if missing_fields:
             raise ValidationError(
@@ -43,7 +28,6 @@ class DataValidator:
             "date": DataValidator._validate_date(data.get("date")),
         }
         
-        # Validate price
         try:
             price = float(str(data["price"]).replace(",", ""))
             if price < 0:
@@ -52,7 +36,6 @@ class DataValidator:
         except (ValueError, TypeError) as e:
             raise ValidationError(f"Invalid price value: {data['price']}", details={"error": str(e)})
         
-        # Validate optional fields
         if data.get("min_price"):
             try:
                 validated["min_price"] = float(str(data["min_price"]).replace(",", ""))
@@ -71,7 +54,6 @@ class DataValidator:
             except (ValueError, TypeError):
                 validated["modal_price"] = None
         
-        # Validate arrival (quantity)
         if data.get("arrival"):
             try:
                 arrival = float(str(data["arrival"]).replace(",", ""))
@@ -87,18 +69,7 @@ class DataValidator:
 
     @staticmethod
     def validate_commodity(data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Validate commodity data.
-        
-        Args:
-            data: Raw commodity data
-            
-        Returns:
-            Validated and cleaned data
-            
-        Raises:
-            ValidationError: If validation fails
-        """
+
         if not data.get("name"):
             raise ValidationError("Commodity name is required", details={"data": data})
         
@@ -112,18 +83,7 @@ class DataValidator:
 
     @staticmethod
     def validate_market(data: dict[str, Any]) -> dict[str, Any]:
-        """
-        Validate market data.
-        
-        Args:
-            data: Raw market data
-            
-        Returns:
-            Validated and cleaned data
-            
-        Raises:
-            ValidationError: If validation fails
-        """
+
         if not data.get("name"):
             raise ValidationError("Market name is required", details={"data": data})
         
@@ -137,23 +97,13 @@ class DataValidator:
 
     @staticmethod
     def _validate_date(date_value: Any) -> Optional[str]:
-        """
-        Validate and normalize date value.
-        
-        Args:
-            date_value: Date value to validate
-            
-        Returns:
-            Normalized date string (YYYY-MM-DD) or None
-        """
+
         if not date_value:
             return None
         
-        # If already a datetime object
         if isinstance(date_value, datetime):
             return date_value.strftime("%Y-%m-%d")
         
-        # Try common date formats
         date_formats = [
             "%Y-%m-%d",
             "%d-%m-%Y",
@@ -180,16 +130,7 @@ class DataValidator:
         data_list: list[dict[str, Any]],
         validator_func: callable
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        """
-        Validate a batch of data items.
-        
-        Args:
-            data_list: List of data items to validate
-            validator_func: Validation function to use
-            
-        Returns:
-            Tuple of (valid_items, invalid_items)
-        """
+
         valid_items = []
         invalid_items = []
         
@@ -215,17 +156,7 @@ class DataValidator:
 
     @staticmethod
     def is_valid_price_range(min_price: float, max_price: float, modal_price: float) -> bool:
-        """
-        Check if price range is valid.
-        
-        Args:
-            min_price: Minimum price
-            max_price: Maximum price
-            modal_price: Modal (average) price
-            
-        Returns:
-            True if valid, False otherwise
-        """
+
         if min_price < 0 or max_price < 0 or modal_price < 0:
             return False
         

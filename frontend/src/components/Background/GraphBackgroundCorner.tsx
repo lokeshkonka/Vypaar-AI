@@ -8,7 +8,7 @@ export default function GraphBackgroundCorner() {
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      {/* ================= TOP LEFT ================= */}
+      {}
       <path
         d="M0 0 C 220 140, 380 300, 600 600"
         className="market-line-corner line-strong-corner"
@@ -22,7 +22,7 @@ export default function GraphBackgroundCorner() {
         className="market-line-corner line-faint-corner delay-2"
       />
 
-      {/* ================= TOP RIGHT ================= */}
+      {}
       <path
         d="M1200 0 C 980 140, 820 300, 600 600"
         className="market-line-corner line-strong-corner"
@@ -36,7 +36,7 @@ export default function GraphBackgroundCorner() {
         className="market-line-corner line-faint-corner delay-2"
       />
 
-      {/* ================= BOTTOM LEFT ================= */}
+      {}
       <path
         d="M0 1200 C 220 980, 380 820, 600 600"
         className="market-line-corner line-strong-corner"
@@ -50,7 +50,7 @@ export default function GraphBackgroundCorner() {
         className="market-line-corner line-faint-corner delay-2"
       />
 
-      {/* ================= BOTTOM RIGHT ================= */}
+      {}
       <path
         d="M1200 1200 C 980 980, 820 820, 600 600"
         className="market-line-corner line-strong-corner"

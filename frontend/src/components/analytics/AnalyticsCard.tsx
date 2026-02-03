@@ -5,7 +5,7 @@ export interface AnalyticsCardProps {
   title: string;
   value: string | number;
   unit?: string;
-  trend?: number; // percentage, positive or negative
+  trend?: number;
   trendLabel?: string;
   sparkline?: number[];
   description?: string;
@@ -71,7 +71,7 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
         onClick ? "cursor-pointer hover:shadow-lg" : ""
       }`}
     >
-      {/* Header with icon and title */}
+      {}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -81,7 +81,7 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
         {icon && <div className={`text-2xl ${getIconColor()}`}>{icon}</div>}
       </div>
 
-      {/* Main value */}
+      {}
       <div className="mb-4">
         <p className="text-3xl font-bold text-gray-900 dark:text-white">
           {value}
@@ -93,7 +93,7 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
         </p>
       </div>
 
-      {/* Trend and sparkline */}
+      {}
       <div className="flex items-center justify-between">
         {trend !== undefined && (
           <div className={`flex items-center gap-1 text-sm font-semibold ${getTrendColor()}`}>
@@ -111,7 +111,7 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
           </div>
         )}
 
-        {/* Simple sparkline */}
+        {}
         {sparkline && sparkline.length > 0 && (
           <div className="flex items-end gap-1 h-8">
             {sparkline.map((value, idx) => {
@@ -139,7 +139,7 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
         )}
       </div>
 
-      {/* Description */}
+      {}
       {description && (
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
           {description}

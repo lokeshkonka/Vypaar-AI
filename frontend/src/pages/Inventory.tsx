@@ -16,7 +16,7 @@ export default function Inventory() {
   return (
     <ContextAnalysisProvider>
       <div className="relative min-h-screen overflow-hidden">
-        {/* Background glows */}
+        {}
         <div className="absolute -top-40 -left-40 h-105 w-105 rounded-full bg-emerald-500/20 blur-[120px]" />
         <div className="absolute -bottom-40 -right-40 h-105 w-105 rounded-full bg-emerald-400/10 blur-[120px]" />
 
@@ -24,7 +24,7 @@ export default function Inventory() {
         <GraphBackgroundBottom />
 
         <main className="relative z-10 max-w-7xl mx-auto px-4 pt-28 space-y-8 pb-12">
-          {/* Header */}
+          {}
           <div className="space-y-2">
             <h1 className="text-4xl font-bold tracking-tight">
               Inventory Management
@@ -34,22 +34,26 @@ export default function Inventory() {
             </p>
           </div>
 
-          {/* Stock Metrics */}
+          {}
           <StockComponent />
 
-          {/* Action Cards Row */}
+          {}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ActionRequiredCard />
             <DecisionInsightCard />
           </div>
 
-          {/* Stock Comparison */}
+          {}
           <StockCompare />
 
+<<<<<<< Updated upstream
           {/* Bulk Import */}
           <BulkImport />
 
           {/* Your Stock Table */}
+=======
+          {}
+>>>>>>> Stashed changes
           <ForecastProvider>
             <InventoryProvider>
               <YourStock />

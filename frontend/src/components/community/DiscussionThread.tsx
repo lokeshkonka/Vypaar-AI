@@ -48,7 +48,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition">
-      {/* Header */}
+      {}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-start gap-3 flex-1">
           <img
@@ -75,17 +75,17 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         </span>
       </div>
 
-      {/* Title */}
+      {}
       <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 line-clamp-2">
         {title}
       </h3>
 
-      {/* Content */}
+      {}
       <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-3">
         {content}
       </p>
 
-      {/* Tags */}
+      {}
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {tags.map((tag, i) => (
@@ -99,7 +99,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         </div>
       )}
 
-      {/* Stats and Actions */}
+      {}
       <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-4">
           <button
@@ -126,7 +126,7 @@ export const DiscussionThread: React.FC<DiscussionThreadProps> = ({
         </div>
       </div>
 
-      {/* Replies Preview */}
+      {}
       {replies.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
           {replies.slice(0, 2).map((reply) => (

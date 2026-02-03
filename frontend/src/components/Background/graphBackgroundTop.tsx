@@ -8,7 +8,7 @@ export default function GraphBackgroundTop() {
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      {/* === PRIMARY VERTICAL FLOW === */}
+      {}
       <path
         d="
           M210 0
@@ -19,7 +19,7 @@ export default function GraphBackgroundTop() {
         className="market-line-top line-strong-top"
       />
 
-      {/* === SECONDARY FLOW === */}
+      {}
       <path
         d="
           M150 0
@@ -29,7 +29,7 @@ export default function GraphBackgroundTop() {
         className="market-line-top line-medium-top"
       />
 
-      {/* === SUPPORTING FLOW === */}
+      {}
       <path
         d="
           M270 0
@@ -39,7 +39,7 @@ export default function GraphBackgroundTop() {
         className="market-line-top line-soft-top"
       />
 
-      {/* === FAINT DEPTH LINES === */}
+      {}
       <path
         d="
           M90 0

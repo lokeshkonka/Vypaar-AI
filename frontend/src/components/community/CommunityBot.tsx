@@ -72,7 +72,7 @@ export const CommunityBot: React.FC<CommunityBotProps> = ({ className = '' }) =>
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Header */}
+      {}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-700 dark:to-blue-700 rounded-lg p-4 mb-4 text-white">
         <div className="flex items-center gap-2 mb-1">
           <Zap size={20} />
@@ -84,7 +84,7 @@ export const CommunityBot: React.FC<CommunityBotProps> = ({ className = '' }) =>
         </div>
       </div>
 
-      {/* Insights */}
+      {}
       <div className="mb-4">
         <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">
           AI Predictions
@@ -116,7 +116,7 @@ export const CommunityBot: React.FC<CommunityBotProps> = ({ className = '' }) =>
         )}
       </div>
 
-      {/* Trending */}
+      {}
       <div>
         <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-2 flex items-center gap-1">
           <TrendingUp size={16} /> Trending
@@ -156,7 +156,7 @@ export const CommunityBot: React.FC<CommunityBotProps> = ({ className = '' }) =>
         )}
       </div>
 
-      {/* Footer */}
+      {}
       <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
           AI-powered market analysis

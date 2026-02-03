@@ -1,7 +1,5 @@
 import { useNotify } from "../../../context/NotifyContext";
 
-
-
 export default function NotificationComponent() {
   const { notifications, markAsRead } = useNotify();
 

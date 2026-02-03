@@ -1,5 +1,4 @@
-// src/context/ModelContext.tsx
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useContext, useEffect, useState } from "react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
@@ -62,7 +61,6 @@ export function ModelProvider({
           console.log("Received data:", data);
           setMetrics(data);
           
-          // Generate graph data with varied daily performance
           const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
           const graphPoints: ModelGraphPoint[] = days.map((day, idx) => ({
             day,

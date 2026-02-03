@@ -1,4 +1,3 @@
-"""Alert configuration and management endpoints."""
 
 from typing import List, Optional
 from datetime import timedelta
@@ -24,9 +23,7 @@ from app.database.repositories import (
 from app.database.models import Alert
 from app.core.utils import get_current_timestamp
 
-
 router = APIRouter(prefix="/alerts", tags=["alerts"])
-
 
 @router.post("/", response_model=AlertResponse, status_code=status.HTTP_201_CREATED)
 async def create_alert(
@@ -35,18 +32,8 @@ async def create_alert(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> AlertResponse:
-    """
-    Create a new alert configuration.
-    
-    Alert types:
-    - PRICE_THRESHOLD: Alert when price crosses threshold
-    - INVENTORY_LOW: Alert when inventory falls below level
-    - PRICE_DROP: Alert on significant price drop
-    - PRICE_SPIKE: Alert on significant price increase
-    - DEMAND_SURGE: Alert on sudden demand increase
-    """
+
     try:
-        # Validate commodity if specified
         if request.commodity_id:
             commodity = await commodity_repo.get_by_id(request.commodity_id)
             if not commodity:
@@ -55,7 +42,6 @@ async def create_alert(
                     detail=f"Commodity {request.commodity_id} not found"
                 )
 
-        # Validate market if specified
         if request.market_id:
             market = await market_repo.get_by_id(request.market_id)
             if not market:
@@ -64,7 +50,6 @@ async def create_alert(
                     detail=f"Market {request.market_id} not found"
                 )
 
-        # Create alert
         alert = Alert(
             alert_type=request.alert_type,
             commodity_id=request.commodity_id,
@@ -108,7 +93,6 @@ async def create_alert(
             detail=str(e)
         )
 
-
 @router.get("/", response_model=List[AlertResponse])
 async def list_alerts(
     alert_type: Optional[str] = None,
@@ -121,19 +105,7 @@ async def list_alerts(
     limit: int = Query(100, ge=1, le=500),
     alert_repo: AlertRepository = Depends(get_alert_repo),
 ) -> List[AlertResponse]:
-    """
-    List alerts with filtering.
-    
-    Args:
-        alert_type: Filter by alert type
-        priority: Filter by priority (CRITICAL, HIGH, MEDIUM, LOW)
-        status_filter: Filter by status (ACTIVE, TRIGGERED, RESOLVED, DISMISSED)
-        commodity_id: Filter by commodity
-        market_id: Filter by market
-        active_only: Show only active alerts
-        skip: Pagination offset
-        limit: Maximum results
-    """
+
     try:
         if active_only and not status_filter:
             alerts = await alert_repo.get_active_alerts()
@@ -144,7 +116,6 @@ async def list_alerts(
         else:
             alerts = await alert_repo.get_all(skip=skip, limit=limit)
 
-        # Apply additional filters
         if alert_type:
             alerts = [a for a in alerts if a.alert_type == alert_type]
         if priority:
@@ -152,7 +123,6 @@ async def list_alerts(
         if market_id:
             alerts = [a for a in alerts if a.market_id == market_id]
 
-        # Apply pagination
         alerts = alerts[skip:skip + limit]
 
         return [
@@ -181,13 +151,12 @@ async def list_alerts(
             detail=str(e)
         )
 
-
 @router.get("/{alert_id}", response_model=AlertResponse)
 async def get_alert(
     alert_id: int,
     alert_repo: AlertRepository = Depends(get_alert_repo),
 ) -> AlertResponse:
-    """Get alert by ID."""
+
     alert = await alert_repo.get_by_id(alert_id)
     
     if not alert:
@@ -212,14 +181,13 @@ async def get_alert(
         updated_at=alert.updated_at,
     )
 
-
 @router.patch("/{alert_id}", response_model=AlertResponse)
 async def update_alert(
     alert_id: int,
     request: AlertUpdateRequest,
     alert_repo: AlertRepository = Depends(get_alert_repo),
 ) -> AlertResponse:
-    """Update alert configuration or status."""
+
     try:
         alert = await alert_repo.get_by_id(alert_id)
         
@@ -229,7 +197,6 @@ async def update_alert(
                 detail=f"Alert {alert_id} not found"
             )
 
-        # Build update data
         update_data = {}
         if request.status is not None:
             update_data['status'] = request.status
@@ -271,13 +238,12 @@ async def update_alert(
             detail=str(e)
         )
 
-
 @router.delete("/{alert_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_alert(
     alert_id: int,
     alert_repo: AlertRepository = Depends(get_alert_repo),
 ):
-    """Delete alert configuration."""
+
     try:
         alert = await alert_repo.get_by_id(alert_id)
         
@@ -299,13 +265,12 @@ async def delete_alert(
             detail=str(e)
         )
 
-
 @router.get("/recent", response_model=List[AlertResponse])
 async def get_recent_alerts(
     hours: int = Query(24, ge=1, le=168),
     alert_repo: AlertRepository = Depends(get_alert_repo),
 ) -> List[AlertResponse]:
-    """Get recently triggered alerts."""
+
     try:
         alerts = await alert_repo.get_recent_alerts(hours=hours)
 

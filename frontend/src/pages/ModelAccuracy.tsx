@@ -1,4 +1,3 @@
-// src/pages/ModelAccuracy.tsx
 import Navbar from "../components/dashboard/Navbar/Navbar";
 import DashFooter from "../components/dashboard/Home/dashFooter";
 import { ModelProvider, useModelAccuracy } from "../context/ModelContext";
@@ -54,7 +53,7 @@ export default function ModelAccuracy() {
           <AccuracyHero />
           <MetricsGrid />
 
-          {/* 🔥 NEW VISUAL COMPARISON */}
+          {}
           <ModelGraph />
 
           <AccuracyComparison />

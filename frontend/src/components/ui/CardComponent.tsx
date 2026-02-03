@@ -1,4 +1,3 @@
-// src/components/product-analysis/ui/CardComponent.tsx
 
 export default function CardComponent({
   title,
@@ -24,7 +23,7 @@ export default function CardComponent({
         dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]
       "
     >
-      {/* Header: Icon + Title inline */}
+      {}
       {title && (
         <div className="flex items-center gap-2">
           {icon && (
@@ -58,13 +57,13 @@ export default function CardComponent({
         </div>
       )}
 
-      {/* Divider */}
+      {}
       <div
         className="h-px w-10"
         style={{ backgroundColor: "var(--border)" }}
       />
 
-      {/* Main content */}
+      {}
       <div
         className="
           text-base sm:text-lg

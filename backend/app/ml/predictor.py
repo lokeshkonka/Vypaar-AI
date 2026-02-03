@@ -1,4 +1,3 @@
-"""High-level prediction interface combining preprocessing, ensemble, and metrics."""
 
 from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
@@ -10,7 +9,6 @@ from app.ml.preprocessor import DataPreprocessor
 from app.ml.ensemble import EnsembleManager
 from app.ml.model_metrics import ModelMetricsCalculator
 from app.config import settings
-
 
 class AgriculturalPredictor:
 
@@ -55,22 +53,11 @@ class AgriculturalPredictor:
         include_individual: bool = True,
         include_confidence: bool = True,
     ) -> Dict[str, Any]:
-        """
-        Make prediction on single sample.
 
-        Args:
-            features: Input features
-            include_individual: Include individual model predictions
-            include_confidence: Include confidence interval
-
-        Returns:
-            Dictionary with predictions and metrics
-        """
         start_time = datetime.now()
 
         self.ensemble.refresh_if_newer()
 
-        # Ensemble prediction
         if include_confidence:
             ensemble_pred, confidence, individual_preds = (
                 self.ensemble.predict_with_confidence(features)
@@ -85,12 +72,10 @@ class AgriculturalPredictor:
             confidence = None
             lower_bound, upper_bound = None, None
 
-        # Get feature importance
         feature_importance = self.preprocessor.get_feature_importance_baseline(
             features.reshape(1, -1)
         )
 
-        # Combine model importances
         model_importances = {}
         for model_name, model in self.ensemble.models.items():
             importance = self._get_model_feature_importance(model, model_name)
@@ -100,7 +85,6 @@ class AgriculturalPredictor:
             model_importances
         )
 
-        # Build response
         prediction_time = (datetime.now() - start_time).total_seconds()
 
         result = {
@@ -115,13 +99,11 @@ class AgriculturalPredictor:
         if include_individual:
             result['individual_predictions'] = individual_preds
 
-        # Add feature importance
         top_features = sorted(
             combined_importance.items(), key=lambda x: x[1], reverse=True
         )[:5]
         result['top_features'] = {name: float(imp) for name, imp in top_features}
 
-        # Store in history
         self.prediction_history.append(result)
 
         return result
@@ -131,16 +113,7 @@ class AgriculturalPredictor:
         features_list: np.ndarray,
         include_individual: bool = False,
     ) -> List[Dict[str, Any]]:
-        """
-        Make predictions on multiple samples.
 
-        Args:
-            features_list: 2D array of features
-            include_individual: Include individual model predictions
-
-        Returns:
-            List of prediction results
-        """
         start_time = datetime.now()
 
         ensemble_preds, individual_preds_list, confidences = self.ensemble.batch_predict(
@@ -180,30 +153,12 @@ class AgriculturalPredictor:
     def evaluate_predictions(
         self, y_true: np.ndarray, y_pred: np.ndarray
     ) -> Dict[str, float]:
-        """
-        Evaluate prediction accuracy.
 
-        Args:
-            y_true: True values
-            y_pred: Predicted values
-
-        Returns:
-            Dictionary of evaluation metrics
-        """
         metrics = self.metrics_calculator.calculate_metrics(y_true, y_pred)
         return metrics
 
     def _get_model_feature_importance(self, model: Any, model_name: str) -> Dict[str, float]:
-        """
-        Get feature importance from model.
 
-        Args:
-            model: Trained model
-            model_name: Name of the model
-
-        Returns:
-            Feature importance dictionary
-        """
         if hasattr(model, 'feature_importances_'):
             importances = model.feature_importances_
             total = np.sum(importances)
@@ -218,12 +173,7 @@ class AgriculturalPredictor:
                 for name in self.preprocessor.feature_names}
 
     def get_prediction_statistics(self) -> Dict[str, Any]:
-        """
-        Get statistics from prediction history.
 
-        Returns:
-            Dictionary with prediction statistics
-        """
         if not self.prediction_history:
             return {'total_predictions': 0}
 
@@ -245,15 +195,10 @@ class AgriculturalPredictor:
         return stats
 
     def clear_history(self) -> None:
-        """Clear prediction history."""
+
         self.prediction_history = []
         logger.info("Cleared prediction history")
 
     def get_ensemble_status(self) -> Dict[str, Any]:
-        """
-        Get status of predictor ensemble.
 
-        Returns:
-            Dictionary with status information
-        """
         return self.ensemble.get_ensemble_status()

@@ -1,4 +1,3 @@
-"""Discussions endpoint for community discussions."""
 
 from typing import Optional, List
 from datetime import datetime, timedelta
@@ -20,14 +19,11 @@ from app.database.repositories import DiscussionRepository
 from app.database.models import Discussion, Comment, DiscussionLike
 from app.core.utils import get_current_timestamp
 
-
 router = APIRouter(prefix="/discussions", tags=["Discussions"])
 
-
 def get_discussion_repo(db=Depends(get_db)) -> DiscussionRepository:
-    """Get discussion repository."""
-    return DiscussionRepository(db)
 
+    return DiscussionRepository(db)
 
 def get_comment_repo(db=Depends(get_db)) -> CommentRepository:
     """Get comment repository."""
@@ -43,7 +39,7 @@ async def get_discussions(
     limit: int = Query(50, ge=1, le=100),
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> DiscussionListResponse:
-    """Get discussions with optional filtering and search."""
+
     try:
         if search:
             discussions = await repo.search(search, skip, limit)
@@ -52,7 +48,6 @@ async def get_discussions(
         else:
             discussions = await repo.get_recent(skip, limit)
 
-        # Sort discussions
         if sort_by == "popular":
             discussions.sort(key=lambda x: x.likes_count, reverse=True)
         elif sort_by == "views":
@@ -89,13 +84,12 @@ async def get_discussions(
         logger.error(f"Error fetching discussions: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch discussions")
 
-
 @router.get("/pinned", response_model=List[DiscussionResponse])
 async def get_pinned_discussions(
     limit: int = Query(10, ge=1, le=20),
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> List[DiscussionResponse]:
-    """Get pinned discussions."""
+
     try:
         discussions = await repo.get_pinned(limit)
         return [
@@ -122,19 +116,17 @@ async def get_pinned_discussions(
         logger.error(f"Error fetching pinned discussions: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch pinned discussions")
 
-
 @router.get("/{discussion_id}", response_model=DiscussionResponse)
 async def get_discussion(
     discussion_id: int,
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> DiscussionResponse:
-    """Get a specific discussion by ID."""
+
     try:
         discussion = await repo.get_by_id(discussion_id)
         if not discussion:
             raise HTTPException(status_code=404, detail="Discussion not found")
 
-        # Increment views
         await repo.increment_views(discussion_id)
 
         return DiscussionResponse(
@@ -159,15 +151,13 @@ async def get_discussion(
         logger.error(f"Error fetching discussion {discussion_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch discussion")
 
-
 @router.post("/", response_model=DiscussionResponse, status_code=status.HTTP_201_CREATED)
 async def create_discussion(
     request: DiscussionCreate,
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> DiscussionResponse:
-    """Create a new discussion."""
+
     try:
-        # Generate default avatar if not provided
         avatar_url = request.avatar_url or f"https://api.dicebear.com/7.x/avataaars/svg?seed={request.author}"
 
         discussion = await repo.create(
@@ -209,14 +199,13 @@ async def create_discussion(
         logger.error(f"Error creating discussion: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create discussion")
 
-
 @router.put("/{discussion_id}", response_model=DiscussionResponse)
 async def update_discussion(
     discussion_id: int,
     request: DiscussionUpdate,
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> DiscussionResponse:
-    """Update a discussion."""
+
     try:
         discussion = await repo.get_by_id(discussion_id)
         if not discussion:
@@ -257,13 +246,12 @@ async def update_discussion(
         logger.error(f"Error updating discussion {discussion_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update discussion")
 
-
 @router.delete("/{discussion_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_discussion(
     discussion_id: int,
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ):
-    """Delete a discussion (soft delete - mark as archived)."""
+
     try:
         discussion = await repo.get_by_id(discussion_id)
         if not discussion:
@@ -280,13 +268,12 @@ async def delete_discussion(
         logger.error(f"Error deleting discussion {discussion_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete discussion")
 
-
 @router.post("/{discussion_id}/like", response_model=DiscussionResponse)
 async def like_discussion(
     discussion_id: int,
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> DiscussionResponse:
-    """Like a discussion."""
+
     try:
         discussion = await repo.increment_likes(discussion_id)
         if not discussion:
@@ -318,7 +305,6 @@ async def like_discussion(
         logger.error(f"Error liking discussion {discussion_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to like discussion")
 
-
 @router.get("/commodity/{commodity}", response_model=DiscussionListResponse)
 async def get_discussions_by_commodity(
     commodity: str,
@@ -326,7 +312,7 @@ async def get_discussions_by_commodity(
     limit: int = Query(50, ge=1, le=100),
     repo: DiscussionRepository = Depends(get_discussion_repo),
 ) -> DiscussionListResponse:
-    """Get discussions for a specific commodity."""
+
     try:
         discussions = await repo.get_by_commodity(commodity, skip, limit)
 

@@ -1,4 +1,3 @@
-"""Market trend analysis endpoint."""
 
 from typing import Optional, List
 from datetime import datetime, date, timedelta
@@ -20,40 +19,33 @@ from app.database.repositories import (
     MarketPriceRepository,
 )
 
-
 router = APIRouter(prefix="/market-trends", tags=["Market Trends"])
 
-
 def get_trend_repo(db: AsyncSession = Depends(get_db)) -> MarketTrendAnalysisRepository:
-    """Get trend analysis repository."""
+
     return MarketTrendAnalysisRepository(db)
 
-
 def get_commodity_repo(db: AsyncSession = Depends(get_db)) -> CommodityRepository:
-    """Get commodity repository."""
+
     return CommodityRepository(db)
 
-
 def get_market_repo(db: AsyncSession = Depends(get_db)) -> MarketRepository:
-    """Get market repository."""
+
     return MarketRepository(db)
 
-
 def get_price_repo(db: AsyncSession = Depends(get_db)) -> MarketPriceRepository:
-    """Get market price repository."""
-    return MarketPriceRepository(db)
 
+    return MarketPriceRepository(db)
 
 async def _build_trend_response(
     trend_analysis,
     commodity_repo: CommodityRepository,
     market_repo: MarketRepository,
 ) -> MarketTrendAnalysisResponse:
-    """Build trend analysis response."""
+
     commodity = await commodity_repo.get_by_id(trend_analysis.commodity_id)
     market = await market_repo.get_by_id(trend_analysis.market_id)
     
-    # Determine trend label
     trend_label = f"{trend_analysis.trend_direction} ({trend_analysis.trend_strength * 100:.0f}% strength)"
     
     return MarketTrendAnalysisResponse(
@@ -77,7 +69,6 @@ async def _build_trend_response(
         trend_label=trend_label,
     )
 
-
 @router.get("/{commodity_id}/{market_id}", response_model=MarketTrendComparisonResponse)
 async def get_trend_comparison(
     commodity_id: int,
@@ -86,9 +77,8 @@ async def get_trend_comparison(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> MarketTrendComparisonResponse:
-    """Get trend comparison across different periods (7d, 14d, 30d)."""
+
     try:
-        # Validate commodity and market
         commodity = await commodity_repo.get_by_id(commodity_id)
         market = await market_repo.get_by_id(market_id)
         
@@ -97,12 +87,10 @@ async def get_trend_comparison(
         
         trends_data = await repo.get_trend_comparison(commodity_id, market_id)
         
-        # Build responses
         trends_7d = await _build_trend_response(trends_data["7d"], commodity_repo, market_repo) if trends_data["7d"] else None
         trends_14d = await _build_trend_response(trends_data["14d"], commodity_repo, market_repo) if trends_data["14d"] else None
         trends_30d = await _build_trend_response(trends_data["30d"], commodity_repo, market_repo) if trends_data["30d"] else None
         
-        # Determine trend change
         trend_change = "STABLE"
         recommendation = "HOLD"
         
@@ -135,7 +123,6 @@ async def get_trend_comparison(
         logger.error(f"Error fetching trend comparison: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch trend analysis")
 
-
 @router.get("/period/{commodity_id}/{market_id}/{period_days}", response_model=MarketTrendAnalysisResponse)
 async def get_trend_for_period(
     commodity_id: int,
@@ -145,7 +132,7 @@ async def get_trend_for_period(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> MarketTrendAnalysisResponse:
-    """Get latest trend analysis for a specific period."""
+
     try:
         trend_analysis = await repo.get_latest_analysis(commodity_id, market_id, period_days)
         
@@ -159,7 +146,6 @@ async def get_trend_for_period(
         logger.error(f"Error fetching trend analysis: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch trend analysis")
 
-
 @router.get("/history/{commodity_id}/{market_id}", response_model=List[MarketTrendAnalysisResponse])
 async def get_trend_history(
     commodity_id: int,
@@ -170,7 +156,7 @@ async def get_trend_history(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> List[MarketTrendAnalysisResponse]:
-    """Get historical trend analysis."""
+
     try:
         end_date = date.today()
         start_date = end_date - timedelta(days=days_back)
@@ -188,7 +174,6 @@ async def get_trend_history(
         logger.error(f"Error fetching trend history: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch trend history")
 
-
 @router.get("/analyze/{commodity_id}/{market_id}", response_model=dict)
 async def analyze_market_trends(
     commodity_id: int,
@@ -197,24 +182,14 @@ async def analyze_market_trends(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> dict:
-    """
-    Perform real-time market trend analysis based on latest market data.
-    
-    This endpoint analyzes price data from the last 90 days to calculate:
-    - Trend direction (INCREASING, DECREASING, STABLE)
-    - Price volatility
-    - Momentum indicators
-    - Support and resistance levels
-    """
+
     try:
-        # Validate inputs
         commodity = await commodity_repo.get_by_id(commodity_id)
         market = await market_repo.get_by_id(market_id)
         
         if not commodity or not market:
             raise HTTPException(status_code=404, detail="Commodity or market not found")
         
-        # Get price history (90 days)
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=90)
         
@@ -223,18 +198,15 @@ async def analyze_market_trends(
         if not prices:
             raise HTTPException(status_code=404, detail="No price data available for analysis")
         
-        # Extract price values
         price_values = [p.price for p in prices]
         
-        # Calculate metrics
         avg_price = np.mean(price_values)
         min_price = np.min(price_values)
         max_price = np.max(price_values)
         volatility = np.std(price_values) / avg_price if avg_price > 0 else 0
         
-        # Determine trend
-        recent_prices = price_values[-14:]  # Last 2 weeks
-        old_prices = price_values[:14]  # First 2 weeks
+        recent_prices = price_values[-14:]
+        old_prices = price_values[:14]
         
         recent_avg = np.mean(recent_prices) if recent_prices else avg_price
         old_avg = np.mean(old_prices) if old_prices else avg_price
@@ -251,7 +223,6 @@ async def analyze_market_trends(
             trend_direction = "STABLE"
             trend_strength = 0.3
         
-        # Calculate momentum (rate of change)
         momentum = (price_values[-1] - price_values[0]) / len(price_values) if len(price_values) > 1 else 0
         
         return {

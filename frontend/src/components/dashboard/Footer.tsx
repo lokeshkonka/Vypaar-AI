@@ -14,9 +14,9 @@ const Footer: React.FC = () => {
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
     >
-      {/* TOP GRID */}
+      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-14">
-        {/* BRAND */}
+        {}
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="flex items-center gap-3">
             <img
@@ -36,7 +36,7 @@ const Footer: React.FC = () => {
           </p>
         </div>
 
-        {/* COMPANY LINKS */}
+        {}
         <div className="flex lg:items-center lg:justify-center">
           <div className="flex flex-col space-y-2.5">
             <h3 className="font-semibold text-gray-100 mb-4">
@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* NEWSLETTER */}
+        {}
         <div>
           <h3 className="font-semibold text-gray-100 mb-4">
             Subscribe to updates
@@ -116,10 +116,10 @@ const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* DIVIDER */}
+      {}
       <div className="mt-14 border-t border-emerald-900/60" />
 
-      {/* BOTTOM BAR */}
+      {}
       <div
         className="
           py-6

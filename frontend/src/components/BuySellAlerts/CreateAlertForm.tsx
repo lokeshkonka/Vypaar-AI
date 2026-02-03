@@ -51,14 +51,12 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
         if (commodRes.ok) {
           const data = await commodRes.json();
           console.log("Commodities data:", data);
-          // Handle both array and wrapped response
           const commArray = Array.isArray(data) ? data : (data.data || data.commodities || []);
           setCommodities(commArray);
         }
         if (marketsRes.ok) {
           const data = await marketsRes.json();
           console.log("Markets data:", data);
-          // Handle both array and wrapped response
           const mktArray = Array.isArray(data) ? data : (data.data || data.markets || []);
           setMarkets(mktArray);
         }
@@ -76,7 +74,6 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
     setIsLoading(true);
 
     try {
-      // Validation
       if (!formData.commodity_id || !formData.market_id) {
         throw new Error("Please select commodity and market");
       }
@@ -103,7 +100,6 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
         enabled: true,
       });
 
-      // Reset form
       setFormData({
         commodity_id: "",
         market_id: "",
@@ -140,7 +136,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        {/* Commodity */}
+        {}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Commodity *
@@ -166,7 +162,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
           </select>
         </div>
 
-        {/* Market */}
+        {}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Market *
@@ -192,7 +188,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
           </select>
         </div>
 
-        {/* Buy Threshold */}
+        {}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Buy Threshold (₹) *
@@ -215,7 +211,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
           />
         </div>
 
-        {/* Sell Threshold */}
+        {}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Sell Threshold (₹) *
@@ -238,7 +234,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
           />
         </div>
 
-        {/* Priority */}
+        {}
         <div>
           <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
             Priority
@@ -262,7 +258,7 @@ export default function CreateAlertForm({ onSuccess }: CreateAlertFormProps) {
         </div>
       </div>
 
-      {/* Message */}
+      {}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-soft)" }}>
           Alert Message (Optional)

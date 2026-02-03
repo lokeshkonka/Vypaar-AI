@@ -1,11 +1,9 @@
-// src/components/ModelAccuracy/ModelGraph.tsx
 import GraphComponent from "../ui/GraphComponent";
 import { useModelAccuracy } from "../../context/ModelContext";
 
 export default function ModelGraph() {
   const { graphData } = useModelAccuracy();
 
-  // Transform data for GraphComponent
   const aiData = graphData.map((d) => ({
     day: d.day,
     actual: d.actual,

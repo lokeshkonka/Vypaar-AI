@@ -9,7 +9,7 @@ export default function MarketGraphBackgroundUpward() {
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      {/* Primary bullish line */}
+      {}
       <path
         d="M0 300 
            C 120 280, 240 200, 360 220 
@@ -19,7 +19,7 @@ export default function MarketGraphBackgroundUpward() {
         className="market-line line-strong"
       />
 
-      {/* Secondary line */}
+      {}
       <path
         d="M0 260 
            C 140 240, 280 260, 420 190 
@@ -28,7 +28,7 @@ export default function MarketGraphBackgroundUpward() {
         className="market-line line-medium"
       />
 
-      {/* Tertiary */}
+      {}
       <path
         d="M0 320 
            C 160 300, 320 280, 480 260 
@@ -37,7 +37,7 @@ export default function MarketGraphBackgroundUpward() {
         className="market-line line-soft"
       />
 
-      {/* Extra depth lines */}
+      {}
       <path
         d="M0 340 
            C 200 330, 400 310, 600 300 

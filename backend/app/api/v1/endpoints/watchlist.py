@@ -1,4 +1,3 @@
-"""Watchlist endpoint for user's favorite commodities and markets."""
 
 from typing import Optional, List
 
@@ -22,29 +21,23 @@ from app.database.repositories import (
 from app.core.utils import get_current_timestamp
 from datetime import datetime, timedelta
 
-
 router = APIRouter(prefix="/watchlist", tags=["Watchlist"])
 
-
 def get_watchlist_repo(db: AsyncSession = Depends(get_db)) -> WatchlistRepository:
-    """Get watchlist repository."""
+
     return WatchlistRepository(db)
 
-
 def get_commodity_repo(db: AsyncSession = Depends(get_db)) -> CommodityRepository:
-    """Get commodity repository."""
+
     return CommodityRepository(db)
 
-
 def get_market_repo(db: AsyncSession = Depends(get_db)) -> MarketRepository:
-    """Get market repository."""
+
     return MarketRepository(db)
 
-
 def get_market_price_repo(db: AsyncSession = Depends(get_db)) -> MarketPriceRepository:
-    """Get market price repository."""
-    return MarketPriceRepository(db)
 
+    return MarketPriceRepository(db)
 
 @router.get("/{user_id}", response_model=WatchlistListResponse)
 async def get_user_watchlist(
@@ -56,17 +49,15 @@ async def get_user_watchlist(
     market_repo: MarketRepository = Depends(get_market_repo),
     price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> WatchlistListResponse:
-    """Get user's watchlist."""
+
     try:
         watchlist_items = await repo.get_user_watchlist(user_id, skip, limit)
         
         responses = []
         for item in watchlist_items:
-            # Get commodity info
             commodity = await commodity_repo.get_by_id(item.commodity_id)
             market = await market_repo.get_by_id(item.market_id) if item.market_id else None
             
-            # Get latest price
             current_price = None
             if market and commodity:
                 latest_price = await price_repo.get_latest_price(item.commodity_id, item.market_id)
@@ -97,7 +88,6 @@ async def get_user_watchlist(
         logger.error(f"Error fetching watchlist for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch watchlist")
 
-
 @router.post("", response_model=WatchlistResponse, status_code=status.HTTP_201_CREATED)
 async def add_to_watchlist(
     request: WatchlistCreate,
@@ -105,25 +95,21 @@ async def add_to_watchlist(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> WatchlistResponse:
-    """Add item to watchlist."""
+
     try:
-        # Validate commodity exists
         commodity = await commodity_repo.get_by_id(request.commodity_id)
         if not commodity:
             raise HTTPException(status_code=404, detail="Commodity not found")
         
-        # Validate market exists if provided
         market = None
         if request.market_id:
             market = await market_repo.get_by_id(request.market_id)
             if not market:
                 raise HTTPException(status_code=404, detail="Market not found")
         
-        # Check if already in watchlist
         if await repo.exists(request.user_id, request.commodity_id, request.market_id):
             raise HTTPException(status_code=400, detail="Item already in watchlist")
         
-        # Create watchlist entry
         watchlist_item = await repo.create(
             user_id=request.user_id,
             commodity_id=request.commodity_id,
@@ -154,7 +140,6 @@ async def add_to_watchlist(
         logger.error(f"Error adding to watchlist: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to add to watchlist")
 
-
 @router.put("/{watchlist_id}", response_model=WatchlistResponse)
 async def update_watchlist_entry(
     watchlist_id: int,
@@ -163,7 +148,7 @@ async def update_watchlist_entry(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> WatchlistResponse:
-    """Update watchlist entry."""
+
     try:
         watchlist_item = await repo.get_by_id(watchlist_id)
         if not watchlist_item:
@@ -203,13 +188,12 @@ async def update_watchlist_entry(
         logger.error(f"Error updating watchlist entry: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update watchlist entry")
 
-
 @router.delete("/{watchlist_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_from_watchlist(
     watchlist_id: int,
     repo: WatchlistRepository = Depends(get_watchlist_repo),
 ):
-    """Remove item from watchlist."""
+
     try:
         watchlist_item = await repo.get_by_id(watchlist_id)
         if not watchlist_item:

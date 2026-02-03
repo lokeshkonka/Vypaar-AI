@@ -1,4 +1,3 @@
-// src/data/insight-dummy.ts
 export type InsightPriority = "high" | "medium" | "info";
 
 export interface InsightItem {
@@ -6,7 +5,7 @@ export interface InsightItem {
   title: string;
   reason: string;
   priority: InsightPriority;
-  confidence: number; // 0–100
+  confidence: number;
   timeHorizon: "Immediate" | "Upcoming" | "Long-term";
 }
 

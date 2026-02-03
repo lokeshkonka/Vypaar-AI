@@ -4,7 +4,6 @@ import { ChevronDown, ChevronRight, BarChart3, Box, TrendingUp, Activity, Zap, T
 import { navigationSections } from "../../libs/navigationConfig";
 import type { NavItem, NavSection } from "../../libs/navigationConfig";
 
-// Icon map for navigation items
 const iconMap: Record<string, React.ReactNode> = {
   "product-analysis": <BarChart3 className="w-5 h-5" />,
   "inventory": <Box className="w-5 h-5" />,
@@ -109,7 +108,7 @@ const SectionComponent: React.FC<SectionProps> = ({
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <>
-      {/* Backdrop */}
+      {}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 md:hidden"
@@ -117,7 +116,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         />
       )}
 
-      {/* Sidebar */}
+      {}
       <div
         className={`
           fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 
@@ -126,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between gap-2 p-4 border-b border-gray-200 dark:border-gray-800">
           <a href="/" className="flex items-center gap-2">
             <img src="/icon.png" className="h-8 w-8" alt="Vypaar AI" />
@@ -138,11 +137,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="md:hidden p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
           >
-            ✕
+            
           </button>
         </div>
 
-        {/* Navigation Sections */}
+        {}
         <nav className="space-y-6 p-4">
           {navigationSections.map((section: NavSection) => (
             <SectionComponent

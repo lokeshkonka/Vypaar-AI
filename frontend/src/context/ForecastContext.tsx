@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import {
   createContext,
   useContext,
@@ -9,10 +9,6 @@ import {
 } from "react";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-
-/* =========================
-   TYPES
-   ========================= */
 
 export type ForecastSelection = {
   state?: string;
@@ -45,32 +41,24 @@ export interface Product {
 }
 
 type ForecastContextType = {
-  /* Selection */
+  
   selection: ForecastSelection;
   setSelection: (data: Partial<ForecastSelection>) => void;
 
-  /* Reference data (from backend) */
+  
   markets: Market[];
   commodities: Commodity[];
   categories: string[];
   products: Product[];
   forecastRanges: Array<{ label: string; value: "7" | "14" }>;
 
-  /* Actions */
+  
   generateForecast: () => Promise<void>;
   isSelectionComplete: boolean;
   isLoading: boolean;
 };
 
-/* =========================
-   CONTEXT
-   ========================= */
-
 const ForecastContext = createContext<ForecastContextType | null>(null);
-
-/* =========================
-   PROVIDER
-   ========================= */
 
 export function ForecastProvider({ children }: { children: ReactNode }) {
   const [selection, setSelectionState] =
@@ -84,7 +72,6 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     setSelectionState((prev) => ({ ...prev, ...data }));
   };
 
-  // Fetch markets and commodities from backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -113,7 +100,17 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     fetchData();
   }, []);
 
+<<<<<<< Updated upstream
   // Use categories from backend API commodities
+=======
+  const COMMODITY_CATEGORIES: { [key: string]: string } = {
+    "Tomato": "Vegetables",
+    "Potato": "Vegetables",
+    "Wheat": "Grains",
+    "Rice": "Grains",
+  };
+
+>>>>>>> Stashed changes
   const categories = useMemo(() => {
     return Array.from(
       new Set(
@@ -148,7 +145,7 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     );
   }, [selection]);
 
-  /* -------- backend integration -------- */
+  
   const generateForecast = async () => {
     if (!isSelectionComplete) {
       throw new Error("Forecast selection incomplete");
@@ -176,7 +173,6 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
 
       const forecastData = await res.json();
       
-      // Store forecast data in localStorage for ProductAnalysis page
       localStorage.setItem('forecastData', JSON.stringify(forecastData));
       localStorage.setItem('forecastSelection', JSON.stringify(selection));
     } catch (error) {
@@ -206,10 +202,6 @@ export function ForecastProvider({ children }: { children: ReactNode }) {
     </ForecastContext.Provider>
   );
 }
-
-/* =========================
-   HOOK
-   ========================= */
 
 export function useForecast() {
   const ctx = useContext(ForecastContext);

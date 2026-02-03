@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import type { AnalysisContextValue, ImpactItem } from "./types";
 
@@ -24,7 +24,6 @@ export function ContextAnalysisProvider({
 
   useEffect(() => {
     const loadForecastData = async () => {
-      // Prevent duplicate requests
       if (loadingRef.current) {
         return;
       }
@@ -33,13 +32,11 @@ export function ContextAnalysisProvider({
         loadingRef.current = true;
         setIsLoading(true);
         
-        // Get forecast selection from localStorage (set by ForecastContext)
         const selectionStr = localStorage.getItem('forecastSelection');
         
         if (selectionStr) {
           const selection = JSON.parse(selectionStr);
           
-          // Skip if selection is incomplete
           if (!selection.market || !selection.product) {
             // Fallback to product-analysis endpoint without filters
             const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
@@ -50,6 +47,7 @@ export function ContextAnalysisProvider({
             return;
           }
           
+<<<<<<< Updated upstream
           // Fetch product analysis with commodity and market filters
           const analysisParams = new URLSearchParams({
             commodity_name: selection.product,
@@ -61,6 +59,64 @@ export function ContextAnalysisProvider({
           
           if (analysisRes.ok) {
             const analysisData = await analysisRes.json();
+=======
+          const forecastPayload = {
+            state: selection.state || "",
+            city: selection.city || "",
+            market: selection.market,
+            category: selection.category || "",
+            product: selection.product,
+            forecast_range: Number(selection.forecastRange || 7),
+          };
+          
+          const forecastRes = await fetch(`${BACKEND_URL}/api/forecast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(forecastPayload),
+          });
+          
+          if (forecastRes.ok) {
+            const forecastData = await forecastRes.json();
+            
+            const demandGraphData = forecastData.forecasts?.map((f: any, idx: number) => ({
+              day: `Day ${idx + 1}`,
+              actual: f.predicted_price * 0.95,
+              forecast: f.predicted_price,
+            })) || [];
+            
+            const avgPredictedPrice = forecastData.averagePrice || 0;
+            const predictedDemand = Math.round(avgPredictedPrice * 1.2);
+            
+            const weatherImpact: ImpactItem[] = [
+              { 
+                title: "Temperature Rise", 
+                subtitle: "Expected 3°C increase", 
+                delta: "+12%", 
+                positive: forecastData.trend === "up" 
+              },
+              { 
+                title: "Rainfall Pattern", 
+                subtitle: "Moderate precipitation", 
+                delta: "+5%", 
+                positive: true 
+              },
+            ];
+            
+            const festivalImpact: ImpactItem[] = [
+              { 
+                title: "Upcoming Festival", 
+                subtitle: "High demand expected", 
+                delta: "+25%", 
+                positive: true 
+              },
+              { 
+                title: "Market Holiday", 
+                subtitle: "Reduced supply window", 
+                delta: "-8%", 
+                positive: false 
+              },
+            ];
+>>>>>>> Stashed changes
             
             // Use real data from backend
             setAnalysis({
@@ -136,7 +192,10 @@ export function ContextAnalysisProvider({
             }
           }
         } else {
+<<<<<<< Updated upstream
           // No selection - fetch default product analysis
+=======
+>>>>>>> Stashed changes
           const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
           if (res.ok) {
             const data = await res.json();
@@ -151,17 +210,14 @@ export function ContextAnalysisProvider({
       }
     };
 
-    // Check if selection has changed
     const selectionStr = localStorage.getItem('forecastSelection');
     if (selectionStr !== previousSelectionRef.current) {
       previousSelectionRef.current = selectionStr;
       loadForecastData();
     } else if (!previousSelectionRef.current) {
-      // First load
       loadForecastData();
     }
     
-    // Listen for storage changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'forecastSelection' && e.newValue !== previousSelectionRef.current) {
         previousSelectionRef.current = e.newValue;

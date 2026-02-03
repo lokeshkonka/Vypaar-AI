@@ -47,7 +47,7 @@ const ArchitectureSection: React.FC = () => {
       "
     >
       <div className="max-w-7xl mx-auto px-6 py-24 text-center">
-        {/* Title */}
+        {}
         <h2 className="text-4xl font-semibold tracking-tight">
           Technical Architecture
         </h2>
@@ -57,7 +57,7 @@ const ArchitectureSection: React.FC = () => {
           AI inference, explainability, and enforcement layers.
         </p>
 
-        {/* 3D CARD */}
+        {}
         <div
           ref={cardRef}
           onMouseMove={handleMouseMove}
@@ -78,7 +78,7 @@ const ArchitectureSection: React.FC = () => {
             shadow-[0_40px_80px_-30px_rgba(16,185,129,0.35)]
           "
         >
-          {/* WHITE IMAGE SURFACE */}
+          {}
           <div
             className="
               bg-white

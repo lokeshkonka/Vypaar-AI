@@ -1,4 +1,3 @@
-// src/components/product-analysis/StockComponent.tsx
 import {
   FiTrendingUp,
   FiPackage,
@@ -13,7 +12,7 @@ export default function StockComponent() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Predicted Demand */}
+      {}
       <MetricCard
         title="Predicted Demand"
         value={stockMetrics.predictedDemand}
@@ -22,7 +21,7 @@ export default function StockComponent() {
         icon={<FiTrendingUp size={18} />}
       />
 
-      {/* Stock Needed */}
+      {}
       <MetricCard
         title="Stock Needed"
         value={stockMetrics.stockNeeded}
@@ -31,7 +30,7 @@ export default function StockComponent() {
         icon={<FiPackage size={18} />}
       />
 
-      {/* Overstock Risk */}
+      {}
       <MetricCard
         title="Overstock Risk"
         value={stockMetrics.overstockRisk}
@@ -40,7 +39,7 @@ export default function StockComponent() {
         icon={<FiAlertTriangle size={18} />}
       />
 
-      {/* Understock Risk */}
+      {}
       <MetricCard
         title="Understock Risk"
         value={stockMetrics.understockRisk}

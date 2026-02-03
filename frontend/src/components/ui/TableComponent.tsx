@@ -1,9 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
 
-/* =========================
-   TYPES
-   ========================= */
+import React from "react";
 
 /**
  * Allows:
@@ -31,10 +27,6 @@ interface TableComponentProps<T> {
   skeletonRows?: number;
 }
 
-/* =========================
-   COMPONENT
-   ========================= */
-
 export default function TableComponent<T>({
   title,
   icon,
@@ -52,7 +44,7 @@ export default function TableComponent<T>({
         transition-all duration-200
       "
     >
-      {/* Header */}
+      {}
       {title && (
         <div className="flex items-center gap-2 mb-5">
           {icon && (
@@ -74,13 +66,13 @@ export default function TableComponent<T>({
         </div>
       )}
 
-      {/* Table wrapper */}
+      {}
       <div
         className="overflow-x-auto"
         style={{ border: "1px solid var(--border)" }}
       >
         <table className="w-full border-collapse">
-          {/* HEADER */}
+          {}
           <thead>
             <tr>
               {columns.map((col, index) => (
@@ -110,7 +102,7 @@ export default function TableComponent<T>({
             </tr>
           </thead>
 
-          {/* BODY */}
+          {}
           <tbody>
             {loading
               ? Array.from({ length: skeletonRows }).map((_, i) => (

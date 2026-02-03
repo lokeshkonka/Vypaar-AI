@@ -31,7 +31,7 @@ function ImpactRow({
         dark:bg-[rgba(var(--glass-white),0.15)]
       "
     >
-      {/* Left */}
+      {}
       <div>
         <p className="text-sm font-medium text-main">
           {title}
@@ -43,7 +43,7 @@ function ImpactRow({
         )}
       </div>
 
-      {/* Right */}
+      {}
       {delta && (
         <div
           className="
@@ -53,7 +53,7 @@ function ImpactRow({
           style={{
             color: positive
               ? "rgb(var(--emerald-main))"
-              : "#f59e0b", // intentional warning color
+              : "#f59e0b",
           }}
         >
           {positive ? (
@@ -82,7 +82,7 @@ export default function ImpactListCard({
         space-y-3
       "
     >
-      {/* Header */}
+      {}
       <div className="flex items-center gap-2">
         {icon && (
           <span className="text-[rgb(var(--emerald-main))]">
@@ -102,7 +102,7 @@ export default function ImpactListCard({
         </h3>
       </div>
 
-      {/* Items */}
+      {}
       <div className="space-y-2">
         {items.map((item, idx) => (
           <ImpactRow key={idx} {...item} />

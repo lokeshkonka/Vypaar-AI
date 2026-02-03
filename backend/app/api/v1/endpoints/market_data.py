@@ -1,4 +1,3 @@
-"""Market data query endpoints."""
 
 from typing import List, Optional
 from datetime import date, timedelta
@@ -24,9 +23,7 @@ from app.database.repositories import (
 )
 from app.core.utils import get_current_timestamp
 
-
 router = APIRouter(prefix="/market-data", tags=["market-data"])
-
 
 @router.get("/commodities", response_model=List[CommodityResponse])
 async def list_commodities(
@@ -36,15 +33,7 @@ async def list_commodities(
     limit: int = Query(100, ge=1, le=500),
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
 ) -> List[CommodityResponse]:
-    """
-    List all commodities with optional filtering.
-    
-    Args:
-        category: Filter by category
-        search: Search by name
-        skip: Number of records to skip
-        limit: Maximum records to return
-    """
+
     try:
         if search:
             commodities = await commodity_repo.search(search_term=search, limit=limit)
@@ -73,13 +62,12 @@ async def list_commodities(
             detail=str(e)
         )
 
-
 @router.get("/commodities/{commodity_id}", response_model=CommodityResponse)
 async def get_commodity(
     commodity_id: int,
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
 ) -> CommodityResponse:
-    """Get commodity by ID."""
+
     commodity = await commodity_repo.get_by_id(commodity_id)
     
     if not commodity:
@@ -97,7 +85,6 @@ async def get_commodity(
         updated_at=commodity.updated_at,
     )
 
-
 @router.get("/markets", response_model=List[MarketResponse])
 async def list_markets(
     state: Optional[str] = None,
@@ -106,15 +93,7 @@ async def list_markets(
     limit: int = Query(100, ge=1, le=500),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> List[MarketResponse]:
-    """
-    List all markets with optional filtering.
-    
-    Args:
-        state: Filter by state
-        search: Search by name
-        skip: Number of records to skip
-        limit: Maximum records to return
-    """
+
     try:
         if search:
             markets = await market_repo.search(search_term=search, limit=limit)
@@ -146,13 +125,12 @@ async def list_markets(
             detail=str(e)
         )
 
-
 @router.get("/markets/{market_id}", response_model=MarketResponse)
 async def get_market(
     market_id: int,
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> MarketResponse:
-    """Get market by ID."""
+
     market = await market_repo.get_by_id(market_id)
     
     if not market:
@@ -173,7 +151,6 @@ async def get_market(
         updated_at=market.updated_at,
     )
 
-
 @router.get("/prices", response_model=MarketDataListResponse)
 async def get_market_prices(
     commodity_id: Optional[int] = None,
@@ -186,47 +163,30 @@ async def get_market_prices(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> MarketDataListResponse:
-    """
-    Query market prices with filtering and pagination.
-    
-    Args:
-        commodity_id: Filter by commodity
-        market_id: Filter by market
-        start_date: Filter prices from this date
-        end_date: Filter prices until this date
-        skip: Number of records to skip
-        limit: Maximum records to return
-    """
+
     try:
-        # Set default date range if not provided
         if not end_date:
             end_date = get_current_timestamp().date()
         if not start_date:
             start_date = end_date - timedelta(days=30)
 
-        # Query prices
         if commodity_id and market_id:
-            # Specific commodity-market pair
             prices = await market_price_repo.get_price_history(
                 commodity_id=commodity_id,
                 market_id=market_id,
                 days=(end_date - start_date).days
             )
         elif market_id:
-            # All commodities for a market
             prices = await market_price_repo.get_market_prices(
                 market_id=market_id,
                 date=end_date
             )
         else:
-            # General query - get all recent prices
             prices = await market_price_repo.get_all(skip=skip, limit=limit)
 
-        # Apply pagination
         total = len(prices)
         prices = prices[skip:skip + limit]
 
-        # Get commodity and market names
         commodity_map = {}
         market_map = {}
 
@@ -241,7 +201,6 @@ async def get_market_prices(
                 if market:
                     market_map[price.market_id] = market.name
 
-        # Build response
         price_responses = [
             MarketPriceResponse(
                 id=p.id,
@@ -276,7 +235,6 @@ async def get_market_prices(
             detail=str(e)
         )
 
-
 @router.get("/prices/{commodity_id}/{market_id}/latest", response_model=MarketPriceResponse)
 async def get_latest_price(
     commodity_id: int,
@@ -285,7 +243,7 @@ async def get_latest_price(
     commodity_repo: CommodityRepository = Depends(get_commodity_repo),
     market_repo: MarketRepository = Depends(get_market_repo),
 ) -> MarketPriceResponse:
-    """Get latest price for commodity-market pair."""
+
     try:
         price = await market_price_repo.get_latest_price(
             commodity_id=commodity_id,
@@ -298,7 +256,6 @@ async def get_latest_price(
                 detail=f"No price data found for commodity {commodity_id} in market {market_id}"
             )
 
-        # Get names
         commodity = await commodity_repo.get_by_id(commodity_id)
         market = await market_repo.get_by_id(market_id)
 

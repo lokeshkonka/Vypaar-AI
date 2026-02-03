@@ -1,4 +1,3 @@
-"""Agmarknet web scraper for agricultural market data."""
 
 import json
 from datetime import datetime, timedelta
@@ -22,7 +21,6 @@ from app.scraper.utils import (
     parse_int,
     extract_table_data,
 )
-
 
 class AgmarknetScraper:
 
@@ -126,7 +124,6 @@ class AgmarknetScraper:
             {"name": "Cardamom", "category": "Spices", "unit": "Quintal"},
         ]
         
-        # Validate commodities
         valid_commodities, invalid = self.validator.validate_batch(
             commodities,
             self.validator.validate_commodity
@@ -200,7 +197,6 @@ class AgmarknetScraper:
             {"name": "Jabalpur", "state": "Madhya Pradesh", "district": "Jabalpur"},
         ]
         
-        # Validate markets
         valid_markets, invalid = self.validator.validate_batch(
             markets,
             self.validator.validate_market
@@ -536,7 +532,6 @@ class AgmarknetScraper:
         except Exception as e:
             logger.exception(f"Data collection failed: {str(e)}")
             raise ScraperError(f"Full scrape failed: {str(e)}")
-
 
 def create_scraper() -> AgmarknetScraper:
     return AgmarknetScraper()

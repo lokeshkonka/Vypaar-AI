@@ -109,7 +109,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
       {isOpen && (
         <div className="absolute top-full mt-2 right-0 w-80 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-50 p-6">
-          {/* Header */}
+          {}
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               Filters
@@ -122,7 +122,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </button>
           </div>
 
-          {/* Commodities */}
+          {}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Commodities
@@ -147,7 +147,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </div>
           </div>
 
-          {/* Markets */}
+          {}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Markets
@@ -172,7 +172,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </div>
           </div>
 
-          {/* Price Range */}
+          {}
           <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
             <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
               Price Range (₹)
@@ -195,7 +195,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </div>
           </div>
 
-          {/* Date Range */}
+          {}
           {showDateRange && (
             <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-800">
               <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
@@ -218,7 +218,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             </div>
           )}
 
-          {/* Actions */}
+          {}
           <div className="flex gap-3">
             <button
               onClick={clearFilters}

@@ -14,16 +14,13 @@ import GenerateForecastCTA from "../components/dashboard/Home/GenerateForecastCT
 import DashFooter from "../components/dashboard/Home/dashFooter";
 import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
 
-
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate / wait for user + dashboard readiness
-    // Replace this later with Clerk / Supabase / API readiness
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 800); // subtle delay to avoid flash
+    }, 800);
 
     return () => clearTimeout(timer);
   }, []);
@@ -43,7 +40,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <ForecastProvider>
-        {/* Home content */}
+        {}
         <main className="relative z-10 max-w-2xl mx-auto mt-12">
           <WelcomeCard />
 

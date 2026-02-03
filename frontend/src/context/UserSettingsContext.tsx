@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-// Types
 export const NotificationType = {
   EMAIL: "EMAIL",
   PUSH: "PUSH",
@@ -80,7 +79,6 @@ export interface Session {
   is_current: boolean;
 }
 
-// Context
 interface UserSettingsContextType {
   profile: UserProfile | null;
   notifications: NotificationPreference[] | null;
@@ -90,7 +88,6 @@ interface UserSettingsContextType {
   isLoading: boolean;
   error: string | null;
   
-  // Methods
   getProfile: () => Promise<UserProfile>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>;
   getNotifications: () => Promise<NotificationPreference[]>;
@@ -131,7 +128,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
 
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
 
-  // Profile methods
   const getProfile = async (): Promise<UserProfile> => {
     setIsLoading(true);
     setError(null);
@@ -179,7 +175,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
     }
   };
 
-  // Notification methods
   const getNotifications = async (): Promise<NotificationPreference[]> => {
     setIsLoading(true);
     setError(null);
@@ -227,7 +222,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
     }
   };
 
-  // API Keys methods
   const listAPIKeys = async (): Promise<APIKey[]> => {
     setIsLoading(true);
     setError(null);
@@ -264,7 +258,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
       });
       if (!response.ok) throw new Error("Failed to create API key");
       const data = await response.json();
-      // Refresh keys list
       await listAPIKeys();
       return data;
     } catch (err) {
@@ -287,7 +280,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
         },
       });
       if (!response.ok) throw new Error("Failed to revoke API key");
-      // Refresh keys list
       await listAPIKeys();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -298,7 +290,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
     }
   };
 
-  // Security methods
   const getSecuritySettings = async (): Promise<SecuritySettings> => {
     setIsLoading(true);
     setError(null);
@@ -356,7 +347,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
         },
       });
       if (!response.ok) throw new Error("Failed to disable 2FA");
-      // Refresh security settings
       await getSecuritySettings();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -367,7 +357,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
     }
   };
 
-  // Sessions methods
   const listSessions = async (): Promise<Session[]> => {
     setIsLoading(true);
     setError(null);
@@ -401,7 +390,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
         },
       });
       if (!response.ok) throw new Error("Failed to revoke session");
-      // Refresh sessions list
       await listSessions();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -423,7 +411,6 @@ export const UserSettingsProvider: React.FC<UserSettingsProviderProps> = ({ chil
         },
       });
       if (!response.ok) throw new Error("Failed to revoke all sessions");
-      // Refresh sessions list
       await listSessions();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";

@@ -1,4 +1,3 @@
-"""Data import endpoints."""
 
 import asyncio
 from typing import List
@@ -13,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/data", tags=["Data Import"])
 
-
 @router.post(
     "/import/upload",
     response_model=dict,
@@ -27,27 +25,14 @@ async def upload_csv_file(
         ..., description="Type of data: SALES_DATA, MARKET_PRICES, or INVENTORY"
     ),
 ) -> dict:
-    """
-    Upload a CSV file and create an import job.
 
-    **File Format Requirements:**
-    - SALES_DATA: date, market_name, commodity_name, price, quantity, [unit], [grade]
-    - MARKET_PRICES: date, market_name, commodity_name, min_price, max_price, modal_price, arrival_quantity
-    - INVENTORY: date, market_name, commodity_name, quantity_in_stock, quantity_sold, quantity_damaged, [unit], [notes]
-
-    **Date Format:** YYYY-MM-DD
-
-    **Returns:** Job ID and preview of data
-    """
     try:
-        # Validate file type
         if not file.filename.endswith(".csv"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Only CSV files are supported",
             )
 
-        # Read file
         content = await file.read()
 
         if len(content) == 0:
@@ -56,13 +41,12 @@ async def upload_csv_file(
                 detail="File is empty",
             )
 
-        if len(content) > 50 * 1024 * 1024:  # 50MB limit
+        if len(content) > 50 * 1024 * 1024:
             raise HTTPException(
                 status_code=status.HTTP_413_PAYLOAD_TOO_LARGE,
                 detail="File size exceeds 50MB limit",
             )
 
-        # Parse CSV
         raw_data, parse_errors = await DataImportService.parse_csv(
             content, import_type
         )
@@ -73,7 +57,6 @@ async def upload_csv_file(
                 detail=f"Error parsing CSV: {', '.join(parse_errors)}",
             )
 
-        # Create import job
         job_id = DataImportService.create_job(import_type, file.filename)
         job = DataImportService.get_job(job_id)
 
@@ -94,7 +77,7 @@ async def upload_csv_file(
         return {
             "job_id": job_id,
             "total_records": len(raw_data),
-            "preview": raw_data[:5],  # Show first 5 rows
+            "preview": raw_data[:5],
             "status": "READY_FOR_VALIDATION",
         }
 
@@ -107,7 +90,6 @@ async def upload_csv_file(
             detail=f"Error processing file: {str(e)}",
         )
 
-
 @router.post(
     "/import/validate",
     response_model=ImportJobResponse,
@@ -117,11 +99,7 @@ async def upload_csv_file(
 async def validate_import(
     job_id: str = Query(..., description="Job ID from upload endpoint"),
 ) -> ImportJobResponse:
-    """
-    Validate the uploaded CSV data.
 
-    Returns validation statistics and any errors found.
-    """
     try:
         job = DataImportService.get_job(job_id)
 
@@ -134,7 +112,6 @@ async def validate_import(
         job.status = ImportStatus.VALIDATING
         job.started_at = job.started_at or asyncio.get_event_loop().time()
 
-        # Validate based on import type
         if job.import_type == ImportType.SALES_DATA:
             valid_rows, errors = await DataImportService.validate_sales_data(
                 job.raw_data
@@ -183,7 +160,6 @@ async def validate_import(
             detail=f"Error validating data: {str(e)}",
         )
 
-
 @router.post(
     "/import/start",
     response_model=ImportJobResponse,
@@ -195,11 +171,7 @@ async def start_import(
     request: ImportStartRequest,
     db: AsyncSession = Depends(get_db),
 ) -> ImportJobResponse:
-    """
-    Start importing validated data.
 
-    The import runs asynchronously. Check status endpoint for progress.
-    """
     try:
         job = DataImportService.get_job(request.job_id)
 
@@ -218,7 +190,6 @@ async def start_import(
         job.status = ImportStatus.IMPORTING
         job.progress_percentage = 0
 
-        # Run import in background
         asyncio.create_task(
             _run_import(
                 job,
@@ -249,7 +220,6 @@ async def start_import(
             detail=f"Error starting import: {str(e)}",
         )
 
-
 @router.get(
     "/import/status/{job_id}",
     response_model=ImportJobResponse,
@@ -259,7 +229,7 @@ async def start_import(
 async def get_import_status(
     job_id: str = Path(..., description="Job ID to check"),
 ) -> ImportJobResponse:
-    """Get the status and progress of an import job."""
+
     try:
         job = DataImportService.get_job(job_id)
 
@@ -269,7 +239,6 @@ async def get_import_status(
                 detail=f"Job {job_id} not found",
             )
 
-        # Calculate estimated time remaining
         estimated_remaining = None
         if (
             job.status == ImportStatus.IMPORTING
@@ -308,7 +277,6 @@ async def get_import_status(
             detail=f"Error retrieving status: {str(e)}",
         )
 
-
 @router.get(
     "/import/jobs",
     response_model=List[ImportJobResponse],
@@ -318,7 +286,7 @@ async def get_import_status(
 async def list_import_jobs(
     status_filter: ImportStatus = Query(None, description="Filter by status"),
 ) -> List[ImportJobResponse]:
-    """Get list of all import jobs."""
+
     try:
         jobs = DataImportService.get_all_jobs()
 
@@ -348,11 +316,10 @@ async def list_import_jobs(
             detail=f"Error retrieving jobs: {str(e)}",
         )
 
-
 async def _run_import(
     job, db: AsyncSession, proceed_with_errors: bool = False
 ) -> None:
-    """Background task to run the actual import."""
+
     try:
         if job.import_type == ImportType.SALES_DATA:
             valid_rows, errors = await DataImportService.validate_sales_data(

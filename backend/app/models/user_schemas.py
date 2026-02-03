@@ -1,4 +1,3 @@
-"""Pydantic schemas for user settings and profile management."""
 
 from datetime import datetime
 from enum import Enum
@@ -6,34 +5,26 @@ from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-
 class NotificationType(str, Enum):
-    """Types of notifications users can receive."""
 
     EMAIL = "EMAIL"
     PUSH = "PUSH"
     IN_APP = "IN_APP"
 
-
 class PreferredLanguage(str, Enum):
-    """Supported languages."""
 
     ENGLISH = "ENGLISH"
     HINDI = "HINDI"
     SPANISH = "SPANISH"
     FRENCH = "FRENCH"
 
-
 class Theme(str, Enum):
-    """UI theme preferences."""
 
     LIGHT = "LIGHT"
     DARK = "DARK"
     AUTO = "AUTO"
 
-
 class NotificationPreference(BaseModel):
-    """User notification preferences."""
 
     notification_type: NotificationType
     enabled: bool
@@ -43,7 +34,6 @@ class NotificationPreference(BaseModel):
     )
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -53,9 +43,7 @@ class NotificationPreference(BaseModel):
             }
         }
 
-
 class UserProfileUpdate(BaseModel):
-    """Request to update user profile."""
 
     first_name: Optional[str] = Field(None, min_length=1, max_length=50)
     last_name: Optional[str] = Field(None, min_length=1, max_length=50)
@@ -67,7 +55,6 @@ class UserProfileUpdate(BaseModel):
     theme: Optional[Theme] = None
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -82,9 +69,7 @@ class UserProfileUpdate(BaseModel):
             }
         }
 
-
 class UserProfileResponse(BaseModel):
-    """Complete user profile response."""
 
     user_id: str
     first_name: str
@@ -102,7 +87,6 @@ class UserProfileResponse(BaseModel):
     is_phone_verified: bool = False
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -123,9 +107,7 @@ class UserProfileResponse(BaseModel):
             }
         }
 
-
 class APIKeyResponse(BaseModel):
-    """API key information."""
 
     key_id: str
     name: str
@@ -136,7 +118,6 @@ class APIKeyResponse(BaseModel):
     is_active: bool = True
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -150,9 +131,7 @@ class APIKeyResponse(BaseModel):
             }
         }
 
-
 class CreateAPIKeyRequest(BaseModel):
-    """Request to create new API key."""
 
     name: str = Field(min_length=1, max_length=100)
     expires_in_days: Optional[int] = Field(
@@ -163,7 +142,6 @@ class CreateAPIKeyRequest(BaseModel):
     )
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -172,9 +150,7 @@ class CreateAPIKeyRequest(BaseModel):
             }
         }
 
-
 class CreateAPIKeyResponse(BaseModel):
-    """Response when creating new API key."""
 
     key_id: str
     name: str
@@ -183,7 +159,6 @@ class CreateAPIKeyResponse(BaseModel):
     expires_at: Optional[datetime] = None
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -195,16 +170,13 @@ class CreateAPIKeyResponse(BaseModel):
             }
         }
 
-
 class NotificationPreferencesResponse(BaseModel):
-    """User notification preferences."""
 
     user_id: str
     preferences: list[NotificationPreference]
     updated_at: datetime
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -225,20 +197,17 @@ class NotificationPreferencesResponse(BaseModel):
             }
         }
 
-
 class SecuritySettingsResponse(BaseModel):
-    """User security settings."""
 
     user_id: str
     two_factor_enabled: bool
-    two_factor_method: Optional[str] = None  # sms, email, authenticator
+    two_factor_method: Optional[str] = None
     last_password_change: Optional[datetime] = None
     active_sessions: int
     suspicious_login_attempts: int = 0
     last_login: Optional[datetime] = None
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -252,14 +221,11 @@ class SecuritySettingsResponse(BaseModel):
             }
         }
 
-
 class UpdateNotificationPreferencesRequest(BaseModel):
-    """Request to update notification preferences."""
 
     preferences: list[NotificationPreference]
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -273,14 +239,11 @@ class UpdateNotificationPreferencesRequest(BaseModel):
             }
         }
 
-
 class EnableTwoFactorRequest(BaseModel):
-    """Request to enable two-factor authentication."""
 
     method: str = Field(description="sms, email, or authenticator")
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {

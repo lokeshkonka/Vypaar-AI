@@ -1,4 +1,3 @@
-"""Data preprocessing and feature engineering for agricultural ML models."""
 
 from typing import Tuple, List, Dict, Optional, Any
 from datetime import datetime, timedelta
@@ -11,7 +10,6 @@ from sklearn.impute import SimpleImputer
 
 from app.core.utils import get_current_timestamp
 from app.core.festival_calendar import FestivalCalendar
-
 
 class DataPreprocessor:
 
@@ -77,17 +75,7 @@ class DataPreprocessor:
     def extract_lag_features(
         self, data: pd.DataFrame, col: str, lags: List[int] = None
     ) -> pd.DataFrame:
-        """
-        Extract lag features from time series.
 
-        Args:
-            data: DataFrame with time series data
-            col: Column name to create lag features from
-            lags: List of lag periods (default: [1, 7, 30])
-
-        Returns:
-            DataFrame with lag features
-        """
         if lags is None:
             lags = [1, 7, 30]
 
@@ -96,7 +84,6 @@ class DataPreprocessor:
         for lag in lags:
             features[f'{col}_lag_{lag}'] = data[col].shift(lag)
 
-        # Rolling statistics
         for window in [7, 30]:
             features[f'{col}_rolling_mean_{window}'] = (
                 data[col].rolling(window=window).mean()
@@ -111,7 +98,6 @@ class DataPreprocessor:
                 data[col].rolling(window=window).max()
             )
 
-        # Exponential weighted average
         features[f'{col}_ewm_mean'] = data[col].ewm(span=7).mean()
 
         return features
@@ -119,17 +105,7 @@ class DataPreprocessor:
     def detect_outliers(
         self, data: np.ndarray, method: str = "iqr", threshold: float = 1.5
     ) -> np.ndarray:
-        """
-        Detect outliers using IQR or Z-score method.
 
-        Args:
-            data: Input array
-            method: 'iqr' or 'zscore'
-            threshold: IQR multiplier (1.5) or z-score threshold (3)
-
-        Returns:
-            Boolean mask of outliers
-        """
         if method == "iqr":
             q1 = np.percentile(data, 25)
             q3 = np.percentile(data, 75)
@@ -137,24 +113,14 @@ class DataPreprocessor:
             lower = q1 - threshold * iqr
             upper = q3 + threshold * iqr
             return (data < lower) | (data > upper)
-        else:  # zscore
+        else:
             z_scores = np.abs((data - np.mean(data)) / np.std(data))
             return z_scores > threshold
 
     def handle_outliers(
         self, data: np.ndarray, method: str = "iqr", strategy: str = "clip"
     ) -> np.ndarray:
-        """
-        Handle outliers in data.
 
-        Args:
-            data: Input array
-            method: Outlier detection method
-            strategy: 'remove', 'clip', or 'median'
-
-        Returns:
-            Processed array
-        """
         outlier_mask = self.detect_outliers(data, method)
         
         if strategy == "remove":
@@ -166,7 +132,7 @@ class DataPreprocessor:
             lower = q1 - 1.5 * iqr
             upper = q3 + 1.5 * iqr
             return np.clip(data, lower, upper)
-        else:  # median
+        else:
             median = np.median(data[~outlier_mask])
             data[outlier_mask] = median
             return data
@@ -174,17 +140,7 @@ class DataPreprocessor:
     def encode_categorical(
         self, data: pd.DataFrame, categorical_cols: List[str], fit: bool = True
     ) -> pd.DataFrame:
-        """
-        Encode categorical variables.
 
-        Args:
-            data: DataFrame with categorical columns
-            categorical_cols: List of categorical column names
-            fit: Whether to fit encoders or use existing ones
-
-        Returns:
-            DataFrame with encoded categorical features
-        """
         data_encoded = data.copy()
         
         for col in categorical_cols:
@@ -204,22 +160,10 @@ class DataPreprocessor:
     def scale_features(
         self, data: np.ndarray, feature_name: str, fit: bool = True
     ) -> np.ndarray:
-        """
-        Scale numerical features.
 
-        Args:
-            data: Input array (1D or 2D)
-            feature_name: Name for scaler storage
-            fit: Whether to fit scaler or use existing one
-
-        Returns:
-            Scaled array
-        """
         try:
-            # Convert to 2D if needed
             data_2d = data.reshape(-1, 1) if data.ndim == 1 else data
             
-            # Handle case where all values are the same (std = 0)
             if data_2d.std() == 0:
                 logger.debug(f"Feature {feature_name} has zero variance, returning as-is")
                 return data_2d.flatten() if data.ndim == 1 else data_2d
@@ -249,6 +193,7 @@ class DataPreprocessor:
         handle_missing: bool = True,
         handle_outliers_: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray]:
+<<<<<<< Updated upstream
         """
         Prepare data for model training.
         
@@ -349,14 +294,58 @@ class DataPreprocessor:
         self.feature_names = standard_features
         self.numeric_features = ['commodity_id', 'market_id', 'arrival', 'price']
         self.categorical_features = []
+=======
 
-        # Extract target
+        data_processed = data.copy()
+
+        if handle_missing and data_processed.isnull().any().any():
+            numeric_cols_to_impute = (
+                numeric_cols or data_processed.select_dtypes(include=[np.number]).columns.tolist()
+            )
+            data_processed[numeric_cols_to_impute] = self.imputer.fit_transform(
+                data_processed[numeric_cols_to_impute]
+            )
+            logger.info(f"Handled missing values in {len(numeric_cols_to_impute)} columns")
+
+        temporal_features = self.extract_temporal_features(data_processed[date_col])
+
+        if categorical_cols:
+            data_processed = self.encode_categorical(
+                data_processed, categorical_cols, fit=True
+            )
+
+        if numeric_cols is None:
+            numeric_cols = data_processed.select_dtypes(include=[np.number]).columns.tolist()
+            if target_col in numeric_cols:
+                numeric_cols.remove(target_col)
+
+        if handle_outliers_:
+            for col in numeric_cols:
+                data_processed[col] = self.handle_outliers(
+                    data_processed[col].values, strategy="clip"
+                )
+
+        feature_cols = numeric_cols + (categorical_cols or [])
+        features = data_processed[feature_cols].copy()
+        
+        features = pd.concat([features, temporal_features], axis=1)
+        
+        for col in numeric_cols:
+            features[col] = self.scale_features(features[col].values, col, fit=True)
+
+        self.feature_names = features.columns.tolist()
+        self.numeric_features = numeric_cols
+        self.categorical_features = categorical_cols or []
+>>>>>>> Stashed changes
+
         target = data_processed[target_col].values
 
+<<<<<<< Updated upstream
         # Convert features to numeric dtype
+=======
+>>>>>>> Stashed changes
         features = features.apply(pd.to_numeric, errors="coerce")
 
-        # Remove rows with NaN in features or target
         valid_idx = ~(pd.isna(features).any(axis=1) | pd.isna(target))
         features = features.to_numpy()[valid_idx]
         target = target[valid_idx]
@@ -370,6 +359,7 @@ class DataPreprocessor:
     def prepare_prediction_data(
         self, data: pd.DataFrame, date_col: str, categorical_cols: List[str] = None
     ) -> np.ndarray:
+<<<<<<< Updated upstream
         """
         Prepare data for prediction (uses fitted preprocessor).
         
@@ -387,16 +377,21 @@ class DataPreprocessor:
         Returns:
             Processed features as numpy array
         """
+=======
+
+>>>>>>> Stashed changes
         data_processed = data.copy()
 
-        # Extract temporal features (includes festival indicators)
         temporal_features = self.extract_temporal_features(data_processed[date_col])
 
-        # Build features dataframe with proper columns
         features = pd.DataFrame()
         
+<<<<<<< Updated upstream
         # Add numeric columns that exist (matching training data)
         numeric_cols = ['commodity_id', 'market_id', 'arrival', 'min_price', 'max_price', 'modal_price']
+=======
+        numeric_cols = ['price', 'arrival', 'commodity_id', 'market_id']
+>>>>>>> Stashed changes
         for col in numeric_cols:
             if col in data_processed.columns:
                 features[col] = data_processed[col]
@@ -411,14 +406,17 @@ class DataPreprocessor:
                 else:
                     features[col] = 0.0
         
-        # Add temporal/festival features
         features = pd.concat([features, temporal_features], axis=1)
         
+<<<<<<< Updated upstream
         # Define standard 29 features for model compatibility (must match trained model)
+=======
+>>>>>>> Stashed changes
         standard_features = [
             'commodity_id',
             'market_id',
             'arrival',
+<<<<<<< Updated upstream
             'min_price',
             'max_price',
             'modal_price',
@@ -445,18 +443,35 @@ class DataPreprocessor:
             'is_procurement_period',
             'is_festival_week',
             'is_major_festival',
+=======
+            'day_of_week',
+            'month',
+            'season',
+            'is_festival',
+            'festival_effect',
+            'holiday_proximity',
+            'monsoon_factor',
+            'harvest_season',
+            'price',
+            'week_of_year',
+            'quarter',
+            'month_sin',
+            'month_cos',
+>>>>>>> Stashed changes
         ]
         
-        # Fill missing features with defaults
         for col in standard_features:
             if col not in features.columns:
                 features[col] = 0.0
         
-        # Select only standard features in order
         features = features[standard_features].copy()
         
+<<<<<<< Updated upstream
         # Scale numeric features (use fitted scalers if available)
         for col in ['arrival']:
+=======
+        for col in ['price', 'arrival']:
+>>>>>>> Stashed changes
             if col in features.columns:
                 try:
                     values = features[col].values
@@ -466,12 +481,15 @@ class DataPreprocessor:
                 except Exception as e:
                     logger.debug(f"Could not scale {col}: {e}, using raw values")
 
-        # Handle missing values
         features = features.fillna(features.mean(numeric_only=True))
         features = features.fillna(0.0)
         
+<<<<<<< Updated upstream
         # Update feature names for consistency
         self.feature_names = features.columns.tolist()
+=======
+        self.feature_names = standard_features
+>>>>>>> Stashed changes
         
         features_array = features.values
 
@@ -480,15 +498,7 @@ class DataPreprocessor:
         return features_array
 
     def get_feature_importance_baseline(self, features: np.ndarray) -> Dict[str, float]:
-        """
-        Get baseline feature importance using variance.
 
-        Args:
-            features: Feature array
-
-        Returns:
-            Dictionary of feature importance scores
-        """
         feature_variance = np.var(features, axis=0)
         total_variance = np.sum(feature_variance)
         

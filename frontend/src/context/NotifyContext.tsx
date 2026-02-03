@@ -1,4 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
+
 import { createContext, useContext, useState } from "react";
 
 /**
@@ -56,8 +56,6 @@ export function NotifyProvider({
       )
     );
 
-    // BACKEND CALL (later)
-    // PATCH /api/notifications/:id/read
   };
 
   return (

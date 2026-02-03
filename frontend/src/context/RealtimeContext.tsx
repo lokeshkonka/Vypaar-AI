@@ -48,7 +48,6 @@ interface RealtimeProviderProps {
   wsUrl?: string;
 }
 
-// Mock data generator
 const generateMockPrice = (basePrice: number, volatility: number = 2): number => {
   const change = (Math.random() - 0.5) * volatility;
   return Math.round((basePrice + change) * 100) / 100;
@@ -76,7 +75,6 @@ const generateMockCommodity = (name: string, symbol: string, basePrice: number):
   };
 };
 
-// Mock alerts generator
 const generateRandomAlert = (commodities: RealtimeCommodity[]): RealtimeMarketAlert | null => {
   if (commodities.length === 0) return null;
 
@@ -132,15 +130,8 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children, ws
   const [isConnected, setIsConnected] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(new Date());
 
-  // Simulate WebSocket connection and data updates
   useEffect(() => {
-    // TODO: Replace with real WebSocket when backend is ready
-    // const ws = new WebSocket(wsUrl || 'ws://localhost:8000/ws/market');
-    // ws.onopen = () => setIsConnected(true);
-    // ws.onmessage = (event) => { ... };
-    // ws.onclose = () => setIsConnected(false);
 
-    // For now, simulate with intervals
     const priceUpdateInterval = setInterval(() => {
       setCommodities((prev) =>
         prev.map((commodity) => {
@@ -165,12 +156,11 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children, ws
       setLastUpdate(new Date());
     }, 3000);
 
-    // Generate random alerts every 8-12 seconds
     const alertInterval = setInterval(() => {
       setCommodities((current) => {
         const alert = generateRandomAlert(current);
         if (alert) {
-          setAlerts((prev) => [alert, ...prev].slice(0, 10)); // Keep last 10 alerts
+          setAlerts((prev) => [alert, ...prev].slice(0, 10));
         }
         return current;
       });
@@ -184,12 +174,10 @@ export const RealtimeProvider: React.FC<RealtimeProviderProps> = ({ children, ws
 
   const connect = () => {
     setIsConnected(true);
-    // TODO: Implement real WebSocket connection
   };
 
   const disconnect = () => {
     setIsConnected(false);
-    // TODO: Implement real WebSocket disconnection
   };
 
   const clearAlerts = () => {

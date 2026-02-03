@@ -1,4 +1,3 @@
-"""Pytest configuration and fixtures."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -6,29 +5,25 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.config import settings
 
-
 @pytest.fixture(scope="session")
 def test_app():
-    """Create a test FastAPI application."""
-    return app
 
+    return app
 
 @pytest.fixture(scope="function")
 def client(test_app):
-    """Create a test client."""
+
     with TestClient(test_app) as test_client:
         yield test_client
 
-
 @pytest.fixture(scope="session")
 def test_settings():
-    """Provide test settings."""
-    return settings
 
+    return settings
 
 @pytest.fixture(scope="function")
 def sample_market_data():
-    """Provide sample market data for testing."""
+
     return {
         "market": "Delhi",
         "commodity": "Wheat",
@@ -38,10 +33,9 @@ def sample_market_data():
         "state": "Delhi"
     }
 
-
 @pytest.fixture(scope="function")
 def sample_prediction_request():
-    """Provide sample prediction request for testing."""
+
     return {
         "market": "Delhi",
         "commodity": "Wheat",
@@ -53,10 +47,9 @@ def sample_prediction_request():
         }
     }
 
-
 @pytest.fixture(scope="function")
 def sample_inventory_request():
-    """Provide sample inventory request for testing."""
+
     return {
         "commodity": "Wheat",
         "current_stock": 1000,
@@ -64,10 +57,9 @@ def sample_inventory_request():
         "forecast_days": 30
     }
 
-
 @pytest.fixture(scope="function")
 def sample_alert_config():
-    """Provide sample alert configuration for testing."""
+
     return {
         "alert_type": "PRICE_THRESHOLD",
         "commodity": "Wheat",
@@ -80,13 +72,11 @@ def sample_alert_config():
         "channels": ["in_app", "email"]
     }
 
-
 @pytest.fixture(autouse=True)
 def reset_loggers():
-    """Reset loggers between tests."""
+
     import logging
     
-    # Clear all handlers
     for logger_name in logging.root.manager.loggerDict:
         logger = logging.getLogger(logger_name)
         logger.handlers.clear()
@@ -94,10 +84,9 @@ def reset_loggers():
     
     yield
 
-
 @pytest.fixture(scope="function")
 def mock_ml_model(monkeypatch):
-    """Mock ML model for testing."""
+
     class MockModel:
         def predict(self, X):
             import numpy as np
@@ -109,10 +98,9 @@ def mock_ml_model(monkeypatch):
     
     return MockModel()
 
-
 @pytest.fixture(scope="function")
 def mock_redis(monkeypatch):
-    """Mock Redis connection for testing."""
+
     class MockRedis:
         def __init__(self):
             self.data = {}

@@ -49,7 +49,6 @@ export const Table = React.forwardRef<
   const [sort, setSort] = useState<SortState>({ key: null, direction: "asc" });
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Handle sorting
   const handleSort = (key: string, sortable?: boolean) => {
     if (!sortable) return;
 
@@ -64,7 +63,6 @@ export const Table = React.forwardRef<
     }
   };
 
-  // Sort data
   let sortedData = [...data];
   if (sort.key) {
     sortedData.sort((a, b) => {
@@ -83,7 +81,6 @@ export const Table = React.forwardRef<
     });
   }
 
-  // Paginate data
   let displayData = sortedData;
   let totalPages = 1;
   if (pagination) {

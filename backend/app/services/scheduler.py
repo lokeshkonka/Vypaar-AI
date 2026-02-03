@@ -23,7 +23,6 @@ from app.database.repositories import (
     MarketRepository,
 )
 
-
 class DataScheduler:
     
     def __init__(self):
@@ -236,9 +235,7 @@ class DataScheduler:
         
         return status
 
-
 _scheduler_instance: Optional[DataScheduler] = None
-
 
 def get_scheduler() -> DataScheduler:
     

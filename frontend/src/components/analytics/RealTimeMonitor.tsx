@@ -12,7 +12,7 @@ interface LiveCommodity {
   high: number;
   low: number;
   timestamp: Date;
-  trend: number[]; // Last 10 prices for sparkline
+  trend: number[];
 }
 
 export interface RealTimeMonitorProps {
@@ -22,7 +22,6 @@ export interface RealTimeMonitorProps {
   className?: string;
 }
 
-// Mock data generator for demo
 const generateMockPrice = (basePrice: number, volatility: number = 2): number => {
   const change = (Math.random() - 0.5) * volatility;
   return Math.round((basePrice + change) * 100) / 100;
@@ -72,7 +71,6 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
   const [isConnected] = useState(propIsConnected);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  // Simulate real-time price updates
   useEffect(() => {
     const interval = setInterval(() => {
       setCommodities((prevCommodities) =>
@@ -84,7 +82,6 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
           const change = newPrice - commodity.price;
           const changePercent = (change / commodity.price) * 100;
 
-          // Update trend (keep last 10)
           const newTrend = [...commodity.trend.slice(1), newPrice];
 
           return {
@@ -101,7 +98,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
         })
       );
       setLastUpdate(new Date());
-    }, 3000); // Update every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -139,7 +136,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Header */}
+      {}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -156,7 +153,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
         </div>
       </div>
 
-      {/* Commodities Grid */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {commodities.map((commodity) => {
           const isPositive = commodity.change >= 0;
@@ -167,7 +164,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
               key={commodity.id}
               className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
             >
-              {/* Symbol & Name */}
+              {}
               <div className="mb-2">
                 <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">
                   {commodity.symbol}
@@ -177,7 +174,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
                 </p>
               </div>
 
-              {/* Price & Change */}
+              {}
               <div className="mb-2">
                 <div className="flex items-baseline justify-between gap-1 mb-1">
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
@@ -210,7 +207,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
                 </p>
               </div>
 
-              {/* Sparkline */}
+              {}
               {sparklinePoints && (
                 <div className="mb-2 h-6 flex items-end">
                   <svg
@@ -233,7 +230,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
                 </div>
               )}
 
-              {/* Stats */}
+              {}
               <div className="space-y-1 text-xs border-t border-gray-300 dark:border-gray-600 pt-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">High</span>
@@ -259,7 +256,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
         })}
       </div>
 
-      {/* Status Bar */}
+      {}
       <div className="mt-4 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
         <div className="flex items-center gap-2 text-xs">
           <Zap size={14} className="text-blue-600 dark:text-blue-400" />
@@ -279,7 +276,7 @@ export const RealTimeMonitor: React.FC<RealTimeMonitorProps> = ({
         </div>
       </div>
 
-      {/* Footer */}
+      {}
       <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 text-center">
         Data simulated for demonstration. Connect to WebSocket for real-time prices.
       </p>

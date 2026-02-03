@@ -14,10 +14,6 @@ import {
 import Navbar from "../components/landing/Navbar";
 import DashFooter from "../components/dashboard/Home/dashFooter";
 
-/* =========================
-   TYPES
-   ========================= */
-
 interface NavItem {
   id: string;
   label: string;
@@ -35,17 +31,11 @@ interface ArchitectureBlock {
   description: string;
 }
 
-/* =========================
-   PAGE
-   ========================= */
-
 export default function Docs() {
   const [activeSection, setActiveSection] = useState("overview");
   const [expandedArch, setExpandedArch] = useState<string | null>(null);
 
-  /* =========================
-     NAV ITEMS
-     ========================= */
+  
 
   const navItems: NavItem[] = [
     { id: "overview", label: "Overview", icon: <Brain size={16} /> },
@@ -58,9 +48,7 @@ export default function Docs() {
     { id: "integration", label: "Integration", icon: <ArrowRight size={16} /> },
   ];
 
-  /* =========================
-     CONTENT
-     ========================= */
+  
 
   const features: FeatureBlock[] = [
     {
@@ -112,9 +100,7 @@ export default function Docs() {
     },
   ];
 
-  /* =========================
-     RENDER SECTIONS
-     ========================= */
+  
 
   const renderSection = () => {
     switch (activeSection) {
@@ -311,20 +297,18 @@ export default function Docs() {
     }
   };
 
-  /* =========================
-     LAYOUT
-     ========================= */
+  
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Background glows */}
+      {}
       <div className="absolute -top-40 -left-40 h-105 w-105 rounded-full bg-emerald-500/20 blur-[120px]" />
       <div className="absolute -bottom-40 -right-40 h-105 w-105 rounded-full bg-emerald-400/10 blur-[120px]" />
 
       <Navbar />
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-28 pb-16 grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* SIDEBAR */}
+        {}
         <aside className="lg:col-span-1 space-y-1">
           {navItems.map((n) => (
             <button
@@ -342,7 +326,7 @@ export default function Docs() {
           ))}
         </aside>
 
-        {/* CONTENT */}
+        {}
         <section className="lg:col-span-3 glass-card p-6">
           {renderSection()}
         </section>
@@ -350,7 +334,7 @@ export default function Docs() {
 
       <DashFooter />
 
-      {/* ANIMATIONS */}
+      {}
       <style>{`
         .animate-section {
           animation: fadeSlide 0.35s ease-out;

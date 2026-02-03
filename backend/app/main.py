@@ -1,4 +1,3 @@
-"""FastAPI main application."""
 
 import time
 from contextlib import asynccontextmanager
@@ -19,14 +18,12 @@ from app.core.logging_config import setup_logging
 from app.core.utils import get_current_timestamp
 from app.services.scheduler import get_scheduler
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     
     logger.info(f"{settings.app_name} v{settings.app_version} starting up")
     logger.info(f"Running in {settings.environment} mode")
     
-    # Only start scheduler if not in testing mode
     import os
     if os.getenv("TESTING") != "1":
         scheduler = get_scheduler()
@@ -42,8 +39,6 @@ async def lifespan(app: FastAPI):
         scheduler.stop()
     logger.info(f"{settings.app_name} shutting down gracefully")
 
-
-# Initialize FastAPI application
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
@@ -54,8 +49,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -64,8 +57,6 @@ app.add_middleware(
     allow_headers=settings.cors_allow_headers,
 )
 
-
-# Request logging middleware
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     
@@ -85,8 +76,6 @@ async def log_requests(request: Request, call_next):
     
     return response
 
-
-# Exception handlers
 @app.exception_handler(AgriTechException)
 async def agritech_exception_handler(request: Request, exc: AgriTechException):
     
@@ -105,10 +94,9 @@ async def agritech_exception_handler(request: Request, exc: AgriTechException):
         }
     )
 
-
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle request validation errors."""
+
     logger.warning(
         f"Validation error",
         extra={
@@ -127,10 +115,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    """Handle unexpected exceptions."""
+
     logger.exception(
         f"Unexpected error: {str(exc)}",
         extra={
@@ -149,11 +136,9 @@ async def general_exception_handler(request: Request, exc: Exception):
         }
     )
 
-
-# Root endpoint
 @app.get("/", tags=["Root"])
 async def root() -> dict[str, Any]:
-    """Root endpoint."""
+
     return {
         "name": settings.app_name,
         "version": settings.app_version,
@@ -163,13 +148,10 @@ async def root() -> dict[str, Any]:
         "timestamp": get_current_timestamp().isoformat(),
     }
 
-
-# Include API router
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 app.include_router(frontend_router, prefix="/api")
 app.include_router(frontend_router, prefix=settings.api_v1_prefix)
-app.include_router(frontend_router)  # For /users/init at root level
-
+app.include_router(frontend_router)
 
 if __name__ == "__main__":
     import uvicorn

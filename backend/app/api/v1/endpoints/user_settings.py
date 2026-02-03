@@ -1,4 +1,3 @@
-"""REST API endpoints for user settings and profile management."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,16 +17,12 @@ from app.services.user_settings_service import UserSettingsService
 
 router = APIRouter(prefix="/settings", tags=["user-settings"])
 
-
 @router.get("/profile", response_model=UserProfileResponse)
 async def get_profile(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Get current user's profile.
-    
-    Returns complete user profile including personal info, preferences, and verification status.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -38,18 +33,13 @@ async def get_profile(
     profile = await UserSettingsService.get_profile(session, user_id)
     return profile
 
-
 @router.put("/profile", response_model=UserProfileResponse)
 async def update_profile(
     profile_data: UserProfileUpdate,
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Update user profile.
-    
-    Allows updating personal information, preferences, and display settings.
-    Fields: first_name, last_name, email, phone, organization, bio, language, theme
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -57,14 +47,12 @@ async def update_profile(
             detail="User not authenticated",
         )
     
-    # Convert to dict, filtering out None values
     update_data = profile_data.dict(exclude_unset=True)
     
     updated_profile = await UserSettingsService.update_profile(
         session, user_id, update_data
     )
     return updated_profile
-
 
 @router.get(
     "/notifications",
@@ -74,10 +62,7 @@ async def get_notification_preferences(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Get notification preferences.
-    
-    Returns user's notification settings for email, push, and in-app notifications.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -94,7 +79,6 @@ async def get_notification_preferences(
         updated_at=__import__("datetime").datetime.utcnow(),
     )
 
-
 @router.put(
     "/notifications",
     response_model=NotificationPreferencesResponse
@@ -104,10 +88,7 @@ async def update_notification_preferences(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Update notification preferences.
-    
-    Configure notification settings for different channels and frequencies.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -124,16 +105,12 @@ async def update_notification_preferences(
         updated_at=__import__("datetime").datetime.utcnow(),
     )
 
-
 @router.get("/api-keys", response_model=list)
 async def list_api_keys(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """List all API keys for current user.
-    
-    Returns list of API keys with metadata but not secret values.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -144,18 +121,13 @@ async def list_api_keys(
     keys = await UserSettingsService.list_api_keys(session, user_id)
     return keys
 
-
 @router.post("/api-keys", response_model=CreateAPIKeyResponse, status_code=201)
 async def create_api_key(
     request: CreateAPIKeyRequest,
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Create new API key.
-    
-    Returns secret key only on creation - store it securely.
-    Secret key will not be shown again.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -183,17 +155,13 @@ async def create_api_key(
         expires_at=expires_at,
     )
 
-
 @router.delete("/api-keys/{key_id}", status_code=204)
 async def revoke_api_key(
     key_id: str,
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Revoke API key.
-    
-    Immediately disables the API key - cannot be undone.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -208,7 +176,6 @@ async def revoke_api_key(
             detail="API key not found",
         )
 
-
 @router.get(
     "/security",
     response_model=SecuritySettingsResponse
@@ -217,10 +184,7 @@ async def get_security_settings(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Get security settings.
-    
-    Returns 2FA status, session information, and security metrics.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -231,17 +195,13 @@ async def get_security_settings(
     settings = await UserSettingsService.get_security_settings(session, user_id)
     return settings
 
-
 @router.post("/security/two-factor/enable", status_code=200)
 async def enable_two_factor(
     request: EnableTwoFactorRequest,
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Enable two-factor authentication.
-    
-    Supports: sms, email, authenticator app
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -260,17 +220,13 @@ async def enable_two_factor(
             detail=str(e),
         )
 
-
 @router.post("/security/two-factor/verify", status_code=200)
 async def verify_two_factor(
     code: str,
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Verify two-factor code.
-    
-    Completes 2FA setup by verifying the user's code.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -278,8 +234,7 @@ async def verify_two_factor(
             detail="User not authenticated",
         )
     
-    # Get method from query or session
-    method = "authenticator"  # default
+    method = "authenticator"
     verified = await UserSettingsService.verify_two_factor_code(
         session, user_id, method, code
     )
@@ -292,13 +247,12 @@ async def verify_two_factor(
     
     return {"success": True, "message": "Two-factor authentication enabled"}
 
-
 @router.delete("/security/two-factor/disable", status_code=204)
 async def disable_two_factor(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Disable two-factor authentication."""
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -308,16 +262,12 @@ async def disable_two_factor(
     
     await UserSettingsService.disable_two_factor(session, user_id)
 
-
 @router.get("/sessions", response_model=list)
 async def list_sessions(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """List all active sessions.
-    
-    Shows all devices/browsers currently logged into the account.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -328,14 +278,13 @@ async def list_sessions(
     sessions = await UserSettingsService.list_active_sessions(session, user_id)
     return sessions
 
-
 @router.delete("/sessions/{session_id}", status_code=204)
 async def revoke_session(
     session_id: str,
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Revoke a specific session."""
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(
@@ -352,16 +301,12 @@ async def revoke_session(
             detail="Session not found",
         )
 
-
 @router.post("/sessions/revoke-all", status_code=200)
 async def revoke_all_sessions(
     current_user: dict = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ):
-    """Revoke all sessions except current.
-    
-    Logs out from all other devices/browsers.
-    """
+
     user_id = current_user.get("user_id")
     if not user_id:
         raise HTTPException(

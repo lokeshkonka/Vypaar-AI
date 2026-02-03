@@ -32,8 +32,11 @@ import { useTheme } from "../../../context/ThemeContext";
 import { useNotify } from "../../../context/NotifyContext";
 import NotificationComponent from "./NotificationComponent";
 
+<<<<<<< Updated upstream
 
 
+=======
+>>>>>>> Stashed changes
 interface NavbarProps {
   onMenuClick?: () => void;
 }
@@ -52,11 +55,16 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
   return (
     <>
+<<<<<<< Updated upstream
       {/* ================= TOP NAVBAR ================= */}
       <header className="fixed top-0 z-50 w-full bg-white dark:bg-[#0f1f1b] border-b border-gray-200 dark:border-[#1f3a33]">
+=======
+      {}
+      <header className="fixed top-0 z-30 w-full bg-white dark:bg-[#0f1f1b] border-b border-gray-200 dark:border-[#1f3a33]">
+>>>>>>> Stashed changes
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
 
-          {/* LEFT */}
+          {}
           <div className="flex items-center gap-4">
             <button
               onClick={() => {
@@ -76,6 +84,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </Link>
           </div>
 
+<<<<<<< Updated upstream
           {/* CENTER */}
           <nav className="hidden md:flex items-center gap-6 lg:gap-10 text-sm">
             <NavLink
@@ -89,6 +98,10 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               Discussions
             </NavLink>
 
+=======
+          {}
+          <nav className="hidden md:flex items-center gap-10 text-sm">
+>>>>>>> Stashed changes
             <NavLink
               to="/blog"
               className={({ isActive }) =>
@@ -112,9 +125,15 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
             </NavLink>
           </nav>
 
+<<<<<<< Updated upstream
           {/* RIGHT */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Theme Toggle */}
+=======
+          {}
+          <div className="flex items-center gap-4 ">
+            {}
+>>>>>>> Stashed changes
             <button
               onClick={toggleTheme}
               className="cursor-pointer rounded-2xl p-2 text-gray-600 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/10 transition"
@@ -123,8 +142,13 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               {theme === "dark" ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
 
+<<<<<<< Updated upstream
             {/* Notifications */}
             <div className="relative">
+=======
+            {}
+            <div className=" px-3 translate-y-1 ">
+>>>>>>> Stashed changes
               <button
                 onClick={() => setShowNotif(v => !v)}
                 className="cursor-pointer p-2 relative text-gray-600 dark:text-gray-300 hover:text-black dark:hover:text-white transition"
@@ -138,7 +162,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
               {showNotif && <NotificationComponent />}
             </div>
 
-            {/* User */}
+            {}
             <SignedIn>
               <UserButton
                 appearance={{
@@ -157,11 +181,11 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
         </div>
       </header>
 
-      {/* ================= SIDE NAVBAR ================= */}
+      {}
       <NavLoader open={open}>
         <div className="flex h-full flex-col px-5 py-6 bg-white dark:bg-[#0f1f1b]">
 
-          {/* HEADER */}
+          {}
           <div className="flex items-center justify-between">
             <Link
               to="/"
@@ -184,7 +208,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
           <div className="my-5 h-px bg-gray-200 dark:bg-white/10" />
 
-          {/* DASHBOARD NAV */}
+          {}
           <div className="space-y-1">
             <SideItem
               icon={<FiBarChart2 />}
@@ -298,7 +322,7 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
           <div className="my-5 h-px bg-gray-200 dark:bg-white/10" />
 
-          {/* MOBILE LINKS */}
+          {}
           <div className="md:hidden space-y-2">
             <NavLink
               to="/dashboard/discussions"
@@ -333,10 +357,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
     </>
   );
 }
-
-/* =========================
-   SIDE ITEM
-   ========================= */
 
 function SideItem({
   icon,

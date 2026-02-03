@@ -1,4 +1,3 @@
-// src/pages/Insights.tsx
 import Navbar from "../components/dashboard/Navbar/Navbar";
 import DashFooter from "../components/dashboard/Home/dashFooter";
 import GraphBackgroundTop from "../components/Background/graphBackgroundTop";
@@ -9,7 +8,7 @@ export default function Insights() {
   return (
     <InsightProvider>
       <div className="relative min-h-screen overflow-hidden">
-        {/* Background glows */}
+        {}
         <div className="absolute -top-40 -left-40 h-105 w-105 rounded-full bg-emerald-500/20 blur-[120px]" />
         <div className="absolute -bottom-40 -right-40 h-105 w-105 rounded-full bg-emerald-400/10 blur-[120px]" />
 

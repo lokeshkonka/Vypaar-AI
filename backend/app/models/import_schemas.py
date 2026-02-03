@@ -1,4 +1,3 @@
-"""Pydantic schemas for data import operations."""
 
 from datetime import datetime
 from enum import Enum
@@ -6,9 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
-
 class ImportStatus(str, Enum):
-    """Import job status enumeration."""
 
     PENDING = "PENDING"
     PROCESSING = "PROCESSING"
@@ -18,17 +15,13 @@ class ImportStatus(str, Enum):
     FAILED = "FAILED"
     PARTIAL = "PARTIAL"
 
-
 class ImportType(str, Enum):
-    """Type of data being imported."""
 
     SALES_DATA = "SALES_DATA"
     MARKET_PRICES = "MARKET_PRICES"
     INVENTORY = "INVENTORY"
 
-
 class ValidationErrorDetail(BaseModel):
-    """Details about a validation error."""
 
     row: int
     column: str
@@ -36,9 +29,7 @@ class ValidationErrorDetail(BaseModel):
     error_message: str
     suggestion: Optional[str] = None
 
-
 class ImportStats(BaseModel):
-    """Statistics about an import operation."""
 
     total_records: int
     valid_records: int
@@ -49,7 +40,6 @@ class ImportStats(BaseModel):
     validation_errors: List[ValidationErrorDetail] = []
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -63,9 +53,7 @@ class ImportStats(BaseModel):
             }
         }
 
-
 class ImportJobResponse(BaseModel):
-    """Response for import job information."""
 
     job_id: str
     status: ImportStatus
@@ -77,10 +65,9 @@ class ImportJobResponse(BaseModel):
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    estimated_time_remaining: Optional[int] = None  # In seconds
+    estimated_time_remaining: Optional[int] = None
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -106,9 +93,7 @@ class ImportJobResponse(BaseModel):
             }
         }
 
-
 class FileUploadRequest(BaseModel):
-    """Request for file upload (for validation before processing)."""
 
     filename: str
     import_type: ImportType
@@ -118,7 +103,6 @@ class FileUploadRequest(BaseModel):
     auto_validate: bool = True
 
     class Config:
-        """Pydantic config."""
 
         json_schema_extra = {
             "example": {
@@ -131,18 +115,14 @@ class FileUploadRequest(BaseModel):
             }
         }
 
-
 class ImportStartRequest(BaseModel):
-    """Request to start an import job."""
 
     job_id: str
     proceed_with_errors: bool = False
 
-
 class SalesDataRow(BaseModel):
-    """Schema for individual sales data row."""
 
-    date: str  # YYYY-MM-DD format
+    date: str
     market_name: str
     commodity_name: str
     price: float
@@ -153,7 +133,7 @@ class SalesDataRow(BaseModel):
     @field_validator("date")
     @classmethod
     def validate_date_format(cls, v: str) -> str:
-        """Validate date format."""
+
         try:
             datetime.strptime(v, "%Y-%m-%d")
         except ValueError:
@@ -163,7 +143,7 @@ class SalesDataRow(BaseModel):
     @field_validator("price", "quantity", mode="before")
     @classmethod
     def validate_numeric(cls, v: Any) -> float:
-        """Validate numeric fields."""
+
         if isinstance(v, str):
             v = v.strip()
         try:
@@ -171,11 +151,9 @@ class SalesDataRow(BaseModel):
         except (ValueError, TypeError):
             raise ValueError(f"Expected numeric value, got {v}")
 
-
 class MarketPriceRow(BaseModel):
-    """Schema for market price data row."""
 
-    date: str  # YYYY-MM-DD format
+    date: str
     market_name: str
     commodity_name: str
     min_price: float
@@ -186,7 +164,7 @@ class MarketPriceRow(BaseModel):
     @field_validator("date")
     @classmethod
     def validate_date_format(cls, v: str) -> str:
-        """Validate date format."""
+
         try:
             datetime.strptime(v, "%Y-%m-%d")
         except ValueError:
@@ -196,7 +174,7 @@ class MarketPriceRow(BaseModel):
     @field_validator("min_price", "max_price", "modal_price", "arrival_quantity", mode="before")
     @classmethod
     def validate_numeric(cls, v: Any) -> float:
-        """Validate numeric fields."""
+
         if isinstance(v, str):
             v = v.strip()
         try:
@@ -204,11 +182,9 @@ class MarketPriceRow(BaseModel):
         except (ValueError, TypeError):
             raise ValueError(f"Expected numeric value, got {v}")
 
-
 class InventoryRow(BaseModel):
-    """Schema for inventory data row."""
 
-    date: str  # YYYY-MM-DD format
+    date: str
     market_name: str
     commodity_name: str
     quantity_in_stock: float
@@ -220,7 +196,7 @@ class InventoryRow(BaseModel):
     @field_validator("date")
     @classmethod
     def validate_date_format(cls, v: str) -> str:
-        """Validate date format."""
+
         try:
             datetime.strptime(v, "%Y-%m-%d")
         except ValueError:
@@ -230,7 +206,7 @@ class InventoryRow(BaseModel):
     @field_validator("quantity_in_stock", "quantity_sold", "quantity_damaged", mode="before")
     @classmethod
     def validate_numeric(cls, v: Any) -> float:
-        """Validate numeric fields."""
+
         if isinstance(v, str):
             v = v.strip()
         try:

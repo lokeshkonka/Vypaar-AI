@@ -1,6 +1,4 @@
-/* ----------------------------------------
-   Types
------------------------------------------ */
+
 
 import { motion } from "framer-motion";
 
@@ -8,12 +6,6 @@ interface SectionTitleProps {
   title: string;
   description: string;
 }
-
-
-
-/* ----------------------------------------
-   Section Title (Merged)
------------------------------------------ */
 
 const SectionTitle: React.FC<SectionTitleProps> = ({
   title,
