@@ -6,7 +6,6 @@ import GraphBackgroundCorner from "../Background/GraphBackgroundCorner";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  showSidebar?: boolean;
 }
 
 /**
@@ -15,7 +14,6 @@ interface DashboardLayoutProps {
  */
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
-  showSidebar = true,
 }) => {
   return (
     <ErrorBoundary>
@@ -23,12 +21,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <GraphBackgroundCorner />
         <Navbar />
         <UserSync />
-
-        {showSidebar && (
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        )}
-
-        {}
         <main className="dashboard-body relative z-10">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
