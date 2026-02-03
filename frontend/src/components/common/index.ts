@@ -10,8 +10,3 @@ export { Card, CardHeader, CardBody, CardFooter, CardMetric } from "./Card";
 
 export { Form, FormField, FormInput, FormSelect, FormTextarea, FormButton, FormGroup, FormRow } from "./Form";
 
-<<<<<<< Updated upstream
-// Notification
-export { default as NotificationCenter } from "./NotificationCenter";
-=======
->>>>>>> Stashed changes

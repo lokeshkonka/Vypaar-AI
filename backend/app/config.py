@@ -39,12 +39,7 @@ class Settings(BaseSettings):
     cors_allow_methods: list[str] = ["*"]
     cors_allow_headers: list[str] = ["*"]
     
-<<<<<<< Updated upstream
-    # Database
-    database_url: str = "sqlite+aiosqlite:///../data/agritech.db"
-=======
     database_url: str = "sqlite+aiosqlite:///./data/agritech.db"
->>>>>>> Stashed changes
     db_echo: bool = False
     db_pool_size: int = 5
     db_max_overflow: int = 10
@@ -64,12 +59,7 @@ class Settings(BaseSettings):
     log_retention: str = "30 days"
     log_compression: str = "zip"
     
-<<<<<<< Updated upstream
-    # ML Models
-    model_dir: str = str(Path(__file__).resolve().parent.parent / "data" / "models")
-=======
     model_dir: str = "data/models"
->>>>>>> Stashed changes
     model_version: str = "v1.0.0"
     ensemble_weights: dict[str, float] = {
         "xgboost": 0.35,

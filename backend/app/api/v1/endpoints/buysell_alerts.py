@@ -357,23 +357,12 @@ async def update_buysell_alert(
         await alert_repo.db.flush()
         await alert_repo.db.commit()
 
-<<<<<<< Updated upstream
-        # Fetch related data
-        commodity = await commodity_repo.get_by_id(alert.commodity_id)
-        market = await market_repo.get_by_id(alert.market_id)
-
-        # Get current price
-        current_price_record = await market_price_repo.get_latest_price(
-            commodity_id=alert.commodity_id,
-            market_id=alert.market_id,
-=======
         commodity = await commodity_repo.get_by_id(updated.commodity_id)
         market = await market_repo.get_by_id(updated.market_id)
 
         current_price_record = await market_price_repo.get_latest(
             commodity_id=updated.commodity_id,
             market_id=updated.market_id,
->>>>>>> Stashed changes
         )
         current_price = current_price_record.price if current_price_record else None
 

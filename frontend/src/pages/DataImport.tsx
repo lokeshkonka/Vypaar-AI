@@ -156,13 +156,8 @@ const DataImport: React.FC = () => {
         ))}
       </div>
 
-<<<<<<< Updated upstream
-      {/* File Upload Area */}
-      <div className="glass-card border-2 border-dashed p-8 sm:p-12 text-center hover:shadow-lg transition-all" style={{ borderColor: "var(--border)", borderRadius: 0 }}>
-=======
       {}
       <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 sm:p-12 text-center hover:border-emerald-400 dark:hover:border-emerald-600 transition-colors bg-gray-50 dark:bg-gray-900/50">
->>>>>>> Stashed changes
         <div className="flex justify-center mb-4">
           <Upload className="w-10 h-10 sm:w-12 sm:h-12" style={{ color: "var(--text-soft)" }} />
         </div>
@@ -187,13 +182,8 @@ const DataImport: React.FC = () => {
         </label>
 
         {selectedFile && (
-<<<<<<< Updated upstream
-          <div className="mt-4 p-3 border" style={{ borderColor: "rgba(16, 185, 129, 0.3)", background: "rgba(16, 185, 129, 0.1)", borderRadius: 0 }}>
-            <p className="text-emerald-600 dark:text-emerald-400 font-medium">✓ {selectedFile.name}</p>
-=======
           <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
             <p className="text-emerald-800 dark:text-emerald-200 font-medium"> {selectedFile.name}</p>
->>>>>>> Stashed changes
             <p className="text-sm text-emerald-600 dark:text-emerald-400">
               {(selectedFile.size / 1024).toFixed(2)} KB
             </p>
@@ -201,17 +191,10 @@ const DataImport: React.FC = () => {
         )}
       </div>
 
-<<<<<<< Updated upstream
-      {/* File Format Instructions */}
-      <div className="glass-card border p-4" style={{ borderColor: "rgba(59, 130, 246, 0.3)", background: "rgba(59, 130, 246, 0.1)", borderRadius: 0 }}>
-        <p className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Required Columns:</p>
-        <code className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 block font-mono mb-3 p-2 border" style={{ background: "var(--panel)", borderColor: "rgba(59, 130, 246, 0.2)", borderRadius: 0 }}>
-=======
       {}
       <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <p className="font-semibold text-blue-900 dark:text-blue-200 mb-2">Required Columns:</p>
         <code className="text-xs sm:text-sm text-blue-800 dark:text-blue-300 block font-mono mb-3 bg-white dark:bg-gray-950 p-2 rounded border border-blue-100 dark:border-blue-900">
->>>>>>> Stashed changes
           {importTypeDescriptions[importType].columns}
         </code>
         <p className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Example:</p>
@@ -342,13 +325,8 @@ const DataImport: React.FC = () => {
                   Row {err.row}: {err.error_message}
                 </div>
                 {err.suggestion && (
-<<<<<<< Updated upstream
-                  <div className="text-red-700 dark:text-red-300 text-xs mt-1">
-                    💡 {err.suggestion}
-=======
                   <div className="text-red-700 text-xs mt-1">
                      {err.suggestion}
->>>>>>> Stashed changes
                   </div>
                 )}
               </div>
@@ -511,13 +489,8 @@ const DataImport: React.FC = () => {
 
   return (
     <DashboardLayout>
-<<<<<<< Updated upstream
-      {/* Header */}
-      <div className="border-b sticky top-16 z-40" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
-=======
       {}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-16 z-40">
->>>>>>> Stashed changes
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Breadcrumbs
             items={[
@@ -581,13 +554,8 @@ const DataImport: React.FC = () => {
           ))}
         </div>
 
-<<<<<<< Updated upstream
-        {/* Content */}
-        <div className="glass-card p-4 sm:p-6 lg:p-8">
-=======
         {}
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 sm:p-6 lg:p-8 shadow-sm">
->>>>>>> Stashed changes
           {renderContent()}
         </div>
       </div>

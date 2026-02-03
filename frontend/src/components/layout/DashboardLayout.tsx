@@ -24,15 +24,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <Navbar />
         <UserSync />
 
-<<<<<<< Updated upstream
-        {/* Main content */}
-=======
         {showSidebar && (
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         )}
 
         {}
->>>>>>> Stashed changes
         <main className="dashboard-body relative z-10">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>

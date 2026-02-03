@@ -47,19 +47,6 @@ export function ContextAnalysisProvider({
             return;
           }
           
-<<<<<<< Updated upstream
-          // Fetch product analysis with commodity and market filters
-          const analysisParams = new URLSearchParams({
-            commodity_name: selection.product,
-            market_name: selection.market,
-            days: String(selection.forecastRange || 7),
-          });
-          
-          const analysisRes = await fetch(`${BACKEND_URL}/api/product-analysis?${analysisParams}`);
-          
-          if (analysisRes.ok) {
-            const analysisData = await analysisRes.json();
-=======
           const forecastPayload = {
             state: selection.state || "",
             city: selection.city || "",
@@ -116,7 +103,6 @@ export function ContextAnalysisProvider({
                 positive: false 
               },
             ];
->>>>>>> Stashed changes
             
             // Use real data from backend
             setAnalysis({
@@ -192,10 +178,6 @@ export function ContextAnalysisProvider({
             }
           }
         } else {
-<<<<<<< Updated upstream
-          // No selection - fetch default product analysis
-=======
->>>>>>> Stashed changes
           const res = await fetch(`${BACKEND_URL}/api/product-analysis`);
           if (res.ok) {
             const data = await res.json();

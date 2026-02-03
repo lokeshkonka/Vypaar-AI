@@ -79,13 +79,8 @@ export default function AlertCard({ alert }: AlertCardProps) {
   };
 
   return (
-<<<<<<< Updated upstream
-    <div className="glass-card p-4">
-      {/* Header */}
-=======
     <div className={`border rounded-lg p-4 ${getSignalColor(alert.signal)}`}>
       {}
->>>>>>> Stashed changes
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <h3 className="font-semibold text-lg" style={{ color: "var(--text-main)" }}>
@@ -105,13 +100,8 @@ export default function AlertCard({ alert }: AlertCardProps) {
         )}
       </div>
 
-<<<<<<< Updated upstream
-      {/* Price Info */}
-      <div className="space-y-2 mb-4 pb-4 border-b" style={{ borderColor: "var(--border)" }}>
-=======
       {}
       <div className="space-y-2 mb-4 pb-4 border-b border-opacity-20 dark:border-opacity-20">
->>>>>>> Stashed changes
         {alert.current_price !== null && (
           <div className="flex justify-between items-center">
             <span className="text-sm" style={{ color: "var(--text-soft)" }}>Current Price:</span>

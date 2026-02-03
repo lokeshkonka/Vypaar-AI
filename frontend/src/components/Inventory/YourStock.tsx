@@ -12,19 +12,6 @@ export default function YourStock() {
     <div className="space-y-4">
       {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-<<<<<<< Updated upstream
-        {/* Add Stock Button */}
-        <AddStockButton />
-        
-        {/* Spacer */}
-        <div className="lg:col-span-1"></div>
-        
-        {/* Actions */}
-        <CardComponent title="Forecast Actions">
-          <p className="text-sm text-soft leading-relaxed mb-2">
-            Modify your forecast configuration such as time horizon (7 or 14 days),
-          </p>
-=======
         {}
         <div className="lg:col-span-2"></div>
         {}
@@ -44,7 +31,6 @@ export default function YourStock() {
     Change Forecast
   </button>
 </CardComponent>
->>>>>>> Stashed changes
 
           <button
             onClick={() => navigate("/dashboard/selector")}

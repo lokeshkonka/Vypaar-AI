@@ -116,13 +116,7 @@ export default function UserSettings() {
           </div>
         )}
 
-<<<<<<< Updated upstream
-        {/* Tabs */}
-        <div className="flex gap-4 mb-8 border-b" style={{ borderColor: "var(--border)" }}>
-=======
-        {}
         <div className="flex gap-4 mb-8 border-b border-gray-200 dark:border-gray-700">
->>>>>>> Stashed changes
           {[
             { id: "profile", label: "Profile", icon: FiUser },
             { id: "security", label: "Security", icon: FiLock },
@@ -143,13 +137,7 @@ export default function UserSettings() {
           ))}
         </div>
 
-<<<<<<< Updated upstream
-        {/* Content */}
-        <div className="glass-card p-6 sm:p-8">
-=======
-        {}
         <div className="bg-white dark:bg-[#1a2f2f] rounded-lg border border-gray-200 dark:border-gray-700 p-8">
->>>>>>> Stashed changes
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin h-8 w-8 border-b-2 border-[rgb(var(--emerald-main))]"></div>

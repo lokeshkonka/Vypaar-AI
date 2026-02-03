@@ -193,108 +193,6 @@ class DataPreprocessor:
         handle_missing: bool = True,
         handle_outliers_: bool = True,
     ) -> Tuple[np.ndarray, np.ndarray]:
-<<<<<<< Updated upstream
-        """
-        Prepare data for model training.
-        
-        Uses the same 16 standard features as prepare_prediction_data for consistency:
-        - commodity_id, market_id, arrival
-        - day_of_week, month, season, week_of_year, quarter
-        - is_festival, festival_effect, holiday_proximity, monsoon_factor, harvest_season
-        - price, month_sin, month_cos
-
-        Args:
-            data: Input DataFrame
-            target_col: Target column name
-            date_col: Date column name
-            categorical_cols: List of categorical columns (ignored, using standard features)
-            numeric_cols: List of numeric columns (ignored, using standard features)
-            handle_missing: Whether to handle missing values
-            handle_outliers_: Whether to handle outliers
-
-        Returns:
-            Tuple of (features, target) as numpy arrays
-        """
-        data_processed = data.copy()
-
-        # Handle missing values for key columns
-        key_numeric_cols = ['price', 'arrival', 'commodity_id', 'market_id', 'min_price', 'max_price', 'modal_price']
-        cols_to_impute = [c for c in key_numeric_cols if c in data_processed.columns]
-        if handle_missing and cols_to_impute:
-            for col in cols_to_impute:
-                if data_processed[col].isnull().any():
-                    data_processed[col] = data_processed[col].fillna(data_processed[col].median())
-            logger.info(f"Handled missing values in {len(cols_to_impute)} columns")
-
-        # Extract temporal features (includes festival indicators)
-        temporal_features = self.extract_temporal_features(data_processed[date_col])
-
-        # Build features dataframe with standard 16 features
-        features = pd.DataFrame()
-        
-        # Add numeric columns that exist
-        for col in ['commodity_id', 'market_id', 'arrival']:
-            if col in data_processed.columns:
-                features[col] = data_processed[col].values
-            else:
-                features[col] = 0.0
-        
-        # Add price column (will be used as a lagged feature, not the target)
-        # Use modal_price or min_price as proxy for historical price info
-        if 'modal_price' in data_processed.columns:
-            features['price'] = data_processed['modal_price'].values
-        elif 'min_price' in data_processed.columns:
-            features['price'] = data_processed['min_price'].values
-        else:
-            features['price'] = 0.0
-        
-        # Add temporal/festival features
-        features = pd.concat([features.reset_index(drop=True), temporal_features.reset_index(drop=True)], axis=1)
-        
-        # Define standard 16 features for model compatibility (same as prepare_prediction_data)
-        standard_features = [
-            'commodity_id',      # 1
-            'market_id',         # 2
-            'arrival',           # 3
-            'day_of_week',       # 4
-            'month',             # 5
-            'season',            # 6
-            'is_festival',       # 7
-            'festival_effect',   # 8
-            'holiday_proximity', # 9
-            'monsoon_factor',    # 10
-            'harvest_season',    # 11
-            'price',             # 12
-            'week_of_year',      # 13
-            'quarter',           # 14
-            'month_sin',         # 15
-            'month_cos',         # 16
-        ]
-        
-        # Fill missing features with defaults
-        for col in standard_features:
-            if col not in features.columns:
-                features[col] = 0.0
-        
-        # Select only standard features in order
-        features = features[standard_features].copy()
-        
-        # Handle outliers on numeric features
-        if handle_outliers_:
-            for col in ['arrival', 'price']:
-                if col in features.columns:
-                    features[col] = self.handle_outliers(features[col].values, strategy="clip")
-        
-        # Scale numeric features
-        for col in ['arrival', 'price']:
-            if col in features.columns:
-                features[col] = self.scale_features(features[col].values, col, fit=True)
-
-        # Store feature names for later use
-        self.feature_names = standard_features
-        self.numeric_features = ['commodity_id', 'market_id', 'arrival', 'price']
-        self.categorical_features = []
-=======
 
         data_processed = data.copy()
 
@@ -336,14 +234,9 @@ class DataPreprocessor:
         self.feature_names = features.columns.tolist()
         self.numeric_features = numeric_cols
         self.categorical_features = categorical_cols or []
->>>>>>> Stashed changes
 
         target = data_processed[target_col].values
 
-<<<<<<< Updated upstream
-        # Convert features to numeric dtype
-=======
->>>>>>> Stashed changes
         features = features.apply(pd.to_numeric, errors="coerce")
 
         valid_idx = ~(pd.isna(features).any(axis=1) | pd.isna(target))
@@ -359,39 +252,14 @@ class DataPreprocessor:
     def prepare_prediction_data(
         self, data: pd.DataFrame, date_col: str, categorical_cols: List[str] = None
     ) -> np.ndarray:
-<<<<<<< Updated upstream
-        """
-        Prepare data for prediction (uses fitted preprocessor).
-        
-        Generates features matching the training data (29 features):
-        - numeric: commodity_id, market_id, arrival, min_price, max_price, modal_price
-        - temporal: day_of_week, day_of_month, month, quarter, week_of_year, day_of_year, season
-        - cyclical: month_sin, month_cos, day_sin, day_cos
-        - festival: is_festival, festival_effect, holiday_proximity, etc.
 
-        Args:
-            data: Input DataFrame (must contain commodity_id, market_id, arrival, date columns)
-            date_col: Date column name
-            categorical_cols: List of categorical columns
-
-        Returns:
-            Processed features as numpy array
-        """
-=======
-
->>>>>>> Stashed changes
         data_processed = data.copy()
 
         temporal_features = self.extract_temporal_features(data_processed[date_col])
 
         features = pd.DataFrame()
         
-<<<<<<< Updated upstream
-        # Add numeric columns that exist (matching training data)
-        numeric_cols = ['commodity_id', 'market_id', 'arrival', 'min_price', 'max_price', 'modal_price']
-=======
         numeric_cols = ['price', 'arrival', 'commodity_id', 'market_id']
->>>>>>> Stashed changes
         for col in numeric_cols:
             if col in data_processed.columns:
                 features[col] = data_processed[col]
@@ -408,42 +276,10 @@ class DataPreprocessor:
         
         features = pd.concat([features, temporal_features], axis=1)
         
-<<<<<<< Updated upstream
-        # Define standard 29 features for model compatibility (must match trained model)
-=======
->>>>>>> Stashed changes
         standard_features = [
             'commodity_id',
             'market_id',
             'arrival',
-<<<<<<< Updated upstream
-            'min_price',
-            'max_price',
-            'modal_price',
-            'day_of_week',
-            'day_of_month',
-            'month',
-            'quarter',
-            'week_of_year',
-            'day_of_year',
-            'season',
-            'month_sin',
-            'month_cos',
-            'day_sin',
-            'day_cos',
-            'is_festival',
-            'festival_proximity',
-            'is_harvest_season',
-            'season_type',
-            'is_weekend',
-            'is_month_end',
-            'is_month_start',
-            'is_sowing_period',
-            'is_harvest_period',
-            'is_procurement_period',
-            'is_festival_week',
-            'is_major_festival',
-=======
             'day_of_week',
             'month',
             'season',
@@ -457,7 +293,6 @@ class DataPreprocessor:
             'quarter',
             'month_sin',
             'month_cos',
->>>>>>> Stashed changes
         ]
         
         for col in standard_features:
@@ -466,12 +301,7 @@ class DataPreprocessor:
         
         features = features[standard_features].copy()
         
-<<<<<<< Updated upstream
-        # Scale numeric features (use fitted scalers if available)
-        for col in ['arrival']:
-=======
         for col in ['price', 'arrival']:
->>>>>>> Stashed changes
             if col in features.columns:
                 try:
                     values = features[col].values
@@ -484,12 +314,7 @@ class DataPreprocessor:
         features = features.fillna(features.mean(numeric_only=True))
         features = features.fillna(0.0)
         
-<<<<<<< Updated upstream
-        # Update feature names for consistency
-        self.feature_names = features.columns.tolist()
-=======
         self.feature_names = standard_features
->>>>>>> Stashed changes
         
         features_array = features.values
 

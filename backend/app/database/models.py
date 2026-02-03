@@ -233,51 +233,6 @@ class Discussion(Base):
     def __repr__(self):
         return f"<Discussion(id={self.id}, title={self.title}, author={self.author})>"
 
-<<<<<<< Updated upstream
-
-class Comment(Base):
-    """Comment model for discussion replies."""
-
-    __tablename__ = "comments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    discussion_id = Column(Integer, ForeignKey("discussions.id"), nullable=False)
-    author = Column(String(255), nullable=False)
-    avatar_url = Column(String(500), nullable=True)
-    content = Column(Text, nullable=False)
-    likes_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Relationship
-    discussion = relationship("Discussion", back_populates="comments")
-
-    __table_args__ = (
-        Index("ix_comment_discussion", "discussion_id"),
-    )
-
-    def __repr__(self):
-        return f"<Comment(id={self.id}, discussion_id={self.discussion_id}, author={self.author})>"
-
-
-class DiscussionLike(Base):
-    """Track user likes on discussions to prevent duplicate likes."""
-
-    __tablename__ = "discussion_likes"
-
-    id = Column(Integer, primary_key=True, index=True)
-    discussion_id = Column(Integer, ForeignKey("discussions.id"), nullable=False)
-    user_id = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    __table_args__ = (
-        UniqueConstraint("discussion_id", "user_id", name="uq_discussion_like"),
-        Index("ix_discussion_like_user", "user_id"),
-    )
-
-
-=======
->>>>>>> Stashed changes
 class Watchlist(Base):
 
     __tablename__ = "watchlists"

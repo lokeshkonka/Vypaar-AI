@@ -18,10 +18,6 @@ from app.models.recommendation_schemas import (
 )
 
 class RecommendationService:
-<<<<<<< Updated upstream
-    """Business logic for recommendations using real data from predictions and market analysis."""
-=======
->>>>>>> Stashed changes
 
     @staticmethod
     async def _generate_recommendations_from_predictions(
@@ -268,11 +264,7 @@ class RecommendationService:
         session: AsyncSession,
         user_id: str,
     ) -> List[RecommendationResponse]:
-<<<<<<< Updated upstream
-        """Return active recommendations for a user based on real predictions."""
-=======
 
->>>>>>> Stashed changes
         logger.info(f"Fetching active recommendations for user {user_id}")
         try:
             return await cls._generate_recommendations_from_predictions(session, user_id)
@@ -303,11 +295,7 @@ class RecommendationService:
         limit: int = 50,
         offset: int = 0,
     ) -> List[RecommendationHistoryItem]:
-<<<<<<< Updated upstream
-        """Return recommendation history for a user from actual predictions."""
-=======
 
->>>>>>> Stashed changes
         logger.info(f"Fetching recommendation history for user {user_id}")
         from app.database.repositories import PredictionRepository, CommodityRepository
         
@@ -430,11 +418,7 @@ class RecommendationService:
         session: AsyncSession,
         user_id: str,
     ) -> RecommendationMetricsResponse:
-<<<<<<< Updated upstream
-        """Return summary metrics for recommendations based on actual prediction results."""
-=======
 
->>>>>>> Stashed changes
         logger.info(f"Fetching recommendation metrics for user {user_id}")
         history = await cls.get_recommendation_history(session, user_id, limit=100)
         

@@ -680,16 +680,9 @@ class ModelMetricsResponse(BaseSchema):
     created_at: datetime
 
 class DiscussionCreate(BaseSchema):
-<<<<<<< Updated upstream
-    """Create discussion request."""
-    
-    title: str = Field(..., min_length=1, max_length=255)
-    content: str = Field(..., min_length=1, max_length=5000)
-=======
 
     title: str = Field(..., min_length=5, max_length=255)
     content: str = Field(..., min_length=10, max_length=5000)
->>>>>>> Stashed changes
     commodity: str = Field(..., min_length=1, max_length=255)
     market: Optional[str] = Field(None, max_length=255)
     author: str = Field(..., min_length=1, max_length=255)
@@ -727,40 +720,6 @@ class DiscussionListResponse(BaseSchema):
     page: int
     page_size: int
 
-<<<<<<< Updated upstream
-
-# Comment schemas
-class CommentCreate(BaseSchema):
-    """Create comment request."""
-    
-    content: str = Field(..., min_length=1, max_length=2000)
-    author: str = Field(..., min_length=1, max_length=255)
-    avatar_url: Optional[str] = None
-
-
-class CommentResponse(BaseSchema):
-    """Comment response."""
-    
-    id: int
-    discussion_id: int
-    author: str
-    avatar_url: Optional[str] = None
-    content: str
-    likes_count: int
-    created_at: datetime
-    updated_at: datetime
-
-
-class CommentListResponse(BaseSchema):
-    """List of comments."""
-    
-    comments: list[CommentResponse]
-    total: int
-
-
-# Watchlist schemas
-=======
->>>>>>> Stashed changes
 class WatchlistCreate(BaseSchema):
 
     user_id: str

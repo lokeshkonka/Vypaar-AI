@@ -46,14 +46,7 @@ export default function Inventory() {
           {}
           <StockCompare />
 
-<<<<<<< Updated upstream
-          {/* Bulk Import */}
-          <BulkImport />
-
-          {/* Your Stock Table */}
-=======
           {}
->>>>>>> Stashed changes
           <ForecastProvider>
             <InventoryProvider>
               <YourStock />

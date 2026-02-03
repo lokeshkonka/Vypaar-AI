@@ -101,21 +101,6 @@ async def generate_forecast(
         )
 
         if not history:
-<<<<<<< Updated upstream
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No historical price data available for {commodity.name} in {market.name}. Please scrape data first using: python scripts/scrape_data.py"
-            )
-        
-        price_series = [p.price or p.modal_price or 0 for p in history if (p.price or p.modal_price)]
-        if not price_series:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No valid price data found for {commodity.name} in {market.name}"
-            )
-        base_price = float(price_series[-1])
-        base_arrival = float(history[-1].arrival or 0.0)
-=======
             logger.warning("No historical prices found; using conservative fallback")
             commodity_hash = sum(ord(c) for c in commodity.name)
             base_price = 1500 + (commodity_hash % 1500)
@@ -125,7 +110,6 @@ async def generate_forecast(
             price_series = [p.price or p.modal_price or 0 for p in history if (p.price or p.modal_price)]
             base_price = float(price_series[-1]) if price_series else 2400.0
             base_arrival = float(history[-1].arrival or 900.0)
->>>>>>> Stashed changes
 
         avg_price = float(np.mean(price_series)) if price_series else base_price
         slope = 0.0
@@ -158,20 +142,6 @@ async def generate_forecast(
                 "arrival": base_arrival,
             }
 
-<<<<<<< Updated upstream
-            # Make prediction using trained models
-            df = pd.DataFrame([payload])
-            features = predictor.preprocessor.prepare_prediction_data(
-                df,
-                date_col="date",
-                categorical_cols=predictor.preprocessor.categorical_features or None,
-            )
-            result = predictor.predict(features, include_individual=False, include_confidence=True)
-            price_pred = float(result.get("prediction", base_price))
-            lower = float(result.get("lower_bound", price_pred * 0.96))
-            upper = float(result.get("upper_bound", price_pred * 1.05))
-            confidence = float(result.get("confidence", 0.85) or 0.85)
-=======
             daily_variations = [1.02, 1.08, 0.98, 1.12, 1.05, 0.96, 0.92]
             variation_idx = (offset - 1) % 7
             daily_multiplier = daily_variations[variation_idx]
@@ -196,7 +166,6 @@ async def generate_forecast(
                     confidence = float(result.get("confidence", confidence) or confidence)
             except Exception as exc:
                 logger.warning(f"Prediction fallback for {commodity.name}: {exc}")
->>>>>>> Stashed changes
 
             forecasts.append(
                 ForecastPoint(
@@ -508,85 +477,6 @@ async def update_inventory(
         await inventory_repo.db.rollback()
         raise HTTPException(status_code=500, detail="Unable to update inventory")
 
-<<<<<<< Updated upstream
-
-class AddInventoryRequest(BaseModel):
-    commodity_id: int
-    market_id: int
-    quantity: float
-    unit_cost: Optional[float] = 0
-    notes: Optional[str] = ""
-
-
-@router.post(
-    "/inventory",
-    status_code=status.HTTP_201_CREATED,
-)
-async def add_inventory(
-    request: AddInventoryRequest,
-    inventory_repo: InventoryRepository = Depends(get_inventory_repo),
-    commodity_repo: CommodityRepository = Depends(get_commodity_repo),
-    market_repo: MarketRepository = Depends(get_market_repo),
-):
-    """Add new inventory item."""
-    try:
-        # Validate commodity and market exist
-        commodity = await commodity_repo.get_by_id(request.commodity_id)
-        market = await market_repo.get_by_id(request.market_id)
-        
-        if not commodity:
-            raise HTTPException(status_code=404, detail="Commodity not found")
-        if not market:
-            raise HTTPException(status_code=404, detail="Market not found")
-        
-        # Check if inventory item already exists for this commodity/market pair
-        existing = await inventory_repo.get_by_commodity_market(
-            commodity_id=request.commodity_id,
-            market_id=request.market_id
-        )
-        
-        if existing:
-            # Update existing inventory
-            await inventory_repo.update(
-                existing.id,
-                current_stock=existing.current_stock + request.quantity,
-                unit_cost=request.unit_cost or existing.unit_cost,
-            )
-            await inventory_repo.db.commit()
-            
-            return {
-                "status": "success",
-                "message": f"Updated stock for {commodity.name} at {market.name}",
-                "inventory_id": existing.id,
-                "new_quantity": existing.current_stock + request.quantity,
-            }
-        else:
-            # Create new inventory item
-            new_item = await inventory_repo.create(
-                commodity_id=request.commodity_id,
-                market_id=request.market_id,
-                current_stock=request.quantity,
-                optimal_stock=request.quantity * 1.2,  # Suggest 20% buffer
-                unit_cost=request.unit_cost or 0,
-            )
-            await inventory_repo.db.commit()
-            
-            return {
-                "status": "success",
-                "message": f"Added {request.quantity} quintals of {commodity.name} at {market.name}",
-                "inventory_id": new_item.id,
-                "quantity": request.quantity,
-            }
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.exception(f"Add inventory failed: {exc}")
-        await inventory_repo.db.rollback()
-        raise HTTPException(status_code=500, detail="Unable to add inventory")
-
-
-=======
->>>>>>> Stashed changes
 @router.get(
     "/product-analysis",
     response_model=ProductAnalysisResponse,
@@ -601,112 +491,25 @@ async def get_product_analysis(
     inventory_repo: InventoryRepository = Depends(get_inventory_repo),
     market_price_repo: MarketPriceRepository = Depends(get_market_price_repo),
 ) -> ProductAnalysisResponse:
-<<<<<<< Updated upstream
-    """Provide product analysis data for the dashboard using real database data."""
-    try:
-        # Get commodities and markets
-        commodities = await commodity_repo.get_all(limit=50)
-        markets = await market_repo.get_all(limit=50)
-=======
 
     try:
         commodities = await commodity_repo.get_all(limit=5)
         markets = await market_repo.get_all(limit=3)
->>>>>>> Stashed changes
         
         if not commodities or not markets:
             raise HTTPException(status_code=404, detail="No data available. Please run data seeding first.")
         
-<<<<<<< Updated upstream
-        # Find specific commodity/market if provided
-        selected_commodity = None
-        selected_market = None
-        
-        if commodity_name:
-            for c in commodities:
-                if c.name.lower() == commodity_name.lower():
-                    selected_commodity = c
-                    break
-        if not selected_commodity:
-            selected_commodity = commodities[0]
-            
-        if market_name:
-            for m in markets:
-                if m.name.lower() == market_name.lower():
-                    selected_market = m
-                    break
-        if not selected_market:
-            selected_market = markets[0]
-        
-        # Build selector data
-=======
->>>>>>> Stashed changes
         selector_data = SelectorData(
             market=selected_market.name,
             product=selected_commodity.name,
             forecastRange=f"Next {days} Days"
         )
         
-<<<<<<< Updated upstream
-        # Get real price history for the commodity/market pair
-        price_history = await market_price_repo.get_price_history(
-            commodity_id=selected_commodity.id,
-            market_id=selected_market.id,
-            days=30,
-        )
-        
-        # Build demand graph data from real price history
-        demand_graph = []
-        day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        
-        if price_history:
-            # Group prices by day of week and calculate averages
-            from collections import defaultdict
-            day_prices = defaultdict(list)
-            for price in price_history:
-                if price.price or price.modal_price:
-                    day_idx = price.date.weekday()
-                    price_val = float(price.price or price.modal_price)
-                    day_prices[day_idx].append(price_val)
-            
-            # Build graph data for each day
-            for i, day_name in enumerate(day_names):
-                prices = day_prices.get(i, [])
-                if prices:
-                    avg_price = int(np.mean(prices))
-                    # Use actual avg as "actual" and add 5% as "forecast"
-                    demand_graph.append(
-                        DemandGraphPoint(day=day_name, actual=avg_price, forecast=int(avg_price * 1.05))
-                    )
-                else:
-                    # Use overall average if no data for this day
-                    all_prices = [p.price or p.modal_price for p in price_history if p.price or p.modal_price]
-                    overall_avg = int(np.mean(all_prices)) if all_prices else 2000
-                    demand_graph.append(
-                        DemandGraphPoint(day=day_name, actual=overall_avg, forecast=int(overall_avg * 1.05))
-                    )
-        else:
-            # No price history - use commodity-based defaults
-            base_price = 2000 + (sum(ord(c) for c in selected_commodity.name) % 1000)
-            for i, day_name in enumerate(day_names):
-                variation = 0.95 + (i * 0.02)
-                actual = int(base_price * variation)
-                demand_graph.append(
-                    DemandGraphPoint(day=day_name, actual=actual, forecast=int(actual * 1.05))
-                )
-        
-        # Build stock metrics from real inventory data for this commodity
-        inventory = await inventory_repo.get_by_commodity_market(selected_commodity.id, selected_market.id)
-        if inventory:
-            current = int(inventory.current_stock or 0)
-            optimal = int(inventory.optimal_stock or current * 1.2)
-=======
         inventories = await inventory_repo.get_all(limit=1)
         if inventories:
             inv = inventories[0]
             current = int(inv.current_stock or 0)
             optimal = int(inv.optimal_stock or current * 1.2)
->>>>>>> Stashed changes
             stock_metrics = StockMetrics(
                 predictedDemand=int(current * 1.1),
                 stockNeeded=optimal,
@@ -731,21 +534,9 @@ async def get_product_analysis(
                     understockRisk=0
                 )
         
-<<<<<<< Updated upstream
-        # Build demand graph data from real price history
-=======
->>>>>>> Stashed changes
         demand_graph = []
         day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         
-<<<<<<< Updated upstream
-        # Fetch real price history for the selected commodity and market
-        price_history = await market_price_repo.get_price_history(
-            commodity_id=selected_commodity.id,
-            market_id=selected_market.id,
-            days=min(days, 30)
-        )
-=======
         base_demand = 2000
         daily_variations = [
             (2200, 2310),
@@ -756,7 +547,6 @@ async def get_product_analysis(
             (2150, 2258),
             (2050, 2153),
         ]
->>>>>>> Stashed changes
         
         if price_history and len(price_history) > 0:
             # Use real price data
@@ -780,22 +570,11 @@ async def get_product_analysis(
                     DemandGraphPoint(day=day_names[i % 7], actual=actual, forecast=forecast)
                 )
         
-<<<<<<< Updated upstream
-        # Build impact data - festival calendar and weather would need integration
-        # For now, return empty arrays as we don't have this data in database
-        festival_impacts = []
-        weather_impacts = []
-=======
->>>>>>> Stashed changes
         impact_data = ImpactData(
             festival=festival_impacts,
             weather=weather_impacts
         )
         
-<<<<<<< Updated upstream
-        # Build recommendation table from inventory for this market
-=======
->>>>>>> Stashed changes
         all_inventory_items = await inventory_repo.get_all(limit=10)
         recommendations = []
         
@@ -829,13 +608,7 @@ async def get_product_analysis(
             impactData=impact_data,
             recommendationTable=recommendations
         )
-<<<<<<< Updated upstream
-    except HTTPException:
-        raise
-    except Exception as exc:  # noqa: BLE001
-=======
     except Exception as exc:
->>>>>>> Stashed changes
         logger.exception(f"Product analysis failed: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch product analysis data")
 
@@ -848,13 +621,8 @@ async def get_commodities(commodity_repo: CommodityRepository = Depends(get_comm
 
     try:
         commodities = await commodity_repo.get_all()
-<<<<<<< Updated upstream
-        return [{"id": c.id, "name": c.name, "category": c.category or "Other"} for c in commodities]
-    except Exception as exc:  # noqa: BLE001
-=======
         return [{"id": c.id, "name": c.name} for c in commodities]
     except Exception as exc:
->>>>>>> Stashed changes
         logger.exception(f"Failed to fetch commodities: {exc}")
         raise HTTPException(status_code=500, detail="Unable to fetch commodities")
 
