@@ -58,7 +58,7 @@ async def seed():
         logger.info(f"Markets seeded: {market_ids}")
 
         start_date = datetime.utcnow().date() - timedelta(days=14)
-        prices = []
+        prices_created = 0
         for day in range(14):
             date = start_date + timedelta(days=day)
             for market_name in ["Azadpur", "Mumbai (Dadar)"]:
@@ -66,7 +66,7 @@ async def seed():
                 commodity_id = commodity_ids["Wheat"]
                 base_price = 2500.0
                 modal = base_price * (1 + (0.05 * ((day % 7) - 3) / 3))
-                prices.append({
+                price_data = {
                     "commodity_id": commodity_id,
                     "market_id": market_id,
                     "date": date,
@@ -75,9 +75,10 @@ async def seed():
                     "max_price": round(modal * 1.1, 2),
                     "modal_price": round(modal, 2),
                     "arrival": round(1000 + 50 * day, 2),
-                })
-        await price_repo.bulk_create(prices)
-        logger.info(f"Seeded {len(prices)} market price records")
+                }
+                await price_repo.create_or_update_price(price_data)
+                prices_created += 1
+        logger.info(f"Seeded/updated {prices_created} market price records")
 
         wheat_id = commodity_ids["Wheat"]
         azadpur_id = market_ids["Azadpur"]
