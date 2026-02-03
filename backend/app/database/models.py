@@ -222,9 +222,6 @@ class Discussion(Base):
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationship for comments
-    comments = relationship("Comment", back_populates="discussion", cascade="all, delete-orphan")
-
     __table_args__ = (
         Index("ix_discussion_commodity_created", "commodity", "created_at"),
         Index("ix_discussion_status", "status"),
@@ -232,6 +229,34 @@ class Discussion(Base):
 
     def __repr__(self):
         return f"<Discussion(id={self.id}, title={self.title}, author={self.author})>"
+
+class Comment(Base):
+
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    discussion_id = Column(Integer, ForeignKey("discussions.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    author = Column(String(255), nullable=True)
+    author_id = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Comment(id={self.id}, discussion_id={self.discussion_id})>"
+
+class DiscussionLike(Base):
+
+    __tablename__ = "discussion_likes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    discussion_id = Column(Integer, ForeignKey("discussions.id"), nullable=False)
+    user_id = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("discussion_id", "user_id", name="uq_discussion_like"),
+    )
 
 class Watchlist(Base):
 

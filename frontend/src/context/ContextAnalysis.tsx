@@ -104,22 +104,21 @@ export function ContextAnalysisProvider({
               },
             ];
             
-            // Use real data from backend
             setAnalysis({
-              selectorData: analysisData.selectorData || {
+              selectorData: {
                 market: selection.market,
                 product: selection.product,
                 forecastRange: `${selection.forecastRange || 7} Days`,
               },
-              stockMetrics: analysisData.stockMetrics || {
-                predictedDemand: 0,
-                stockNeeded: 0,
-                overstockRisk: 0,
-                understockRisk: 0,
+              stockMetrics: {
+                predictedDemand: predictedDemand,
+                stockNeeded: Math.round(predictedDemand * 1.1),
+                overstockRisk: 15,
+                understockRisk: 10,
               },
-              demandGraphData: analysisData.demandGraphData || [],
-              impactData: analysisData.impactData || { festival: [], weather: [] },
-              recommendationTable: analysisData.recommendationTable || [],
+              demandGraphData: demandGraphData,
+              impactData: { festival: festivalImpact, weather: weatherImpact },
+              recommendationTable: [],
             });
           } else {
             // Fallback: try forecast endpoint for basic data

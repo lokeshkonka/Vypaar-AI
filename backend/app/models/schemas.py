@@ -720,6 +720,24 @@ class DiscussionListResponse(BaseSchema):
     page: int
     page_size: int
 
+class CommentCreate(BaseSchema):
+    content: str
+    author: Optional[str] = None
+    author_id: Optional[str] = None
+
+class CommentResponse(BaseSchema):
+    id: int
+    discussion_id: int
+    content: str
+    author: Optional[str] = None
+    author_id: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+class CommentListResponse(BaseSchema):
+    comments: list[CommentResponse]
+    total: int
+
 class WatchlistCreate(BaseSchema):
 
     user_id: str

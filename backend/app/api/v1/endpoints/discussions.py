@@ -25,10 +25,6 @@ def get_discussion_repo(db=Depends(get_db)) -> DiscussionRepository:
 
     return DiscussionRepository(db)
 
-def get_comment_repo(db=Depends(get_db)) -> CommentRepository:
-    """Get comment repository."""
-    return CommentRepository(db)
-
 
 @router.get("/", response_model=DiscussionListResponse)
 async def get_discussions(

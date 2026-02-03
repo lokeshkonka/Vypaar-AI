@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 
-import Navbar from "../components/dashboard/Navbar/Navbar";
-import UserSync from "../components/dashboard/Navbar/UserSync";
 import { DashboardLayout } from "../components/layout/DashboardLayout";
 import { CardSkeleton } from "../components/common";
 
@@ -12,7 +10,6 @@ import MarketSelector from "../components/dashboard/Home/MarketSelector";
 import ProductSelector from "../components/dashboard/Home/ProductSelector";
 import GenerateForecastCTA from "../components/dashboard/Home/GenerateForecastCTA";
 import DashFooter from "../components/dashboard/Home/dashFooter";
-import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
