@@ -36,7 +36,7 @@ class DataScheduler:
         try:
             logger.info("Starting daily market data collection")
             
-            result = self.scraper.scrape_all(days_back=30, historical_days=120)
+            result = self.scraper.scrape_all(days_back=30, historical_days=180)
             
             if result.get("status") == "success":
                 counts = result.get("counts", {})
@@ -114,7 +114,12 @@ class DataScheduler:
                         continue
                     existing = await commodity_repo.get_by_name(name)
                     if not existing:
-                        existing = await commodity_repo.create(commodity)
+                        existing = await commodity_repo.create(
+                            name=name,
+                            category=commodity.get("category", "General"),
+                            unit=commodity.get("unit", "Quintal"),
+                            description=commodity.get("description")
+                        )
                     commodity_cache[name.lower()] = existing
 
                 for market in data_block.get("markets", []):
@@ -123,7 +128,14 @@ class DataScheduler:
                         continue
                     existing = await market_repo.get_by_name(name)
                     if not existing:
-                        existing = await market_repo.create(market)
+                        existing = await market_repo.create(
+                            name=name,
+                            state=market.get("state", "Unknown"),
+                            district=market.get("district", "Unknown"),
+                            latitude=market.get("latitude"),
+                            longitude=market.get("longitude"),
+                            description=market.get("description")
+                        )
                     market_cache[name.lower()] = existing
 
                 stored_count = 0

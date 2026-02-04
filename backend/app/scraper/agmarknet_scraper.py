@@ -52,76 +52,44 @@ class AgmarknetScraper:
 
     def scrape_commodities(self) -> list[dict[str, Any]]:
         
-        logger.info("Fetching comprehensive commodity list across all categories")
+        logger.info("Fetching trader-focused commodity list (long shelf-life commodities)")
         
         commodities = [
-            {"name": "Wheat", "category": "Cereals", "unit": "Quintal"},
-            {"name": "Rice", "category": "Cereals", "unit": "Quintal"},
-            {"name": "Maize", "category": "Cereals", "unit": "Quintal"},
-            {"name": "Bajra", "category": "Cereals", "unit": "Quintal"},
-            {"name": "Jowar", "category": "Cereals", "unit": "Quintal"},
-            {"name": "Barley", "category": "Cereals", "unit": "Quintal"},
-            {"name": "Ragi", "category": "Cereals", "unit": "Quintal"},
+            {"name": "Wheat", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Rice", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Basmati Rice", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Maize", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 8},
+            {"name": "Bajra", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Jowar", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Barley", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Ragi", "category": "Cereals", "unit": "Quintal", "shelf_life_months": 9},
             
-            {"name": "Potato", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Onion", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Tomato", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Brinjal", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Cabbage", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Cauliflower", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Carrot", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Peas", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Beans", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Okra", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Capsicum", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Cucumber", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Bitter Gourd", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Bottle Gourd", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Radish", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Spinach", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Coriander Leaves", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Green Chilli", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Ginger", "category": "Vegetables", "unit": "Quintal"},
-            {"name": "Garlic", "category": "Vegetables", "unit": "Quintal"},
+            {"name": "Moong Dal", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Chana", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Toor Dal", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Urad Dal", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Masoor Dal", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Rajma", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Lobia", "category": "Pulses", "unit": "Quintal", "shelf_life_months": 12},
             
-            {"name": "Cotton", "category": "Cash Crops", "unit": "Quintal"},
-            {"name": "Sugarcane", "category": "Cash Crops", "unit": "Quintal"},
-            {"name": "Jute", "category": "Cash Crops", "unit": "Quintal"},
-            {"name": "Tobacco", "category": "Cash Crops", "unit": "Quintal"},
+            {"name": "Groundnut", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 6},
+            {"name": "Soybean", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Mustard", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Sunflower", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 8},
+            {"name": "Sesame", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Safflower", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Linseed", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 9},
+            {"name": "Castor Seed", "category": "Oilseeds", "unit": "Quintal", "shelf_life_months": 9},
             
-            {"name": "Groundnut", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Soybean", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Mustard", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Sunflower", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Sesame", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Safflower", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Linseed", "category": "Oilseeds", "unit": "Quintal"},
-            {"name": "Castor Seed", "category": "Oilseeds", "unit": "Quintal"},
+            {"name": "Turmeric", "category": "Spices", "unit": "Quintal", "shelf_life_months": 24},
+            {"name": "Coriander Seeds", "category": "Spices", "unit": "Quintal", "shelf_life_months": 18},
+            {"name": "Cumin", "category": "Spices", "unit": "Quintal", "shelf_life_months": 18},
+            {"name": "Black Pepper", "category": "Spices", "unit": "Quintal", "shelf_life_months": 24},
+            {"name": "Cardamom", "category": "Spices", "unit": "Quintal", "shelf_life_months": 18},
+            {"name": "Clove", "category": "Spices", "unit": "Quintal", "shelf_life_months": 24},
             
-            {"name": "Tur", "category": "Pulses", "unit": "Quintal"},
-            {"name": "Moong", "category": "Pulses", "unit": "Quintal"},
-            {"name": "Urad", "category": "Pulses", "unit": "Quintal"},
-            {"name": "Masoor", "category": "Pulses", "unit": "Quintal"},
-            {"name": "Gram", "category": "Pulses", "unit": "Quintal"},
-            {"name": "Chana", "category": "Pulses", "unit": "Quintal"},
-            
-            {"name": "Apple", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Banana", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Mango", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Orange", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Grapes", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Pomegranate", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Papaya", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Guava", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Watermelon", "category": "Fruits", "unit": "Quintal"},
-            {"name": "Pineapple", "category": "Fruits", "unit": "Quintal"},
-            
-            {"name": "Turmeric", "category": "Spices", "unit": "Quintal"},
-            {"name": "Chilli", "category": "Spices", "unit": "Quintal"},
-            {"name": "Coriander", "category": "Spices", "unit": "Quintal"},
-            {"name": "Cumin", "category": "Spices", "unit": "Quintal"},
-            {"name": "Black Pepper", "category": "Spices", "unit": "Quintal"},
-            {"name": "Cardamom", "category": "Spices", "unit": "Quintal"},
+            {"name": "Cotton", "category": "Cash Crops", "unit": "Quintal", "shelf_life_months": 12},
+            {"name": "Jute", "category": "Cash Crops", "unit": "Quintal", "shelf_life_months": 12},
         ]
         
         valid_commodities, invalid = self.validator.validate_batch(
@@ -129,7 +97,7 @@ class AgmarknetScraper:
             self.validator.validate_commodity
         )
         
-        logger.info(f"Found {len(valid_commodities)} commodities across all agricultural categories")
+        logger.info(f"Retrieved {len(valid_commodities)} trader-focused commodities (grains, pulses, oilseeds, spices with long shelf life)")
         
         timestamp = get_current_timestamp().strftime("%Y%m%d_%H%M%S")
         output_file = self.raw_data_dir / f"commodities_{timestamp}.json"
