@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 # Trader-Focused Agricultural Platform Restructuring Plan
 
 ## Executive Summary
@@ -295,6 +296,8 @@ This restructuring transforms Vypaar-AI from a general agricultural platform int
 4. **Next Week**: Retrain models with 29 features
 5. **Following Week**: Update frontend for trader experience
 =======
+=======
+>>>>>>> Stashed changes
 # Trader-Focused Agricultural Price Prediction Platform - Restructuring Plan
 
 ## Executive Summary
@@ -726,4 +729,7 @@ class DataScheduler:
 *Document Version: 1.0*  
 *Last Updated: 2026-02-04*  
 *Author: System Analysis*
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
