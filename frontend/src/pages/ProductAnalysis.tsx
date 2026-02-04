@@ -12,8 +12,6 @@ import MarketComparison from "../components/ProductAnalysis/MarketComparison";
 import ProfitCalculator from "../components/ProductAnalysis/ProfitCalculator";
 import PriceAlerts from "../components/ProductAnalysis/PriceAlerts";
 import ExportData from "../components/ProductAnalysis/ExportData";
-import WeatherImpact from "../components/ProductAnalysis/WeatherImpact";
-import SeasonalTrends from "../components/ProductAnalysis/SeasonalTrends";
 import GraphBackgroundCorner from "../components/Background/GraphBackgroundCorner";
 
 const ProductAnalysis = () => {
@@ -40,12 +38,6 @@ const ProductAnalysis = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <MarketComparison />
           <ProfitCalculator />
-        </div>
-        
-        {/* Weather Impact & Seasonal Trends */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WeatherImpact />
-          <SeasonalTrends />
         </div>
         
         {/* Stock Metrics */}

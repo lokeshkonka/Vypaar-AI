@@ -269,7 +269,7 @@ class MarketPriceRepository(BaseRepository):
             )
         ).limit(1)
         result = await self.db.execute(query)
-        existing = result.scalar_one_or_none()
+        existing = result.scalar()
 
         if existing:
             for field in ["price", "min_price", "max_price", "modal_price", "arrival"]:

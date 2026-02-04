@@ -278,35 +278,38 @@ async def model_accuracy_summary(
     try:
         latest = await metrics_repo.get_latest_metrics(model_name="ensemble")
         if latest:
-            ai_accuracy = latest.accuracy if latest.accuracy is not None else 0.85
-            if ai_accuracy <= 1:
+            ai_accuracy = latest.accuracy if latest.accuracy is not None else None
+            if ai_accuracy and ai_accuracy <= 1:
                 ai_accuracy *= 100
-            mae = latest.mae or 12.0
-            mape = latest.mape * 100 if latest.mape and latest.mape <= 1 else (latest.mape or 6.0)
+            mae = latest.mae if latest.mae is not None else None
+            mape = latest.mape * 100 if latest.mape and latest.mape <= 1 else (latest.mape if latest.mape else None)
         else:
             artifact = getattr(predictor.ensemble, "artifact_info", {}) or {}
             metrics = artifact.get("metrics", {}) if isinstance(artifact, dict) else {}
             ensemble_metrics = metrics.get("ensemble", {}) if isinstance(metrics, dict) else {}
-            ai_accuracy = float(ensemble_metrics.get("accuracy", 0.0) * 100) if ensemble_metrics.get("accuracy") else 0.0
-            mae = float(ensemble_metrics.get("mae", 0.0)) if ensemble_metrics.get("mae") else 0.0
-            mape = float(ensemble_metrics.get("mape", 0.0)) * (100 if ensemble_metrics.get("mape", 0.0) and float(ensemble_metrics.get("mape", 0.0)) <= 1 else 1) if ensemble_metrics.get("mape") else 0.0
+            ai_accuracy = float(ensemble_metrics.get("accuracy", 0.0) * 100) if ensemble_metrics.get("accuracy") else None
+            mae = float(ensemble_metrics.get("mae", 0.0)) if ensemble_metrics.get("mae") else None
+            mape = float(ensemble_metrics.get("mape", 0.0)) * (100 if ensemble_metrics.get("mape", 0.0) and float(ensemble_metrics.get("mape", 0.0)) <= 1 else 1) if ensemble_metrics.get("mape") else None
 
-        if ai_accuracy > 0:
+        if ai_accuracy and ai_accuracy > 0:
             traditional_accuracy = ai_accuracy * 0.83
             improvement = ai_accuracy - traditional_accuracy
         else:
-            traditional_accuracy = 0.0
-            improvement = 0.0
+            traditional_accuracy = None
+            improvement = None
+            ai_accuracy = None
+            mae = None
+            mape = None
 
         return ModelAccuracySummary(
-            forecastAccuracy=ai_accuracy,
-            improvement=improvement,
-            mae=mae,
-            maeTraditional=mae * 1.8,
-            mape=mape,
-            mapeTraditional=mape * 2.1,
-            aiAccuracy=ai_accuracy,
-            traditionalAccuracy=traditional_accuracy,
+            forecastAccuracy=ai_accuracy or 0.0,
+            improvement=improvement or 0.0,
+            mae=mae or 0.0,
+            maeTraditional=(mae * 1.8) if mae else 0.0,
+            mape=mape or 0.0,
+            mapeTraditional=(mape * 2.1) if mape else 0.0,
+            aiAccuracy=ai_accuracy or 0.0,
+            traditionalAccuracy=traditional_accuracy or 0.0,
         )
     except Exception as exc:
         logger.exception(f"Model accuracy summary failed: {exc}")
@@ -499,6 +502,26 @@ async def get_product_analysis(
         if not commodities or not markets:
             raise HTTPException(status_code=404, detail="No data available. Please run data seeding first.")
         
+        if commodity_name:
+            selected_commodity = await commodity_repo.get_by_name(commodity_name)
+            if not selected_commodity:
+                selected_commodity = commodities[0]
+        else:
+            selected_commodity = commodities[0]
+        
+        if market_name:
+            selected_market = await market_repo.get_by_name(market_name)
+            if not selected_market:
+                selected_market = markets[0]
+        else:
+            selected_market = markets[0]
+        
+        price_history = await market_price_repo.get_price_history(
+            commodity_id=selected_commodity.id,
+            market_id=selected_market.id,
+            days=days * 2
+        )
+        
         selector_data = SelectorData(
             market=selected_market.name,
             product=selected_commodity.name,
@@ -537,38 +560,49 @@ async def get_product_analysis(
         demand_graph = []
         day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
         
-        base_demand = 2000
-        daily_variations = [
-            (2200, 2310),
-            (2350, 2468),
-            (2100, 2205),
-            (2450, 2573),
-            (2300, 2415),
-            (2150, 2258),
-            (2050, 2153),
-        ]
-        
         if price_history and len(price_history) > 0:
-            # Use real price data
             for i, record in enumerate(price_history[:days]):
-                actual_price = int(record.price or record.modal_price or 2000)
-                forecast_price = int(actual_price * 1.05)  # 5% forecast increase
-                day_idx = i % 7
-                demand_graph.append(
-                    DemandGraphPoint(day=day_names[day_idx], actual=actual_price, forecast=forecast_price)
-                )
+                actual_price = int(record.price or record.modal_price or 0)
+                if actual_price > 0:
+                    forecast_price = int(actual_price * 1.05)
+                    day_idx = i % 7
+                    demand_graph.append(
+                        DemandGraphPoint(day=day_names[day_idx], actual=actual_price, forecast=forecast_price)
+                    )
         else:
-            # Fallback to generated data based on commodity hash for variety
             commodity_hash = sum(ord(c) for c in selected_commodity.name)
             base_demand = 1500 + (commodity_hash % 1500)
             
             for i in range(days):
-                variation = 0.9 + (((commodity_hash + i * 7) % 20) / 100)  # 0.90-1.09 variation
+                variation = 0.9 + (((commodity_hash + i * 7) % 20) / 100)
                 actual = int(base_demand * variation)
                 forecast = int(actual * 1.05)
                 demand_graph.append(
                     DemandGraphPoint(day=day_names[i % 7], actual=actual, forecast=forecast)
                 )
+        
+        festival_impacts = []
+        weather_impacts = []
+        
+        if price_history and len(price_history) > 7:
+            recent_prices = [float(p.modal_price or p.price or 0) for p in price_history[:7] if p.modal_price or p.price]
+            older_prices = [float(p.modal_price or p.price or 0) for p in price_history[7:14] if p.modal_price or p.price]
+            
+            if recent_prices and older_prices:
+                recent_avg = np.mean(recent_prices)
+                older_avg = np.mean(older_prices)
+                price_change = ((recent_avg - older_avg) / older_avg * 100) if older_avg > 0 else 0
+                
+                festival_impacts.append({
+                    "event": "Recent Market Trend",
+                    "impact": f"+{price_change:.1f}%" if price_change > 0 else f"{price_change:.1f}%"
+                })
+                
+                volatility = float(np.std(recent_prices)) if len(recent_prices) > 1 else 0
+                weather_impacts.append({
+                    "condition": "Price Volatility",
+                    "impact": f"±{volatility:.1f}%"
+                })
         
         impact_data = ImpactData(
             festival=festival_impacts,
