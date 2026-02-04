@@ -456,7 +456,7 @@ class AgmarknetScraper:
         
         return data
 
-    def scrape_all(self, days_back: int = 30, historical_days: Optional[int] = None) -> dict[str, Any]:
+    def scrape_all(self, days_back: int = 180, historical_days: Optional[int] = None) -> dict[str, Any]:
         
         logger.info(f"Beginning comprehensive data collection for the past {days_back} days")
         

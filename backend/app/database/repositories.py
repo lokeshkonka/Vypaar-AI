@@ -83,7 +83,7 @@ class CommodityRepository(BaseRepository):
 
         query = select(Commodity).where(Commodity.name.ilike(name))
         result = await self.db.execute(query)
-        commodity = result.scalar_one_or_none()
+        commodity = result.scalars().first()
         
         # If not found, try partial match
         if not commodity:
@@ -119,7 +119,7 @@ class MarketRepository(BaseRepository):
 
         query = select(Market).where(Market.name.ilike(name))
         result = await self.db.execute(query)
-        market = result.scalar_one_or_none()
+        market = result.scalars().first()
         
         # If not found, try partial match
         if not market:
@@ -267,7 +267,7 @@ class MarketPriceRepository(BaseRepository):
                 MarketPrice.market_id == market_id,
                 MarketPrice.date == price_date,
             )
-        )
+        ).limit(1)
         result = await self.db.execute(query)
         existing = result.scalar_one_or_none()
 

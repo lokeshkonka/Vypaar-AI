@@ -175,7 +175,7 @@ class ForecastRequest(BaseSchema):
     market: str
     category: Optional[str] = None
     product: str
-    forecast_range: int = Field(default=14, ge=1, le=30, alias="forecastRange")
+    forecast_range: int = Field(default=90, ge=7, le=180, alias="forecastRange")
 
 class ForecastResponse(BaseSchema):
 

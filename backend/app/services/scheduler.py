@@ -36,7 +36,7 @@ class DataScheduler:
         try:
             logger.info("Starting daily market data collection")
             
-            result = self.scraper.scrape_all(days_back=30, historical_days=180)
+            result = self.scraper.scrape_all(days_back=180, historical_days=180)
             
             if result.get("status") == "success":
                 counts = result.get("counts", {})

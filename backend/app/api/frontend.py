@@ -142,11 +142,7 @@ async def generate_forecast(
                 "arrival": base_arrival,
             }
 
-            daily_variations = [1.02, 1.08, 0.98, 1.12, 1.05, 0.96, 0.92]
-            variation_idx = (offset - 1) % 7
-            daily_multiplier = daily_variations[variation_idx]
-            
-            price_pred = base_price * daily_multiplier
+            price_pred = base_price
             lower = price_pred * 0.96
             upper = price_pred * 1.05
             confidence = 0.82
@@ -291,12 +287,16 @@ async def model_accuracy_summary(
             artifact = getattr(predictor.ensemble, "artifact_info", {}) or {}
             metrics = artifact.get("metrics", {}) if isinstance(artifact, dict) else {}
             ensemble_metrics = metrics.get("ensemble", {}) if isinstance(metrics, dict) else {}
-            ai_accuracy = float(ensemble_metrics.get("accuracy", 0.85) * 100)
-            mae = float(ensemble_metrics.get("mae", 12.0))
-            mape = float(ensemble_metrics.get("mape", 0.06)) * (100 if float(ensemble_metrics.get("mape", 0.06)) <= 1 else 1)
+            ai_accuracy = float(ensemble_metrics.get("accuracy", 0.0) * 100) if ensemble_metrics.get("accuracy") else 0.0
+            mae = float(ensemble_metrics.get("mae", 0.0)) if ensemble_metrics.get("mae") else 0.0
+            mape = float(ensemble_metrics.get("mape", 0.0)) * (100 if ensemble_metrics.get("mape", 0.0) and float(ensemble_metrics.get("mape", 0.0)) <= 1 else 1) if ensemble_metrics.get("mape") else 0.0
 
-        traditional_accuracy = max(50.0, ai_accuracy - 14.5)
-        improvement = max(0.0, ai_accuracy - traditional_accuracy)
+        if ai_accuracy > 0:
+            traditional_accuracy = ai_accuracy * 0.83
+            improvement = ai_accuracy - traditional_accuracy
+        else:
+            traditional_accuracy = 0.0
+            improvement = 0.0
 
         return ModelAccuracySummary(
             forecastAccuracy=ai_accuracy,

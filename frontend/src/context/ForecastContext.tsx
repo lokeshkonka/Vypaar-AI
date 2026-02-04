@@ -18,7 +18,7 @@ export type ForecastSelection = {
   category?: string;
   product?: string;
 
-  forecastRange?: "7" | "14";
+  forecastRange?: "7" | "14" | "30" | "90" | "180";
 };
 
 interface Market {
@@ -50,7 +50,7 @@ type ForecastContextType = {
   commodities: Commodity[];
   categories: string[];
   products: Product[];
-  forecastRanges: Array<{ label: string; value: "7" | "14" }>;
+  forecastRanges: Array<{ label: string; value: "7" | "14" | "30" | "90" | "180" }>;
 
   
   generateForecast: () => Promise<void>;

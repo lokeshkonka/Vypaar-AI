@@ -26,6 +26,14 @@ class DataPreprocessor:
 
         logger.info(f"Preprocessor ready with {scaler_type} scaling and festival integration")
 
+    def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> pd.Series:
+        delta = prices.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=period, min_periods=1).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=period, min_periods=1).mean()
+        rs = gain / (loss + 1e-10)
+        rsi = 100 - (100 / (1 + rs))
+        return rsi.fillna(50.0)
+
     def _get_scaler(self, scaler_type: str) -> Any:
         if scaler_type == "standard":
             return StandardScaler()
@@ -347,6 +355,89 @@ class DataPreprocessor:
         else:
             trader_features['market_competition_index'] = 0.5
         
+        if 'price' in data.columns and len(data) > 14:
+            trader_features['volatility_14d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: x.rolling(window=min(14, len(x)), min_periods=1).std().fillna(0)
+            )
+        else:
+            trader_features['volatility_14d'] = 0.0
+        
+        if 'price' in data.columns and len(data) > 7:
+            trader_features['momentum_7d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: (x - x.shift(min(7, len(x)-1))).fillna(0)
+            )
+        else:
+            trader_features['momentum_7d'] = 0.0
+        
+        if 'price' in data.columns and len(data) > 30:
+            trader_features['rsi_30d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: self._calculate_rsi(x, min(30, len(x)))
+            )
+        else:
+            trader_features['rsi_30d'] = 50.0
+        
+        if 'arrival' in data.columns and len(data) > 14:
+            trader_features['supply_volatility'] = data.groupby(['commodity_id'])['arrival'].transform(
+                lambda x: x.rolling(window=min(14, len(x)), min_periods=1).std().fillna(0) / (x.rolling(window=min(14, len(x)), min_periods=1).mean().fillna(1) + 1)
+            )
+        else:
+            trader_features['supply_volatility'] = 0.0
+        
+        if 'price' in data.columns and 'arrival' in data.columns and len(data) > 7:
+            price_pct = data.groupby(['commodity_id'])['price'].pct_change().fillna(0)
+            arrival_pct = data.groupby(['commodity_id'])['arrival'].pct_change().fillna(0)
+            trader_features['price_elasticity'] = ((price_pct + 1e-6) / (arrival_pct + 1e-6)).clip(-10, 10).fillna(0)
+        else:
+            trader_features['price_elasticity'] = 0.0
+        
+        trader_features['is_peak_season'] = trader_features['seasonal_demand_index'].apply(
+            lambda x: 1.0 if x > 1.2 else 0.0
+        )
+        
+        if 'month' in data.columns:
+            trader_features['harvest_season'] = data['month'].apply(
+                lambda m: 1.0 if m in [10, 11, 12, 1, 2] else 0.0
+            )
+        else:
+            trader_features['harvest_season'] = 0.0
+        
+        if 'price' in data.columns and len(data) > 90:
+            trader_features['price_trend_90d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: (x.rolling(window=min(30, len(x)), min_periods=1).mean() - 
+                          x.rolling(window=min(90, len(x)), min_periods=1).mean()).fillna(0)
+            )
+        else:
+            trader_features['price_trend_90d'] = 0.0
+        
+        if 'market_id' in data.columns:
+            market_premium = {i: 1.0 + ((i % 20) - 10) * 0.02 for i in range(50)}
+            trader_features['market_premium_factor'] = data['market_id'].map(
+                lambda x: market_premium.get(int(x) if pd.notna(x) else 0, 1.0)
+            )
+        else:
+            trader_features['market_premium_factor'] = 1.0
+        
+        if 'arrival' in data.columns and len(data) > 7:
+            trader_features['supply_consistency'] = data.groupby(['commodity_id'])['arrival'].transform(
+                lambda x: 1.0 / (x.rolling(window=min(7, len(x)), min_periods=1).std().fillna(1) + 1)
+            )
+        else:
+            trader_features['supply_consistency'] = 0.5
+        
+        if 'price' in data.columns and len(data) > 60:
+            trader_features['price_deviation_60d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: ((x - x.rolling(window=min(60, len(x)), min_periods=1).mean()) / 
+                          (x.rolling(window=min(60, len(x)), min_periods=1).std() + 1)).fillna(0)
+            )
+        else:
+            trader_features['price_deviation_60d'] = 0.0
+        
+        trader_features['quarter_demand_weight'] = data.get('quarter', pd.Series([1]*len(data))).map(
+            {1: 0.9, 2: 1.0, 3: 1.1, 4: 1.3}
+        ).fillna(1.0)
+        
+        trader_features['storage_cost_factor'] = trader_features['commodity_shelf_life'] * 0.8
+        
         if 'commodity_shelf_life' in trader_features.columns:
             trader_features['storage_cost_factor'] = trader_features['commodity_shelf_life'].apply(
                 lambda x: 0.1 if x > 0.8 else 0.3 if x > 0.5 else 0.5
@@ -361,6 +452,107 @@ class DataPreprocessor:
             )
         else:
             trader_features['transportation_difficulty'] = 0.5
+        
+        if 'price' in data.columns and 'min_price' in data.columns and 'max_price' in data.columns:
+            trader_features['price_spread'] = data.apply(
+                lambda row: (row['max_price'] - row['min_price']) / (row['price'] + 1) 
+                if pd.notna(row['max_price']) and pd.notna(row['min_price']) else 0.0,
+                axis=1
+            )
+        else:
+            trader_features['price_spread'] = 0.0
+        
+        if 'price' in data.columns and len(data) > 14:
+            trader_features['price_momentum_14d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: (x / x.rolling(window=min(14, len(x)), min_periods=1).mean()).fillna(1.0) - 1.0
+            )
+        else:
+            trader_features['price_momentum_14d'] = 0.0
+        
+        if 'arrival' in data.columns and len(data) > 14:
+            trader_features['arrival_trend_14d'] = data.groupby(['commodity_id'])['arrival'].transform(
+                lambda x: (x.rolling(window=min(14, len(x)), min_periods=1).mean() / 
+                          x.rolling(window=min(28, len(x)), min_periods=1).mean()).fillna(1.0) - 1.0
+            )
+        else:
+            trader_features['arrival_trend_14d'] = 0.0
+        
+        if 'quarter' in data.columns:
+            harvest_quarters = {1: 1.3, 2: 0.9, 3: 1.1, 4: 1.4}
+            trader_features['harvest_season_indicator'] = data['quarter'].map(
+                lambda x: harvest_quarters.get(int(x) if pd.notna(x) else 1, 1.0)
+            )
+        else:
+            trader_features['harvest_season_indicator'] = 1.0
+        
+        if 'price' in data.columns and len(data) > 3:
+            trader_features['price_acceleration'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: x.diff().diff().fillna(0)
+            )
+        else:
+            trader_features['price_acceleration'] = 0.0
+        
+        if 'arrival' in data.columns and 'price' in data.columns:
+            trader_features['supply_pressure'] = data.apply(
+                lambda row: (row['arrival'] / (row['arrival'].rolling(window=7, min_periods=1).mean() + 1))
+                if hasattr(row['arrival'], 'rolling') else 1.0,
+                axis=1
+            )
+        else:
+            trader_features['supply_pressure'] = 1.0
+        
+        if 'commodity_id' in data.columns:
+            commodity_liquidity = {i: 0.6 + (i % 7) * 0.05 for i in range(100)}
+            trader_features['market_liquidity'] = data['commodity_id'].map(
+                lambda x: commodity_liquidity.get(int(x) if pd.notna(x) else 0, 0.8)
+            )
+        else:
+            trader_features['market_liquidity'] = 0.8
+        
+        if 'month' in data.columns:
+            trader_features['monsoon_effect'] = data['month'].apply(
+                lambda x: 1.2 if x in [6, 7, 8, 9] else 1.0
+            )
+        else:
+            trader_features['monsoon_effect'] = 1.0
+        
+        if 'price' in data.columns and len(data) > 30:
+            trader_features['price_range_30d'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: (x.rolling(window=min(30, len(x)), min_periods=1).max() - 
+                          x.rolling(window=min(30, len(x)), min_periods=1).min()).fillna(0)
+            )
+        else:
+            trader_features['price_range_30d'] = 0.0
+        
+        if 'arrival' in data.columns:
+            trader_features['supply_consistency'] = data.groupby(['commodity_id'])['arrival'].transform(
+                lambda x: 1.0 / (x.rolling(window=min(7, len(x)), min_periods=1).std() + 1)
+            )
+        else:
+            trader_features['supply_consistency'] = 1.0
+        
+        if 'price' in data.columns and 'market_id' in data.columns:
+            trader_features['price_premium_to_avg'] = data.groupby(['commodity_id', 'market_id'])['price'].transform(
+                lambda x: (x / x.mean()).fillna(1.0) - 1.0
+            )
+        else:
+            trader_features['price_premium_to_avg'] = 0.0
+        
+        if 'day_of_month' in data.columns:
+            trader_features['month_start_effect'] = data['day_of_month'].apply(
+                lambda x: 1.1 if x <= 7 else 1.0 if x <= 14 else 0.95
+            )
+        else:
+            trader_features['month_start_effect'] = 1.0
+        
+        if 'price' in data.columns and 'arrival' in data.columns and len(data) > 7:
+            trader_features['inventory_pressure'] = data.apply(
+                lambda row: row['price'] * row['arrival'] / 1000.0 
+                if pd.notna(row['arrival']) else 0.0,
+                axis=1
+            )
+        else:
+            trader_features['inventory_pressure'] = 0.0
         
         return trader_features
 
