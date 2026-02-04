@@ -228,6 +228,9 @@ class DataPreprocessor:
         
         features = pd.concat([features, temporal_features], axis=1)
         
+        trader_features = self.calculate_trader_features(features)
+        features = pd.concat([features, trader_features], axis=1)
+        
         for col in numeric_cols:
             features[col] = self.scale_features(features[col].values, col, fit=True)
 
@@ -248,6 +251,118 @@ class DataPreprocessor:
         )
 
         return features, target
+
+    def calculate_trader_features(self, data: pd.DataFrame) -> pd.DataFrame:
+        
+        trader_features = pd.DataFrame()
+        
+        if 'price' in data.columns and len(data) > 1:
+            trader_features['price_volatility'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: x.rolling(window=min(7, len(x)), min_periods=1).std().fillna(0)
+            )
+        else:
+            trader_features['price_volatility'] = 0.0
+        
+        if 'arrival' in data.columns and len(data) > 1:
+            trader_features['arrival_momentum'] = data.groupby(['commodity_id'])['arrival'].transform(
+                lambda x: x.diff().fillna(0)
+            )
+        else:
+            trader_features['arrival_momentum'] = 0.0
+        
+        if 'day_of_week' in data.columns:
+            trader_features['weekend_effect'] = data['day_of_week'].apply(
+                lambda x: 1.0 if x >= 5 else 0.0
+            )
+        else:
+            trader_features['weekend_effect'] = 0.0
+        
+        if 'market_id' in data.columns:
+            market_sizes = {i: 1.0 + (i % 5) * 0.2 for i in range(50)}
+            trader_features['market_size_factor'] = data['market_id'].map(
+                lambda x: market_sizes.get(int(x) if pd.notna(x) else 0, 1.0)
+            )
+        else:
+            trader_features['market_size_factor'] = 1.0
+        
+        commodity_shelf_life = {
+            'wheat': 12, 'rice': 12, 'maize': 6, 'barley': 12, 'soybean': 12,
+            'chickpea': 12, 'pigeon_pea': 12, 'lentil': 12, 'green_gram': 12,
+            'black_gram': 12, 'kidney_bean': 12, 'mustard': 12, 'groundnut': 6,
+            'sunflower': 6, 'sesame': 12, 'cotton': 12, 'jute': 12,
+        }
+        if 'commodity' in data.columns:
+            trader_features['commodity_shelf_life'] = data['commodity'].str.lower().str.replace(' ', '_').map(
+                lambda x: commodity_shelf_life.get(x, 3) / 12.0
+            )
+        else:
+            trader_features['commodity_shelf_life'] = 0.5
+        
+        if 'price' in data.columns and 'arrival' in data.columns:
+            trader_features['price_to_arrival_ratio'] = data.apply(
+                lambda row: row['price'] / (row['arrival'] + 1) if pd.notna(row['arrival']) and row['arrival'] > 0 else 0.0,
+                axis=1
+            )
+        else:
+            trader_features['price_to_arrival_ratio'] = 0.0
+        
+        if 'month' in data.columns:
+            peak_seasons = {10: 1.3, 11: 1.4, 12: 1.5, 1: 1.3, 2: 1.1, 3: 1.0,
+                          4: 0.9, 5: 0.9, 6: 1.1, 7: 1.2, 8: 1.2, 9: 1.1}
+            trader_features['seasonal_demand_index'] = data['month'].map(
+                lambda x: peak_seasons.get(int(x) if pd.notna(x) else 1, 1.0)
+            )
+        else:
+            trader_features['seasonal_demand_index'] = 1.0
+        
+        if 'is_festival' in data.columns and 'festival_effect' in data.columns:
+            trader_features['festival_demand_multiplier'] = data.apply(
+                lambda row: 1.0 + (row['festival_effect'] * 0.5) if row['is_festival'] > 0 else 1.0,
+                axis=1
+            )
+        else:
+            trader_features['festival_demand_multiplier'] = 1.0
+        
+        if 'arrival' in data.columns and len(data) > 7:
+            trader_features['supply_shock_indicator'] = data.groupby(['commodity_id'])['arrival'].transform(
+                lambda x: ((x - x.rolling(window=min(7, len(x)), min_periods=1).mean()) / 
+                          (x.rolling(window=min(7, len(x)), min_periods=1).std() + 1)).fillna(0).clip(-3, 3)
+            )
+        else:
+            trader_features['supply_shock_indicator'] = 0.0
+        
+        if 'price' in data.columns and len(data) > 30:
+            trader_features['demand_trend'] = data.groupby(['commodity_id'])['price'].transform(
+                lambda x: (x.rolling(window=min(30, len(x)), min_periods=1).mean() - 
+                          x.rolling(window=min(60, len(x)), min_periods=1).mean()).fillna(0)
+            )
+        else:
+            trader_features['demand_trend'] = 0.0
+        
+        if 'market_id' in data.columns:
+            market_competition = {i: 0.5 + (i % 10) * 0.05 for i in range(50)}
+            trader_features['market_competition_index'] = data['market_id'].map(
+                lambda x: market_competition.get(int(x) if pd.notna(x) else 0, 0.5)
+            )
+        else:
+            trader_features['market_competition_index'] = 0.5
+        
+        if 'commodity_shelf_life' in trader_features.columns:
+            trader_features['storage_cost_factor'] = trader_features['commodity_shelf_life'].apply(
+                lambda x: 0.1 if x > 0.8 else 0.3 if x > 0.5 else 0.5
+            )
+        else:
+            trader_features['storage_cost_factor'] = 0.3
+        
+        if 'market_id' in data.columns:
+            transport_difficulty = {i: 0.2 + (i % 8) * 0.1 for i in range(50)}
+            trader_features['transportation_difficulty'] = data['market_id'].map(
+                lambda x: transport_difficulty.get(int(x) if pd.notna(x) else 0, 0.5)
+            )
+        else:
+            trader_features['transportation_difficulty'] = 0.5
+        
+        return trader_features
 
     def prepare_prediction_data(
         self, data: pd.DataFrame, date_col: str, categorical_cols: List[str] = None
@@ -276,6 +391,12 @@ class DataPreprocessor:
         
         features = pd.concat([features, temporal_features], axis=1)
         
+        if 'commodity' in data_processed.columns:
+            features['commodity'] = data_processed['commodity']
+        
+        trader_features = self.calculate_trader_features(features)
+        features = pd.concat([features, trader_features], axis=1)
+        
         standard_features = [
             'commodity_id',
             'market_id',
@@ -293,6 +414,19 @@ class DataPreprocessor:
             'quarter',
             'month_sin',
             'month_cos',
+            'price_volatility',
+            'arrival_momentum',
+            'weekend_effect',
+            'market_size_factor',
+            'commodity_shelf_life',
+            'price_to_arrival_ratio',
+            'seasonal_demand_index',
+            'festival_demand_multiplier',
+            'supply_shock_indicator',
+            'demand_trend',
+            'market_competition_index',
+            'storage_cost_factor',
+            'transportation_difficulty',
         ]
         
         for col in standard_features:
